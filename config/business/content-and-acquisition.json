@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001",
+  "requirementIds": ["HVCG-V2-MKT-002", "HVCG-V2-MKT-003", "HVCG-V2-REV-005"],
+  "contentPillars": ["Capital", "Control", "Risk", "Systems", "AI"],
+  "salesLadder": [
+    { "stage": "FREE_AUTHORITY", "examples": ["Content", "Podcast", "Educational materials", "Lead magnets"] },
+    { "stage": "PAID_FRONT_DOOR", "examples": ["Diagnostic"] },
+    { "stage": "MAIN_PROJECT", "examples": ["Productized implementation package"] },
+    { "stage": "RECURRING", "examples": ["Retainer"] },
+    { "stage": "UPSIDE", "examples": ["Success Fee"] },
+    { "stage": "PREMIUM_ENTERPRISE", "examples": ["AI Operations", "Executive", "Transformation"] }
+  ],
+  "leadMagnetsBacklog": [
+    { "id": "LM-CAP-READY", "name": "Capital Readiness Checklist", "status": "PLANNED", "publishGate": true },
+    { "id": "LM-LENDER-DOCS", "name": "Lender-Ready Document Checklist", "status": "PLANNED", "publishGate": true },
+    { "id": "LM-FOUNDER-OS", "name": "Founder Operating System Scorecard", "status": "PLANNED", "publishGate": true },
+    { "id": "LM-AI-BRAIN", "name": "AI Second Brain Readiness Checklist", "status": "PLANNED", "publishGate": true }
+  ],
+  "acquisitionSources": [
+    "Podcast", "LinkedIn", "YouTube", "Instagram", "TikTok", "Newsletter",
+    "Referral Partner", "Lender", "CPA", "Attorney", "Insurance Partner",
+    "Direct Outreach", "Existing Client", "Website", "Other"
+  ]
+}

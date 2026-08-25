@@ -1,0 +1,27 @@
+{
+  "messageId": "757fad18-0992-4053-bfc0-31fb4337ed76",
+  "threadId": "757fad18-0992-4053-bfc0-31fb4337ed76",
+  "timestamp": "2026-07-15T22:19:45Z",
+  "from": "master-pm",
+  "to": [
+    "crm",
+    "executive",
+    "operations",
+    "finance",
+    "client-portal",
+    "ai-governance",
+    "integration"
+  ],
+  "cc": [],
+  "type": "REQUEST",
+  "priority": "HIGH",
+  "subject": "System Online",
+  "body": "HVCG agent communications channel is LIVE (branch cursor/agent-communications). Acknowledge this message, confirm heartbeat, and continue your module work. Do not interrupt CRM Maker OA / auth / smoke. Use export HVCG_REPO_ROOT=\"/Volumes/MacMiniPro2TB/HVCG Project Management System\" then read-inbox / ack-message.",
+  "relatedBranch": "",
+  "relatedFiles": [],
+  "requestedAction": "",
+  "dueBy": null,
+  "requiresAcknowledgement": true,
+  "status": "NEW",
+  "replyTo": null
+}

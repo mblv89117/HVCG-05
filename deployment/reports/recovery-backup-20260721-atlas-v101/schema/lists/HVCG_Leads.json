@@ -1,0 +1,215 @@
+{
+  "title": "HVCG_Leads",
+  "description": "Inbound leads before client record",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Lead/company name"
+    },
+    {
+      "internalName": "ContactName",
+      "displayName": "ContactName",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Email",
+      "displayName": "Email",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Phone",
+      "displayName": "Phone",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Source",
+      "displayName": "Source",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LeadStatus",
+      "displayName": "LeadStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "New",
+        "Contacted",
+        "Qualified",
+        "Disqualified",
+        "Converted"
+      ],
+      "default": "New"
+    },
+    {
+      "internalName": "ServiceInterest",
+      "displayName": "ServiceInterest",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Assessment",
+        "Capital Advisory",
+        "Fractional CFO",
+        "Operational Consulting",
+        "Growth",
+        "Retainer",
+        "Success Fee",
+        "Hybrid",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "EstimatedValue",
+      "displayName": "EstimatedValue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ConvertedClientId",
+      "displayName": "ConvertedClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ReferralPartnerId",
+      "displayName": "ReferralPartnerId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_ReferralPartners"
+    },
+    {
+      "internalName": "ReferralId",
+      "displayName": "ReferralId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Referrals"
+    },
+    {
+      "internalName": "LeadScore",
+      "displayName": "LeadScore",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DiscoveryCallDate",
+      "displayName": "DiscoveryCallDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "NextFollowUpDate",
+      "displayName": "NextFollowUpDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PipelineValue",
+      "displayName": "PipelineValue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LossReason",
+      "displayName": "LossReason",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Price",
+        "Timing",
+        "Competitor",
+        "Fit",
+        "No Response",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "ConvertedOpportunityId",
+      "displayName": "ConvertedOpportunityId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Opportunities"
+    },
+    {
+      "internalName": "LeadSourceDetail",
+      "displayName": "LeadSourceDetail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IsReferral",
+      "displayName": "IsReferral",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    }
+  ]
+}

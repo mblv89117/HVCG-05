@@ -1,0 +1,71 @@
+{
+  "generatedAt": "2026-07-22T04:40:55Z",
+  "liveCheck": true,
+  "dataverse": "https://orgee2f7545.crm.dynamics.com",
+  "hvcg_EnableClientEmails": "false",
+  "hvcg_CrmEnableTeamsNotify": "false",
+  "externalClientEmailFlows": "kept Off",
+  "reminderEvaFlows": {
+    "HVCG_MissingDocumentReminders": {
+      "name": "HVCG_MissingDocumentReminders",
+      "statecode": 0,
+      "statuscode": 1,
+      "category": 5,
+      "on": false
+    },
+    "HVCG_RenewalReminders": {
+      "name": "HVCG_RenewalReminders",
+      "statecode": 0,
+      "statuscode": 1,
+      "category": 5,
+      "on": false
+    },
+    "HVCG_EvaFormCreateLead": {
+      "name": "HVCG_EvaFormCreateLead",
+      "statecode": 0,
+      "statuscode": 1,
+      "category": 5,
+      "on": false
+    }
+  },
+  "targetFlowsOn": {
+    "HVCG_CreateClientWorkspace": {
+      "name": "HVCG_CreateClientWorkspace",
+      "statecode": 1,
+      "statuscode": 2,
+      "category": 5,
+      "on": true
+    },
+    "HVCG_DeliverableApproval": {
+      "name": "HVCG_DeliverableApproval",
+      "statecode": 1,
+      "statuscode": 2,
+      "category": 5,
+      "on": true
+    },
+    "HVCG_CreateProjectFromTemplate": {
+      "name": "HVCG_CreateProjectFromTemplate",
+      "statecode": 1,
+      "statuscode": 2,
+      "category": 5,
+      "on": true
+    },
+    "HVCG_CreateDocumentRequests": {
+      "name": "HVCG_CreateDocumentRequests",
+      "statecode": 1,
+      "statuscode": 2,
+      "category": 5,
+      "on": true
+    },
+    "HVCG_ExecutiveDecisionEscalation": {
+      "name": "HVCG_ExecutiveDecisionEscalation",
+      "statecode": 1,
+      "statuscode": 2,
+      "category": 5,
+      "on": true
+    }
+  },
+  "legacyClientId": "preserved (not deleted)",
+  "hvsFiles": "not modified",
+  "verdict": "GREEN"
+}

@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-07-22T04:45:00Z",
+  "verdict": "GO",
+  "branch": "fix/atlas-production-hardening",
+  "commit": "dceea798fe18a83ba46043d802931a988480f8db",
+  "tag": "atlas-v1.0.1-production",
+  "tagObject": "8b12146c7e3c452e98ba2865a889baede055b11c",
+  "atlasV100Production": "6a346aa736ba5ecaaff701c3561b1d4b1befd564",
+  "atlasV100Unchanged": true,
+  "pushed": false,
+  "urls": {
+    "swa": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net",
+    "hub": "https://app-atlas-integration-hub.azurewebsites.net",
+    "sharePointCommandCenter": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter",
+    "sharePointClients": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients"
+  },
+  "artifacts": {
+    "managedSolution": "releases/v1.0.1/packages/HVCGAtlasProduction_1.0.1.0_managed.zip",
+    "unmanagedSolution": "releases/v1.0.1/packages/HVCGAtlasProduction_1.0.1.0.zip",
+    "rollbackPackage": "deployment/reports/recovery-backup-20260721-atlas-v101/"
+  },
+  "releaseGate": "deployment/reports/ATLAS_V1_PRODUCTION_ABSOLUTE_GO.md",
+  "releaseRecord": "deployment/reports/ATLAS_V1_0_1_PRODUCTION_RELEASE.md"
+}

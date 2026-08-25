@@ -1,0 +1,89 @@
+{
+  "title": "HVCG_Investors",
+  "description": "Capital \u2014 Investor tracking",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CapitalSourceId",
+      "displayName": "CapitalSourceId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_CapitalSources"
+    },
+    {
+      "internalName": "InvestorType",
+      "displayName": "InvestorType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Angel",
+        "Family Office",
+        "PE",
+        "VC",
+        "Strategic",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "CheckSizeMin",
+      "displayName": "CheckSizeMin",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CheckSizeMax",
+      "displayName": "CheckSizeMax",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Thesis",
+      "displayName": "Thesis",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LastContactDate",
+      "displayName": "LastContactDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "title": "HVCG_MeetingPlaybooks",
+  "description": "Ops \u2014 Meeting playbooks",
+  "template": "genericList",
+  "domain": "Ops",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MeetingType",
+      "displayName": "MeetingType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Discovery",
+        "Kickoff",
+        "Status",
+        "Lender",
+        "Investor",
+        "Renewal",
+        "Internal",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "AgendaTemplate",
+      "displayName": "AgendaTemplate",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiredAttendeesRoles",
+      "displayName": "RequiredAttendeesRoles",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "FileLink",
+      "displayName": "FileLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Draft",
+        "Active",
+        "Deprecated"
+      ],
+      "default": "Active"
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

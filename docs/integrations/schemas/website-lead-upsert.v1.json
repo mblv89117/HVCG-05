@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/website-lead-upsert.v1.json",
+  "title": "Website Lead Upsert v1",
+  "description": "Payload accepted by Atlas Hub POST /api/website/leads. Creates or updates HVCG_Leads; it does not create clients, opportunities, or entitlements.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "leadId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Website-side lead identifier. Used as website|{leadId} when no explicit idempotency key is supplied."
+    },
+    "correlationId": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Submission/session correlation ID. For Website-EVA, used as eva|{correlationId} when fullPayload.sessionId is absent."
+    },
+    "submissionType": {
+      "type": "string",
+      "maxLength": 255,
+      "examples": ["Website-EVA", "Website-Funding", "Website-Book", "Website-Privacy-Request"]
+    },
+    "source": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Optional source override. submissionType beginning with Website- wins in current Hub behavior."
+    },
+    "submittedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "nextAction": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "atlasHint": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "testLabel": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "contact": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string", "maxLength": 255 },
+        "email": { "type": "string", "format": "email", "maxLength": 255 },
+        "phone": { "type": "string", "maxLength": 255 },
+        "company": { "type": "string", "maxLength": 255 }
+      }
+    },
+    "fullPayload": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "idempotencyKey": { "type": "string", "maxLength": 255 },
+        "sessionId": { "type": "string", "maxLength": 255 },
+        "contact": { "$ref": "#/properties/contact" },
+        "company": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "legalName": { "type": "string", "maxLength": 255 }
+          }
+        }
+      }
+    }
+  },
+  "anyOf": [
+    { "required": ["leadId"] },
+    { "required": ["correlationId"] },
+    {
+      "required": ["fullPayload"],
+      "properties": {
+        "fullPayload": {
+          "required": ["idempotencyKey"]
+        }
+      }
+    },
+    {
+      "required": ["fullPayload"],
+      "properties": {
+        "fullPayload": {
+          "required": ["sessionId"]
+        }
+      }
+    }
+  ]
+}

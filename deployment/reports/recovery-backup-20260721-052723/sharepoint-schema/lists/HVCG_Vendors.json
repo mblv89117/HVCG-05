@@ -1,0 +1,106 @@
+{
+  "title": "HVCG_Vendors",
+  "description": "Ops \u2014 Vendor management",
+  "template": "genericList",
+  "domain": "Ops",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "VendorCategory",
+      "displayName": "VendorCategory",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Software",
+        "Professional Services",
+        "Contractor",
+        "Facilities",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "PrimaryContact",
+      "displayName": "PrimaryContact",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Email",
+      "displayName": "Email",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ContractEndDate",
+      "displayName": "ContractEndDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "AnnualSpend",
+      "displayName": "AnnualSpend",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RiskRating",
+      "displayName": "RiskRating",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Low",
+        "Medium",
+        "High"
+      ]
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Active",
+        "Inactive",
+        "Evaluating"
+      ],
+      "default": "Active"
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

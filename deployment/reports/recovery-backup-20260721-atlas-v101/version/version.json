@@ -1,0 +1,26 @@
+{
+  "product": "HVCG OS",
+  "version": "1.1.0",
+  "semver": {
+    "major": 1,
+    "minor": 1,
+    "patch": 0
+  },
+  "schemaVersion": "1.1.0",
+  "configSchemaVersion": "1.0.0",
+  "powerPlatformSolutionVersion": "1.1.0.0",
+  "minUpgradeFrom": "1.0.0",
+  "releaseDate": "2026-07-14",
+  "previousRelease": "1.0.0",
+  "compatibility": {
+    "sharePointLists": "additive-migrations-only-for-1.x",
+    "customerData": "preserved-on-upgrade",
+    "breakingChanges": "none-in-1.1.0"
+  },
+  "featuresAdded": [
+    "HVCG_Relationships intelligence layer",
+    "AI orchestration foundation",
+    "Backup and restore",
+    "Operational monitoring"
+  ]
+}

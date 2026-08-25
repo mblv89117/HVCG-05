@@ -1,76 +1,64 @@
-# Environment and secrets
-.env
-.env.local
-.env.*.local
-*.pfx
-*.pem
-*.key
-secrets/
-credentials/
-config/environments/development.json
-config/environments/production.json
-config/environments/test.json
-config/environments/*.local.json
-deployment/reports/*.json
-deployment/reports/HVCG-Dev-Deploy-*.md
-!deployment/reports/.gitkeep
-
-# Schema validation / repair outputs (tenant-specific — never commit)
-deployment/reports/schema/**
-!deployment/reports/schema/.gitkeep
-
-# OS
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-.cursor/
-
-# Node / tooling
 node_modules/
-npm-debug.log*
-dist/
-build/
-coverage/
-.turbo/
-
-# Python
-__pycache__/
-*.py[cod]
 .venv/
-venv/
-*.egg-info/
-
-# Power Platform / PnP
-*.msapp.bak
-ConnectionReferences.local.json
-*.pacignore.local
-
-# Azure
-local.settings.json
-.azure/
-
-# Temporary / logs
+**/.venv/
+**/__pycache__/
+*.pyc
+.npm-cache/
+dist/
+storybook-static/
+.env.local
 *.log
-tmp/
-temp/
-.cache/
+.DS_Store
+apps/atlas-elite-os/tsconfig.tsbuildinfo
+.secrets/
+.data/
+**/plaid-store.json
+**/integration-store.json
+# Local environment configs (never commit secrets / tenant wiring)
+config/environments/development.json
+config/environments/test.json
+config/environments/production.json
 
-# Sample exports with real client data (never commit)
-sample-data/production/
-exports/production/
+# HVS inventory bulk dumps (keep summaries in reports)
+deployment/reports/hvs-onedrive-inventory/inventory-*.json
+deployment/reports/hvs-onedrive-inventory/inventory-*.csv
+deployment/reports/hvs-onedrive-inventory/migration-manifest-*.json
+deployment/reports/hvs-onedrive-inventory/review-queue-*.json
+deployment/reports/hvs-onedrive-inventory/delta-link-*.txt
 
-# Local backups (may contain tenant exports — never commit)
-backups/
+# Production data exports (may contain operating records)
+deployment/reports/data/
 
-# Operational health reports (regenerated)
-deployment/reports/health/
-!deployment/reports/health/.gitkeep
+# Local AI — machine state / derived indexes (never commit)
+.secrets/local-ai.env
+.secrets/local-ai.discovery.json
+**/local-ai-operations.json
+.data/local-ai-document-staging/
+**/local-ai-document-staging/
+.data/local-ai-document-reviews/
+**/local-ai-document-reviews/
+.data/local-ai-document-backups/
+**/local-ai-document-backups/
+.data/local-ai-eva/
+**/local-ai-eva/
+.data/website-studio/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
 
-# Pre-deployment test result dumps (machine-local)
-deployment/reports/predeploy-tests-latest.json
+# Hub deploy artifacts and previous production binaries (never commit)
+deployment/artifacts/hub-build/
+deployment/artifacts/hub-rollback/
+deployment/artifacts/hub-*.zip
+deployment/artifacts/elite-*.zip
+deployment/artifacts/*.ps1
+deployment/artifacts/syn01-corpus/
+
+# ACCG01 live ACL inventory (principals — do not commit)
+deployment/artifacts/accg01-acl-inventory.md
+deployment/artifacts/accg01-acl-inventory.json
+
+# Dated local deploy report copies (latest.md/json remain tracked)
+deployment/reports/HVCG-Dev-Deploy-20*.json
+deployment/reports/HVCG-Dev-Deploy-20*.md
+

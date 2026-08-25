@@ -1,0 +1,172 @@
+{
+  "templateKey": "investor-outreach",
+  "title": "Investor Outreach Campaign",
+  "templateType": "Project",
+  "defaultDurationDays": 35,
+  "domain": "Capital",
+  "workstreams": [
+    "Investor packaging",
+    "Equity placement",
+    "Investor Outreach"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Materials",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Targeting",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "Outreach",
+      "seq": 3
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Deck QC",
+      "offsetDays": 10,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Target list approved",
+      "offsetDays": 14,
+      "isCritical": true
+    },
+    {
+      "key": "m3",
+      "title": "First wave complete",
+      "offsetDays": 35,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Finalize investor materials",
+      "phase": "p1",
+      "offsetDays": 8,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Deck + teaser.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 6,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Build investor target list",
+      "phase": "p2",
+      "offsetDays": 12,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Log investors + thesis fit.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 4,
+      "isCritical": true
+    },
+    {
+      "key": "t3",
+      "title": "Executive approve outreach list",
+      "phase": "p2",
+      "offsetDays": 14,
+      "defaultRole": "Owner",
+      "description": "Capital strategy gate.",
+      "dependsOn": [
+        "t2"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 1,
+      "isCritical": true
+    },
+    {
+      "key": "t4",
+      "title": "Execute outreach wave 1",
+      "phase": "p3",
+      "offsetDays": 21,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Use HVCG_InvestorOutreach.",
+      "dependsOn": [
+        "t3"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 6,
+      "isCritical": false
+    },
+    {
+      "key": "t5",
+      "title": "Weekly pipeline update",
+      "phase": "p3",
+      "offsetDays": 28,
+      "defaultRole": "ProjectManager",
+      "description": "FundingStatus + probability.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 2,
+      "isCritical": false
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "Deck source data",
+      "documentCategory": "Other",
+      "folderTarget": "18 - Presentations",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Deck source data"
+    },
+    {
+      "key": "d2",
+      "title": "Model",
+      "documentCategory": "Other",
+      "folderTarget": "15 - Financial Models",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Model"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Investor deck",
+      "deliverableType": "Investor Deck",
+      "draftOffsetDays": 8,
+      "finalOffsetDays": 12,
+      "requiresExecutiveApproval": true,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "Owner"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Inconsistent metrics",
+      "likelihood": "Medium",
+      "impact": "High",
+      "mitigation": "Analyst alignment gate"
+    }
+  ],
+  "qualityControlChecks": [
+    "No outreach before executive list approval"
+  ],
+  "automationTriggers": [
+    "Deliverable executive approval"
+  ],
+  "clientResponsibilities": [
+    "Authorize targets"
+  ],
+  "internalResponsibilities": [
+    "Log every touch in InvestorOutreach"
+  ],
+  "approvalPoints": [
+    "Investor deck",
+    "Final delivery acceptance"
+  ]
+}

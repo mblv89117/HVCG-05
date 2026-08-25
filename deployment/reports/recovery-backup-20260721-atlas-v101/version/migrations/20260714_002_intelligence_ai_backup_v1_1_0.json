@@ -1,0 +1,39 @@
+{
+  "id": "20260714_002_intelligence_ai_backup_v1_1_0",
+  "fromVersion": "1.0.0",
+  "toVersion": "1.1.0",
+  "type": "additive",
+  "destructive": false,
+  "preservesCustomerData": true,
+  "description": "Add Relationships intelligence layer, AI orchestration entities, operational alerts. Extend AI review/escalation queues with JobId linkage.",
+  "steps": [
+    {
+      "action": "AssertInstalledVersion",
+      "min": "1.0.0",
+      "max": "1.0.999"
+    },
+    {
+      "action": "ApplyListDiff",
+      "diffFile": "releases/migrations/diffs/v1.0.0_to_v1.1.0.json"
+    },
+    {
+      "action": "SetInstalledVersion",
+      "version": "1.1.0"
+    },
+    {
+      "action": "WriteAuditEvent",
+      "eventType": "Upgrade",
+      "details": "Upgraded to 1.1.0 Intelligence + AI orchestration + monitoring"
+    }
+  ],
+  "rollback": {
+    "supported": "soft",
+    "notes": "New lists/columns retained. Version marker rolls back to 1.0.0; apps ignore unused schema.",
+    "steps": [
+      {
+        "action": "SetInstalledVersion",
+        "version": "1.0.0"
+      }
+    ]
+  }
+}

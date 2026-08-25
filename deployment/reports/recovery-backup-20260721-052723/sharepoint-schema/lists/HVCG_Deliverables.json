@@ -1,0 +1,250 @@
+{
+  "title": "HVCG_Deliverables",
+  "description": "Work product tracking",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DeliverableType",
+      "displayName": "DeliverableType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Financial Model",
+        "Cash-Flow Forecast",
+        "Capital Readiness Report",
+        "Enterprise Value Assessment",
+        "Lender Package",
+        "Investor Deck",
+        "Credit Memorandum",
+        "Executive Summary",
+        "Sources and Uses",
+        "Debt Schedule",
+        "Business Plan",
+        "KPI Dashboard",
+        "SOP",
+        "Strategic Plan",
+        "Client Report",
+        "Data Room",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ReviewerEmail",
+      "displayName": "ReviewerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DraftDueDate",
+      "displayName": "DraftDueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "FinalDueDate",
+      "displayName": "FinalDueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DeliverableStatus",
+      "displayName": "DeliverableStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Not Started",
+        "Drafting",
+        "Internal Review",
+        "Revisions",
+        "Client Review",
+        "Approved",
+        "Delivered",
+        "Cancelled"
+      ],
+      "default": "Not Started"
+    },
+    {
+      "internalName": "VersionLabel",
+      "displayName": "VersionLabel",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": "v0.1"
+    },
+    {
+      "internalName": "FileLink",
+      "displayName": "FileLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "InternalReviewStatus",
+      "displayName": "InternalReviewStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Not Required",
+        "Pending",
+        "Approved",
+        "Rejected"
+      ],
+      "default": "Pending"
+    },
+    {
+      "internalName": "ClientApprovalStatus",
+      "displayName": "ClientApprovalStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Not Required",
+        "Pending",
+        "Approved",
+        "Rejected"
+      ],
+      "default": "Not Required"
+    },
+    {
+      "internalName": "DeliveryDate",
+      "displayName": "DeliveryDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RevisionRequest",
+      "displayName": "RevisionRequest",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CompletionEvidence",
+      "displayName": "CompletionEvidence",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresExecutiveApproval",
+      "displayName": "RequiresExecutiveApproval",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PortalVisible",
+      "displayName": "PortalVisible",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AIGenerated",
+      "displayName": "AIGenerated",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    }
+  ]
+}

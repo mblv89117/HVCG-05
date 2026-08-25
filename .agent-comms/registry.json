@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-15T22:20:08Z",
+  "agents": {
+    "master-pm": {
+      "agentId": "master-pm",
+      "displayName": "Master Project Manager",
+      "branch": "cursor/master-pm-orchestrator",
+      "worktreePath": ".worktrees/master-pm-orchestrator",
+      "ownedPaths": [
+        "MASTER_*.md",
+        "docs/agents/",
+        ".agent-comms/"
+      ],
+      "status": "IN_PROGRESS",
+      "lastHeartbeat": "2026-07-15T22:20:08Z",
+      "inboxPath": ".agent-comms/inbox/master-pm",
+      "outboxPath": ".agent-comms/outbox/master-pm",
+      "escalationTarget": "master-pm"
+    },
+    "crm": {
+      "agentId": "crm",
+      "displayName": "CRM Module",
+      "branch": "cursor/v1.1.0-intelligence-ai-ops",
+      "worktreePath": ".",
+      "ownedPaths": [
+        "docs/crm/",
+        "src/power-apps/crm/",
+        "src/power-automate/crm/",
+        "src/power-platform/solutions/",
+        "scripts/Test-HVCGOpportunityCrmAcceptance.ps1"
+      ],
+      "status": "IN_PROGRESS",
+      "lastHeartbeat": "2026-07-15T22:19:45Z",
+      "inboxPath": ".agent-comms/inbox/crm",
+      "outboxPath": ".agent-comms/outbox/crm",
+      "escalationTarget": "master-pm"
+    },
+    "executive": {
+      "agentId": "executive",
+      "displayName": "Executive Command Center",
+      "branch": "cursor/executive-command-center",
+      "worktreePath": ".worktrees/executive-command-center",
+      "ownedPaths": [
+        "docs/executive/",
+        "src/power-apps/executive/",
+        "src/power-automate/executive/"
+      ],
+      "status": "IN_PROGRESS",
+      "lastHeartbeat": "2026-07-15T22:19:45Z",
+      "inboxPath": ".agent-comms/inbox/executive",
+      "outboxPath": ".agent-comms/outbox/executive",
+      "escalationTarget": "master-pm"
+    },
+    "operations": {
+      "agentId": "operations",
+      "displayName": "Operations Hub",
+      "branch": "cursor/operations-hub",
+      "worktreePath": ".worktrees/operations-hub",
+      "ownedPaths": [
+        "docs/operations/",
+        "src/power-apps/operations/",
+        "src/power-automate/operations/"
+      ],
+      "status": "IN_PROGRESS",
+      "lastHeartbeat": "2026-07-15T22:19:45Z",
+      "inboxPath": ".agent-comms/inbox/operations",
+      "outboxPath": ".agent-comms/outbox/operations",
+      "escalationTarget": "master-pm"
+    },
+    "finance": {
+      "agentId": "finance",
+      "displayName": "Finance Operations",
+      "branch": "cursor/finance-operations",
+      "worktreePath": ".worktrees/finance-operations",
+      "ownedPaths": [
+        "docs/finance/",
+        "src/power-apps/finance/",
+        "src/power-automate/finance/"
+      ],
+      "status": "IN_PROGRESS",
+      "lastHeartbeat": "2026-07-15T22:19:45Z",
+      "inboxPath": ".agent-comms/inbox/finance",
+      "outboxPath": ".agent-comms/outbox/finance",
+      "escalationTarget": "master-pm"
+    },
+    "client-portal": {
+      "agentId": "client-portal",
+      "displayName": "Client Portal & Data Rooms",
+      "branch": "cursor/client-portal-data-rooms",
+      "worktreePath": ".worktrees/client-portal-data-rooms",
+      "ownedPaths": [
+        "docs/portal/",
+        "src/power-apps/portal/",
+        "src/power-automate/portal/"
+      ],
+      "status": "IN_PROGRESS",
+      "lastHeartbeat": "2026-07-15T22:19:45Z",
+      "inboxPath": ".agent-comms/inbox/client-portal",
+      "outboxPath": ".agent-comms/outbox/client-portal",
+      "escalationTarget": "master-pm"
+    },
+    "ai-governance": {
+      "agentId": "ai-governance",
+      "displayName": "AI Governance & Work Queues",
+      "branch": "cursor/ai-governance-work-queues",
+      "worktreePath": ".worktrees/ai-governance-work-queues",
+      "ownedPaths": [
+        "docs/ai/",
+        "src/power-apps/ai/",
+        "src/power-automate/ai/"
+      ],
+      "status": "IN_PROGRESS",
+      "lastHeartbeat": "2026-07-15T22:19:45Z",
+      "inboxPath": ".agent-comms/inbox/ai-governance",
+      "outboxPath": ".agent-comms/outbox/ai-governance",
+      "escalationTarget": "master-pm"
+    },
+    "integration": {
+      "agentId": "integration",
+      "displayName": "Integration",
+      "branch": "agent/crm-integration",
+      "worktreePath": ".worktrees/crm-integration",
+      "ownedPaths": [
+        "docs/crm/PARALLEL_AGENT_MAP.md",
+        "releases/",
+        "deployment/install/"
+      ],
+      "status": "IN_PROGRESS",
+      "lastHeartbeat": "2026-07-15T22:19:45Z",
+      "inboxPath": ".agent-comms/inbox/integration",
+      "outboxPath": ".agent-comms/outbox/integration",
+      "escalationTarget": "master-pm"
+    }
+  }
+}

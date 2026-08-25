@@ -1,0 +1,517 @@
+/**
+ * Atlas operating-index search. Not a second SoR.
+ * Tenant-wide / unclassified knowledge search is Manny-only until source-ACL projection exists.
+ * Other users: entitled ClientCodes + authorized internal only.
+ */
+
+import type { AtlasPrincipal } from '../../middleware/auth.ts';
+import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
+import { isMannyPrincipal } from './manny.ts';
+import { entitledClientCodes, isInternalStaff } from './authz.ts';
+import type { SharePointPmService } from './repository.ts';
+
+import {
+  authoritativeSourceUrl,
+  extractMailAttachmentRef,
+  extractProvenDriveItemRef,
+  extractSourceUrl,
+  isFileIndexRow,
+  isMailAttachmentIndexRow,
+} from './fabric/fileIndex.ts';
+import { extractMailConversationId, indexedPreviewOnly } from './fabric/mailPreview.ts';
+
+export interface PmSearchHit {
+  kind:
+    | 'client'
+    | 'project'
+    | 'task'
+    | 'communication'
+    | 'document'
+    | 'vendor'
+    | 'meeting'
+    | 'engagement'
+    | 'deliverable'
+    | 'decision'
+    | 'opportunity'
+    | 'lead'
+    | 'capital_opportunity'
+    | 'lender'
+    | 'investor';
+  id: string;
+  clientCode?: string;
+  title: string;
+  href: string;
+  source: string;
+  /** Authoritative SharePoint/OneDrive webUrl. Never SAS or anonymous share. */
+  webUrl?: string;
+  modifiedAt?: string;
+  provenance?: 'CONFIRMED' | 'LIKELY' | 'PROPOSED';
+  /** Copied from an existing entitled HVCG_Projects row. Never invented. */
+  objective?: string;
+  nextAction?: string;
+  ownerName?: string;
+  startDate?: string;
+  targetCompletionDate?: string;
+  status?: string;
+  /** Indexed mail bodyPreview only. Never a live Outlook body fetch. */
+  preview?: string;
+  conversationId?: string;
+  direction?: 'Inbound' | 'Outbound' | 'Internal';
+  /** Copied from an existing entitled HVCG_Clients.Industry. Never invented. */
+  industry?: string;
+  /** Copied from an existing entitled HVCG_Clients.ClientStage. Never invented. */
+  clientStage?: string;
+  /** Proven Graph drive/item ids from the file index. Never invented. */
+  driveId?: string;
+  itemId?: string;
+  /** Copied from already-indexed outlook-mail-attachment metadata. */
+  parentMessageId?: string;
+  attachmentId?: string;
+  contentType?: string;
+  size?: number;
+}
+
+type LeadRow = {
+  id: string;
+  title: string;
+  clientCode?: string;
+  notes?: string;
+  email?: string;
+  company?: string;
+  status?: string;
+};
+
+type CapitalOpportunityRow = {
+  id: string;
+  title: string;
+  clientCode?: string;
+  notes?: string;
+  projectId?: string;
+};
+
+type LenderRow = {
+  id: string;
+  title: string;
+  notes?: string;
+  category?: string;
+};
+
+/**
+ * Search reads existing SharePoint-backed list methods only.
+ * Optional lead / capital / lender catalogs are used when the source exposes them —
+ * search does not create lists.
+ */
+export type SearchPmService = Pick<
+  SharePointPmService,
+  | 'listAuthorizedClients'
+  | 'listAuthorizedProjects'
+  | 'listAuthorizedTasks'
+  | 'listWorkspaceCollections'
+  | 'listVendors'
+  | 'listOpportunities'
+  | 'listIndexedFiles'
+> & {
+  listWorkspaceCollectionsForSearch?: SharePointPmService['listWorkspaceCollectionsForSearch'];
+  listLeads?: () => Promise<LeadRow[]>;
+  listCapitalOpportunities?: () => Promise<CapitalOpportunityRow[]>;
+  listLenders?: () => Promise<LenderRow[]>;
+};
+
+const SEARCH_CAP = 40;
+/** Projects/tasks must not block an already-matched authorized client. */
+const CORE_BUDGET_MS = 2500;
+/**
+ * Workspace extras / optional catalogs must not pin entitled Command-K.
+ * Live 4b9631a extras fan-out was ~1200–1500 ms; keep them best-effort.
+ */
+const EXTRAS_BUDGET_MS = 400;
+
+async function bestEffort<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await fn();
+  } catch {
+    return fallback;
+  }
+}
+
+async function withBudget<T>(fn: () => Promise<T>, budgetMs: number): Promise<T | undefined> {
+  if (budgetMs <= 0) return undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      fn(),
+      new Promise<undefined>((resolve) => {
+        timer = setTimeout(() => resolve(undefined), budgetMs);
+      }),
+    ]);
+  } catch {
+    return undefined;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function clientHref(clientCode: string): string {
+  return `/clients/${encodeURIComponent(clientCode)}`;
+}
+
+function projectHref(projectId: string): string {
+  return `/projects/${encodeURIComponent(projectId)}`;
+}
+
+/** Bound records with a canonical ClientCode: entitled principals. Unclassified: Manny-only. */
+function canSeeClientBound(manny: boolean, entitled: Set<string>, clientCode?: string): boolean {
+  const code = (clientCode || '').trim();
+  if (!code) return manny;
+  if (!isCanonicalClientCode(code)) return false;
+  if (entitled.has(code)) return true;
+  return manny;
+}
+
+/** Unconverted HVCG_Leads are internal CRM, not a client-scope wildcard. */
+function canSeeLead(principal: AtlasPrincipal, entitled: Set<string>, clientCode?: string): boolean {
+  const code = (clientCode || '').trim();
+  if (!code) return isInternalStaff(principal);
+  if (!isCanonicalClientCode(code) || code === '*') return false;
+  return entitled.has(code);
+}
+
+function opportunityHref(id: string): string {
+  const item = (id || '').trim();
+  return item ? `/opportunities/${encodeURIComponent(item)}` : '/leads';
+}
+
+function capitalOpportunityHref(row: CapitalOpportunityRow): string {
+  const id = (row.id || '').trim();
+  if (id) return `/capital?opportunity=${encodeURIComponent(id)}`;
+  return '/capital';
+}
+
+function leadHref(id: string): string {
+  const item = (id || '').trim();
+  return item ? `/leads/${encodeURIComponent(item)}` : '/leads';
+}
+
+export async function searchSharePointPm(
+  service: SearchPmService,
+  principal: AtlasPrincipal,
+  rawQuery: string,
+  opts?: { extrasBudgetMs?: number; coreBudgetMs?: number },
+): Promise<{ query: string; results: PmSearchHit[]; scope: 'entitled' | 'manny_tenant' }> {
+  const query = rawQuery.trim().slice(0, 120);
+  if (query.length < 2) return { query, results: [], scope: 'entitled' };
+  const q = query.toLowerCase();
+  const results: PmSearchHit[] = [];
+  const manny = isMannyPrincipal(principal);
+  const staff = isInternalStaff(principal);
+  // Fail-closed empty-scope: non-Manny non-staff with no entitled ClientCodes
+  // cannot see client-bound or unclassified records. Do not call SharePoint.
+  if (!manny && !staff && entitledClientCodes(principal).length === 0) {
+    return { query, results: [], scope: 'entitled' };
+  }
+  const extrasBudgetMs = opts?.extrasBudgetMs ?? EXTRAS_BUDGET_MS;
+  const coreBudgetMs = opts?.coreBudgetMs ?? CORE_BUDGET_MS;
+  // Authz from the principal, not from the clients listAll. Entitled catalogs
+  // kick off in parallel — do not wait for HVCG_Clients before opportunities.
+  const entitled = new Set(entitledClientCodes(principal));
+  const clientsP = service.listAuthorizedClients(principal);
+  const extrasStarted = Date.now();
+  const extrasPromise = (async () => {
+    const extraCodes = manny ? (await clientsP).map((c) => c.clientCode) : entitledClientCodes(principal);
+    if (service.listWorkspaceCollectionsForSearch) {
+      const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
+      const batched = await withBudget(
+        () => service.listWorkspaceCollectionsForSearch!(principal, extraCodes),
+        Math.max(0, remaining),
+      );
+      const clients = await clientsP;
+      return clients.map((client) => ({ client, extras: batched?.get(client.clientCode) }));
+    }
+    return Promise.all(
+      extraCodes.map(async (code) => {
+        const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
+        const extras = await withBudget(
+          () => service.listWorkspaceCollections(principal, code),
+          Math.max(0, remaining),
+        );
+        return { code, extras };
+      }),
+    );
+  })();
+  const [clients, projects, tasks, extrasRows, opportunities, leads, capitalOpps] = await Promise.all([
+    clientsP,
+    withBudget(() => service.listAuthorizedProjects(principal), coreBudgetMs).then((rows) => rows || []),
+    withBudget(() => service.listAuthorizedTasks(principal), coreBudgetMs).then((rows) => rows || []),
+    extrasPromise,
+    withBudget(() => bestEffort(() => service.listOpportunities(), []), extrasBudgetMs).then((rows) => rows || []),
+    withBudget(() => bestEffort(async () => (await service.listLeads?.()) || [], []), extrasBudgetMs).then(
+      (rows) => rows || [],
+    ),
+    withBudget(
+      () => bestEffort(async () => (await service.listCapitalOpportunities?.()) || [], []),
+      extrasBudgetMs,
+    ).then((rows) => rows || []),
+  ]);
+  const push = (hit: PmSearchHit) => {
+    if (hit.clientCode && !canSeeClientBound(manny, entitled, hit.clientCode)) return;
+    results.push(hit);
+  };
+
+  for (const c of clients) {
+    const hay = [c.clientCode, c.displayName, c.dba, c.industry].filter(Boolean).join(' ').toLowerCase();
+    if (hay.includes(q) || (isCanonicalClientCode(query) && c.clientCode === query)) {
+      push({
+        kind: 'client',
+        id: c.clientCode,
+        clientCode: c.clientCode,
+        title: `${c.clientCode} · ${c.displayName}`,
+        href: clientHref(c.clientCode),
+        source: 'HVCG_Clients',
+        ...(c.industry?.trim() ? { industry: c.industry.trim() } : {}),
+        ...(c.clientStage?.trim() ? { clientStage: c.clientStage.trim() } : {}),
+      });
+    }
+  }
+  for (const p of projects) {
+    const hay = [p.name, p.nextAction, p.clientCode, p.objective].filter(Boolean).join(' ').toLowerCase();
+    if (hay.includes(q)) {
+      const clientCode =
+        p.clientCode && isCanonicalClientCode(p.clientCode) ? p.clientCode : undefined;
+      push({
+        kind: 'project',
+        id: p.id,
+        ...(clientCode ? { clientCode } : {}),
+        title: p.name,
+        href: projectHref(p.id),
+        source: 'HVCG_Projects',
+        provenance: 'CONFIRMED',
+        ...(p.objective ? { objective: p.objective } : {}),
+        ...(p.nextAction ? { nextAction: p.nextAction } : {}),
+        ...(p.ownerName ? { ownerName: p.ownerName } : {}),
+        ...(p.startDate ? { startDate: p.startDate } : {}),
+        ...(p.targetCompletionDate ? { targetCompletionDate: p.targetCompletionDate } : {}),
+        ...(p.status ? { status: p.status } : {}),
+        ...(p.updatedAt ? { modifiedAt: p.updatedAt } : {}),
+      });
+    }
+  }
+  for (const t of tasks) {
+    const hay = [t.title, t.nextAction, t.clientCode, t.description].filter(Boolean).join(' ').toLowerCase();
+    if (hay.includes(q)) {
+      push({
+        kind: 'task',
+        id: t.id,
+        clientCode: t.clientCode,
+        title: t.title,
+        href: t.projectId ? projectHref(t.projectId) : '/my-work',
+        source: 'HVCG_Tasks',
+      });
+    }
+  }
+  const pushCollection = (
+    items: Array<Record<string, unknown>>,
+    kind: PmSearchHit['kind'],
+    source: string,
+    clientCode: string,
+  ) => {
+    for (const item of items) {
+      const title = String(item.title || '');
+      const hay = [title, item.summary, item.status].filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(q)) continue;
+      const modifiedAt = typeof item.date === 'string' && item.date.trim() ? item.date : undefined;
+      push({
+        kind,
+        id: String(item.id),
+        clientCode,
+        title,
+        href: clientHref(clientCode),
+        source,
+        ...(modifiedAt ? { modifiedAt } : {}),
+      });
+    }
+  };
+  const extrasByCode = new Map<
+    string,
+    NonNullable<Awaited<ReturnType<SharePointPmService['listWorkspaceCollections']>>>
+  >();
+  for (const row of extrasRows as Array<{
+    client?: { clientCode: string };
+    code?: string;
+    extras?: Awaited<ReturnType<SharePointPmService['listWorkspaceCollections']>>;
+  }>) {
+    if (!row.extras) continue;
+    const code = row.client?.clientCode || row.code;
+    if (code) extrasByCode.set(code, row.extras);
+  }
+  for (const c of clients) {
+    const extras = extrasByCode.get(c.clientCode);
+    if (!extras) continue;
+    for (const item of extras.communications.items) {
+      const title = String(item.title || '');
+      const hay = [title, item.summary].filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(q)) continue;
+      const file = isFileIndexRow(item);
+      const attachment = file
+        ? extractMailAttachmentRef(String(item.summary || ''), {
+            sourceItemId: item.sourceItemId,
+            conversationId: item.conversationId,
+            sourceMessageId: 'sourceMessageId' in item ? item.sourceMessageId : undefined,
+          })
+        : undefined;
+      const mailAttachment = Boolean(attachment || isMailAttachmentIndexRow(item));
+      const sourceUrl = authoritativeSourceUrl(
+        typeof item.webUrl === 'string'
+          ? item.webUrl
+          : extractSourceUrl(String(item.summary || '')),
+      );
+      const modifiedAt = typeof item.date === 'string' && item.date.trim() ? item.date : undefined;
+      const summary = String(item.summary || '');
+      const preview = file ? undefined : indexedPreviewOnly(summary);
+      const conversationId = file
+        ? attachment?.parentMessageId
+        : extractMailConversationId(summary, {
+            conversationId: item.conversationId,
+            sourceItemId: item.sourceItemId,
+            id: item.id,
+          });
+      const direction =
+        item.direction === 'Inbound' || item.direction === 'Outbound' || item.direction === 'Internal'
+          ? item.direction
+          : undefined;
+      const proven =
+        file && !mailAttachment
+          ? extractProvenDriveItemRef(summary, {
+              sourceItemId: item.sourceItemId,
+              driveId: 'driveId' in item ? (item as { driveId?: unknown }).driveId : undefined,
+              itemId: 'itemId' in item ? (item as { itemId?: unknown }).itemId : undefined,
+            })
+          : undefined;
+      push({
+        kind: file ? 'document' : 'communication',
+        id: String(item.id),
+        clientCode: c.clientCode,
+        title,
+        href: clientHref(c.clientCode),
+        source: file ? 'HVCG_Communications/file-index' : 'HVCG_Communications',
+        ...(sourceUrl ? { webUrl: sourceUrl } : {}),
+        ...(modifiedAt ? { modifiedAt } : {}),
+        ...(file ? { provenance: 'CONFIRMED' as const } : { provenance: 'PROPOSED' as const }),
+        ...(!file && preview ? { preview } : {}),
+        ...(conversationId ? { conversationId } : {}),
+        ...(!file && direction ? { direction } : {}),
+        ...(proven ? { driveId: proven.driveId, itemId: proven.itemId } : {}),
+        ...(attachment?.parentMessageId ? { parentMessageId: attachment.parentMessageId } : {}),
+        ...(attachment?.attachmentId ? { attachmentId: attachment.attachmentId } : {}),
+        ...(attachment?.contentType ? { contentType: attachment.contentType } : {}),
+        ...(typeof attachment?.size === 'number' ? { size: attachment.size } : {}),
+      });
+    }
+    pushCollection(extras.meetings.items, 'meeting', 'HVCG_Meetings', c.clientCode);
+    pushCollection(extras.engagements.items, 'engagement', 'HVCG_Engagements', c.clientCode);
+    pushCollection(extras.deliverables.items, 'deliverable', 'HVCG_Deliverables', c.clientCode);
+    pushCollection(extras.decisionsRisks.items, 'decision', 'HVCG_Decisions', c.clientCode);
+  }
+
+  for (const o of opportunities) {
+    if (!canSeeClientBound(manny, entitled, o.clientCode)) continue;
+    const hay = [o.title, o.notes, o.clientCode].filter(Boolean).join(' ').toLowerCase();
+    if (!hay.includes(q)) continue;
+    push({
+      kind: 'opportunity',
+      id: o.id,
+      clientCode: o.clientCode,
+      title: o.title,
+      href: opportunityHref(o.id),
+      source: 'HVCG_Opportunities',
+    });
+  }
+
+  for (const lead of leads) {
+    if (!canSeeLead(principal, entitled, lead.clientCode)) continue;
+    const hay = [lead.title, lead.notes, lead.email, lead.company, lead.status, lead.clientCode]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    if (!hay.includes(q)) continue;
+    push({
+      kind: 'lead',
+      id: lead.id,
+      clientCode: lead.clientCode,
+      title: lead.title,
+      href: leadHref(lead.id),
+      source: 'HVCG_Leads',
+    });
+  }
+
+  for (const o of capitalOpps) {
+    if (!canSeeClientBound(manny, entitled, o.clientCode)) continue;
+    const hay = [o.title, o.notes, o.clientCode, o.projectId].filter(Boolean).join(' ').toLowerCase();
+    if (!hay.includes(q)) continue;
+    push({
+      kind: 'capital_opportunity',
+      id: o.id,
+      clientCode: o.clientCode,
+      title: o.title,
+      href: capitalOpportunityHref(o),
+      source: 'HVCG_CapitalOpportunities',
+    });
+  }
+
+  if (manny) {
+    const vendors = await bestEffort(() => service.listVendors(), []);
+    for (const v of vendors) {
+      const hay = [v.title, v.category, v.notes].filter(Boolean).join(' ').toLowerCase();
+      if (hay.includes(q)) {
+        push({
+          kind: 'vendor',
+          id: v.id,
+          title: v.title,
+          href: '/procurement',
+          source: 'HVCG_Vendors',
+        });
+      }
+    }
+    const lenders = await bestEffort(async () => (await service.listLenders?.()) || [], []);
+    for (const lender of lenders) {
+      const hay = [lender.title, lender.category, lender.notes].filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(q)) continue;
+      push({
+        kind: 'lender',
+        id: lender.id,
+        title: lender.title,
+        href: '/capital',
+        source: 'HVCG_Lenders',
+      });
+    }
+    const files = await bestEffort(() => service.listIndexedFiles(), []);
+    for (const f of files) {
+      if (f.clientCode) continue;
+      const hay = [f.title, f.summary].filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(q)) continue;
+      const sourceUrl = authoritativeSourceUrl(
+        f.webUrl || extractSourceUrl(String(f.summary || '')),
+      );
+      const modifiedAt =
+        'modifiedAt' in f && typeof f.modifiedAt === 'string' && f.modifiedAt.trim()
+          ? f.modifiedAt
+          : undefined;
+      const proven = extractProvenDriveItemRef(String(f.summary || ''), {
+        sourceItemId: 'sourceItemId' in f ? (f as { sourceItemId?: unknown }).sourceItemId : undefined,
+        driveId: 'driveId' in f ? (f as { driveId?: unknown }).driveId : undefined,
+        itemId: 'itemId' in f ? (f as { itemId?: unknown }).itemId : undefined,
+      });
+      push({
+        kind: 'document',
+        id: f.id,
+        title: f.title,
+        href: '/documents',
+        source: 'HVCG_Communications/file-index',
+        ...(sourceUrl ? { webUrl: sourceUrl } : {}),
+        ...(modifiedAt ? { modifiedAt } : {}),
+        provenance: 'CONFIRMED',
+        ...(proven ? { driveId: proven.driveId, itemId: proven.itemId } : {}),
+      });
+    }
+  }
+  return { query, results: results.slice(0, SEARCH_CAP), scope: manny ? 'manny_tenant' : 'entitled' };
+}

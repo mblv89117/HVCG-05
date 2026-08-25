@@ -1,0 +1,1901 @@
+{
+  "addLists": [
+    {
+      "title": "HVCG_Relationships",
+      "description": "Intelligence \u2014 Cross-domain relationship graph edges",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Display: Source \u2192 Type \u2192 Target"
+        },
+        {
+          "internalName": "RelationshipId",
+          "displayName": "RelationshipId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Stable unique key e.g. rel|{source}|{type}|{target}"
+        },
+        {
+          "internalName": "SourceEntityType",
+          "displayName": "SourceEntityType",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Person",
+            "Contact",
+            "Organization",
+            "Client",
+            "Prospect",
+            "ReferralPartner",
+            "Vendor",
+            "Lender",
+            "Investor",
+            "CapitalSource",
+            "Opportunity",
+            "CapitalOpportunity",
+            "Engagement",
+            "Project",
+            "Workstream",
+            "Document",
+            "DocumentRequest",
+            "Meeting",
+            "Communication",
+            "Task",
+            "Deliverable",
+            "Decision",
+            "Risk",
+            "Issue",
+            "FundingMilestone",
+            "Invoice",
+            "TeamMember",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "SourceRecordId",
+          "displayName": "SourceRecordId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "SharePoint item ID or business key"
+        },
+        {
+          "internalName": "SourceDisplayName",
+          "displayName": "SourceDisplayName",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "SourceClientCode",
+          "displayName": "SourceClientCode",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": "Denormalized client isolation key when applicable"
+        },
+        {
+          "internalName": "TargetEntityType",
+          "displayName": "TargetEntityType",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Person",
+            "Contact",
+            "Organization",
+            "Client",
+            "Prospect",
+            "ReferralPartner",
+            "Vendor",
+            "Lender",
+            "Investor",
+            "CapitalSource",
+            "Opportunity",
+            "CapitalOpportunity",
+            "Engagement",
+            "Project",
+            "Workstream",
+            "Document",
+            "DocumentRequest",
+            "Meeting",
+            "Communication",
+            "Task",
+            "Deliverable",
+            "Decision",
+            "Risk",
+            "Issue",
+            "FundingMilestone",
+            "Invoice",
+            "TeamMember",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "TargetRecordId",
+          "displayName": "TargetRecordId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "TargetDisplayName",
+          "displayName": "TargetDisplayName",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "TargetClientCode",
+          "displayName": "TargetClientCode",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "RelationshipType",
+          "displayName": "RelationshipType",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Referred by",
+            "Referred",
+            "Owns",
+            "Manages",
+            "Advises",
+            "Works for",
+            "Invested in",
+            "Lent to",
+            "Funded",
+            "Introduced",
+            "Partnered with",
+            "Vendor to",
+            "Depends on",
+            "Blocks",
+            "Related document",
+            "Related meeting",
+            "Related opportunity",
+            "Related engagement",
+            "Related project",
+            "Related capital transaction",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "RelationshipStrength",
+          "displayName": "RelationshipStrength",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Weak",
+            "Medium",
+            "Strong",
+            "Strategic"
+          ],
+          "default": "Medium"
+        },
+        {
+          "internalName": "RelationshipStatus",
+          "displayName": "RelationshipStatus",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Active",
+            "Dormant",
+            "Ended",
+            "Disputed"
+          ],
+          "default": "Active"
+        },
+        {
+          "internalName": "StartDate",
+          "displayName": "StartDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "EndDate",
+          "displayName": "EndDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "LastMeaningfulInteraction",
+          "displayName": "LastMeaningfulInteraction",
+          "type": "DateTime",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "NextPlannedInteraction",
+          "displayName": "NextPlannedInteraction",
+          "type": "DateTime",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "RelationshipOwnerEmail",
+          "displayName": "RelationshipOwnerEmail",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "StrategicValue",
+          "displayName": "StrategicValue",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Low",
+            "Medium",
+            "High",
+            "Critical"
+          ],
+          "default": "Medium"
+        },
+        {
+          "internalName": "RevenueInfluenced",
+          "displayName": "RevenueInfluenced",
+          "type": "Currency",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "CapitalInfluenced",
+          "displayName": "CapitalInfluenced",
+          "type": "Currency",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Notes",
+          "displayName": "Notes",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "HVCG OS",
+            "Manual",
+            "Import",
+            "AI Suggested",
+            "Graph"
+          ],
+          "default": "HVCG OS"
+        },
+        {
+          "internalName": "IsCrossClient",
+          "displayName": "IsCrossClient",
+          "type": "Boolean",
+          "required": false,
+          "indexed": true,
+          "description": "True if SourceClientCode\u2260TargetClientCode \u2014 restricted visibility",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        }
+      ],
+      "views": [
+        "Active Relationships",
+        "By Owner",
+        "Strategic High",
+        "Pending Interactions",
+        "Cross-Client Review"
+      ]
+    },
+    {
+      "title": "HVCG_AIWorkers",
+      "description": "AI \u2014 Registered AI workers/agents (non-autonomous)",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "WorkerKey",
+          "displayName": "WorkerKey",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "WorkerType",
+          "displayName": "WorkerType",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Summarizer",
+            "Extractor",
+            "Drafter",
+            "Analyst",
+            "Packager",
+            "Router",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "Status",
+          "displayName": "Status",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Active",
+            "Disabled",
+            "Deprecated"
+          ],
+          "default": "Active"
+        },
+        {
+          "internalName": "DefaultModel",
+          "displayName": "DefaultModel",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "AllowedTools",
+          "displayName": "AllowedTools",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "MaxDataClassification",
+          "displayName": "MaxDataClassification",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "Public",
+            "Internal",
+            "Confidential",
+            "Restricted"
+          ],
+          "default": "Confidential"
+        },
+        {
+          "internalName": "RequiresHumanApproval",
+          "displayName": "RequiresHumanApproval",
+          "type": "Boolean",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "default": true
+        },
+        {
+          "internalName": "OwnerEmail",
+          "displayName": "OwnerEmail",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Notes",
+          "displayName": "Notes",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_AIPrompts",
+      "description": "AI \u2014 Versioned prompts",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "PromptKey",
+          "displayName": "PromptKey",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "PromptVersion",
+          "displayName": "PromptVersion",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "JobType",
+          "displayName": "JobType",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "MeetingSummary",
+            "TaskExtraction",
+            "StatusReport",
+            "MissingDocs",
+            "ClientFollowUp",
+            "SOPDraft",
+            "ExecutiveBrief",
+            "NextActions",
+            "InconsistencyDetect",
+            "LenderPackageDraft",
+            "InvestorPackageDraft",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "PromptBody",
+          "displayName": "PromptBody",
+          "type": "Note",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "IsActive",
+          "displayName": "IsActive",
+          "type": "Boolean",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "default": true
+        },
+        {
+          "internalName": "DataClassification",
+          "displayName": "DataClassification",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "Public",
+            "Internal",
+            "Confidential",
+            "Restricted"
+          ],
+          "default": "Confidential"
+        },
+        {
+          "internalName": "OwnerEmail",
+          "displayName": "OwnerEmail",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ChangeNotes",
+          "displayName": "ChangeNotes",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_AIToolRegistry",
+      "description": "AI \u2014 Tool permissions registry",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ToolKey",
+          "displayName": "ToolKey",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "ToolCategory",
+          "displayName": "ToolCategory",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "ReadSharePoint",
+            "Search",
+            "Summarize",
+            "Draft",
+            "Analyze",
+            "Export",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "IsEnabled",
+          "displayName": "IsEnabled",
+          "type": "Boolean",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "default": true
+        },
+        {
+          "internalName": "RequiresApproval",
+          "displayName": "RequiresApproval",
+          "type": "Boolean",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "default": true
+        },
+        {
+          "internalName": "MaxDataClassification",
+          "displayName": "MaxDataClassification",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "Public",
+            "Internal",
+            "Confidential",
+            "Restricted"
+          ],
+          "default": "Confidential"
+        },
+        {
+          "internalName": "AllowedWorkerKeys",
+          "displayName": "AllowedWorkerKeys",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ProhibitedActions",
+          "displayName": "ProhibitedActions",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": "e.g. SendEmail, CreateExternalShare"
+        },
+        {
+          "internalName": "Notes",
+          "displayName": "Notes",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_AIContext",
+      "description": "AI \u2014 Context packages for jobs (minimized)",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ContextId",
+          "displayName": "ContextId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "ClientCode",
+          "displayName": "ClientCode",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "ClientId",
+          "displayName": "ClientId",
+          "type": "Lookup",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "lookupList": "HVCG_Clients"
+        },
+        {
+          "internalName": "EngagementId",
+          "displayName": "EngagementId",
+          "type": "Lookup",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "lookupList": "HVCG_Engagements"
+        },
+        {
+          "internalName": "ProjectId",
+          "displayName": "ProjectId",
+          "type": "Lookup",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "lookupList": "HVCG_Projects"
+        },
+        {
+          "internalName": "DataClassification",
+          "displayName": "DataClassification",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Public",
+            "Internal",
+            "Confidential",
+            "Restricted"
+          ],
+          "default": "Confidential"
+        },
+        {
+          "internalName": "IncludedEntityRefs",
+          "displayName": "IncludedEntityRefs",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": "JSON list of entity type + ids"
+        },
+        {
+          "internalName": "RedactionApplied",
+          "displayName": "RedactionApplied",
+          "type": "Boolean",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "default": false
+        },
+        {
+          "internalName": "MinimizationNotes",
+          "displayName": "MinimizationNotes",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ExpiresOn",
+          "displayName": "ExpiresOn",
+          "type": "DateTime",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "CreatedByEmail",
+          "displayName": "CreatedByEmail",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_AIJobs",
+      "description": "AI \u2014 Orchestrated AI jobs (human-gated)",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "JobId",
+          "displayName": "JobId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "JobType",
+          "displayName": "JobType",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "MeetingSummary",
+            "TaskExtraction",
+            "StatusReport",
+            "MissingDocs",
+            "ClientFollowUp",
+            "SOPDraft",
+            "ExecutiveBrief",
+            "NextActions",
+            "InconsistencyDetect",
+            "LenderPackageDraft",
+            "InvestorPackageDraft",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "RequestedByEmail",
+          "displayName": "RequestedByEmail",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "ClientId",
+          "displayName": "ClientId",
+          "type": "Lookup",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "lookupList": "HVCG_Clients"
+        },
+        {
+          "internalName": "ClientCode",
+          "displayName": "ClientCode",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "EngagementId",
+          "displayName": "EngagementId",
+          "type": "Lookup",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "lookupList": "HVCG_Engagements"
+        },
+        {
+          "internalName": "ProjectId",
+          "displayName": "ProjectId",
+          "type": "Lookup",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "lookupList": "HVCG_Projects"
+        },
+        {
+          "internalName": "InputReferences",
+          "displayName": "InputReferences",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ContextId",
+          "displayName": "ContextId",
+          "type": "Lookup",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "lookupList": "HVCG_AIContext"
+        },
+        {
+          "internalName": "PromptKey",
+          "displayName": "PromptKey",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "PromptVersion",
+          "displayName": "PromptVersion",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "WorkerKey",
+          "displayName": "WorkerKey",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "ModelOrProvider",
+          "displayName": "ModelOrProvider",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ToolPermissions",
+          "displayName": "ToolPermissions",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "DataClassification",
+          "displayName": "DataClassification",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Public",
+            "Internal",
+            "Confidential",
+            "Restricted"
+          ],
+          "default": "Confidential"
+        },
+        {
+          "internalName": "JobStatus",
+          "displayName": "JobStatus",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Queued",
+            "Running",
+            "AwaitingReview",
+            "Approved",
+            "Rejected",
+            "Failed",
+            "Cancelled",
+            "Completed"
+          ],
+          "default": "Queued"
+        },
+        {
+          "internalName": "Priority",
+          "displayName": "Priority",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Critical",
+            "High",
+            "Medium",
+            "Low"
+          ],
+          "default": "Medium"
+        },
+        {
+          "internalName": "HumanReviewRequired",
+          "displayName": "HumanReviewRequired",
+          "type": "Boolean",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "default": true
+        },
+        {
+          "internalName": "ReviewerEmail",
+          "displayName": "ReviewerEmail",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "ApprovalStatus",
+          "displayName": "ApprovalStatus",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "NotRequired",
+            "Pending",
+            "Approved",
+            "Rejected"
+          ],
+          "default": "Pending"
+        },
+        {
+          "internalName": "OutputLink",
+          "displayName": "OutputLink",
+          "type": "URL",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Confidence",
+          "displayName": "Confidence",
+          "type": "Number",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "CostEstimate",
+          "displayName": "CostEstimate",
+          "type": "Currency",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ActualCost",
+          "displayName": "ActualCost",
+          "type": "Currency",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "StartedDate",
+          "displayName": "StartedDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "CompletedDate",
+          "displayName": "CompletedDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ErrorMessage",
+          "displayName": "ErrorMessage",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "RetryCount",
+          "displayName": "RetryCount",
+          "type": "Number",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "default": 0
+        },
+        {
+          "internalName": "AuditReference",
+          "displayName": "AuditReference",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "SpecializedQueueList",
+          "displayName": "SpecializedQueueList",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": "Optional link to HVCG_AI_* queue list name"
+        },
+        {
+          "internalName": "SpecializedQueueItemId",
+          "displayName": "SpecializedQueueItemId",
+          "type": "Number",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ExternalSendBlocked",
+          "displayName": "ExternalSendBlocked",
+          "type": "Boolean",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "default": true
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_AIJobSteps",
+      "description": "AI \u2014 Steps within an AI job",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "JobId",
+          "displayName": "JobId",
+          "type": "Lookup",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "lookupList": "HVCG_AIJobs"
+        },
+        {
+          "internalName": "StepOrder",
+          "displayName": "StepOrder",
+          "type": "Number",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "StepType",
+          "displayName": "StepType",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "GatherContext",
+            "Prompt",
+            "ToolCall",
+            "Generate",
+            "Validate",
+            "Review",
+            "Finalize"
+          ]
+        },
+        {
+          "internalName": "StepStatus",
+          "displayName": "StepStatus",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Pending",
+            "Running",
+            "Succeeded",
+            "Failed",
+            "Skipped"
+          ],
+          "default": "Pending"
+        },
+        {
+          "internalName": "ToolKey",
+          "displayName": "ToolKey",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "InputSummary",
+          "displayName": "InputSummary",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "OutputSummary",
+          "displayName": "OutputSummary",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ErrorMessage",
+          "displayName": "ErrorMessage",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "StartedDate",
+          "displayName": "StartedDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "CompletedDate",
+          "displayName": "CompletedDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_AIOutputs",
+      "description": "AI \u2014 Job outputs pending/published after approval",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "JobId",
+          "displayName": "JobId",
+          "type": "Lookup",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "lookupList": "HVCG_AIJobs"
+        },
+        {
+          "internalName": "ClientCode",
+          "displayName": "ClientCode",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "OutputType",
+          "displayName": "OutputType",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "DraftEmail",
+            "Summary",
+            "Report",
+            "SOP",
+            "Package",
+            "Brief",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "OutputLink",
+          "displayName": "OutputLink",
+          "type": "URL",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "OutputBody",
+          "displayName": "OutputBody",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Confidence",
+          "displayName": "Confidence",
+          "type": "Number",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "IsPublished",
+          "displayName": "IsPublished",
+          "type": "Boolean",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "default": false
+        },
+        {
+          "internalName": "HumanApproved",
+          "displayName": "HumanApproved",
+          "type": "Boolean",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "default": false
+        },
+        {
+          "internalName": "DataClassification",
+          "displayName": "DataClassification",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "Public",
+            "Internal",
+            "Confidential",
+            "Restricted"
+          ],
+          "default": "Confidential"
+        }
+      ]
+    },
+    {
+      "title": "HVCG_AIApprovals",
+      "description": "AI \u2014 Explicit approvals for gated AI outputs",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "JobId",
+          "displayName": "JobId",
+          "type": "Lookup",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "lookupList": "HVCG_AIJobs"
+        },
+        {
+          "internalName": "OutputId",
+          "displayName": "OutputId",
+          "type": "Lookup",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "lookupList": "HVCG_AIOutputs"
+        },
+        {
+          "internalName": "ApprovalType",
+          "displayName": "ApprovalType",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "ClientEmail",
+            "Proposal",
+            "FinancialAnalysis",
+            "CapitalRecommendation",
+            "LenderRecommendation",
+            "InvestorRecommendation",
+            "LegalCompliance",
+            "Pricing",
+            "ScopeChange",
+            "ClientDeliverable",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "ApproverEmail",
+          "displayName": "ApproverEmail",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "ApprovalStatus",
+          "displayName": "ApprovalStatus",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Pending",
+            "Approved",
+            "Rejected"
+          ],
+          "default": "Pending"
+        },
+        {
+          "internalName": "DecisionDate",
+          "displayName": "DecisionDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Comments",
+          "displayName": "Comments",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ClientCode",
+          "displayName": "ClientCode",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_AIFeedback",
+      "description": "AI \u2014 Human feedback / corrections",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "JobId",
+          "displayName": "JobId",
+          "type": "Lookup",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "lookupList": "HVCG_AIJobs"
+        },
+        {
+          "internalName": "FeedbackType",
+          "displayName": "FeedbackType",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Correction",
+            "Quality",
+            "Safety",
+            "Usefulness",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "Rating",
+          "displayName": "Rating",
+          "type": "Number",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Comments",
+          "displayName": "Comments",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "SubmittedByEmail",
+          "displayName": "SubmittedByEmail",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "SubmittedDate",
+          "displayName": "SubmittedDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_AIAuditLog",
+      "description": "AI \u2014 Immutable-style AI audit events",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "JobId",
+          "displayName": "JobId",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "ClientCode",
+          "displayName": "ClientCode",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "ActorEmail",
+          "displayName": "ActorEmail",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "EventType",
+          "displayName": "EventType",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "JobCreated",
+            "ContextBuilt",
+            "PromptExecuted",
+            "ToolInvoked",
+            "OutputGenerated",
+            "ReviewRequested",
+            "Approved",
+            "Rejected",
+            "Failed",
+            "Retried",
+            "Escalated"
+          ]
+        },
+        {
+          "internalName": "Details",
+          "displayName": "Details",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "EventDate",
+          "displayName": "EventDate",
+          "type": "DateTime",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "DataClassification",
+          "displayName": "DataClassification",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "Public",
+            "Internal",
+            "Confidential",
+            "Restricted"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "HVCG_AICostTracking",
+      "description": "AI \u2014 Cost tracking per job/provider",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "JobId",
+          "displayName": "JobId",
+          "type": "Lookup",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "lookupList": "HVCG_AIJobs"
+        },
+        {
+          "internalName": "Provider",
+          "displayName": "Provider",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "Model",
+          "displayName": "Model",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "TokensIn",
+          "displayName": "TokensIn",
+          "type": "Number",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "TokensOut",
+          "displayName": "TokensOut",
+          "type": "Number",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "EstimatedCost",
+          "displayName": "EstimatedCost",
+          "type": "Currency",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ActualCost",
+          "displayName": "ActualCost",
+          "type": "Currency",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "BillingMonth",
+          "displayName": "BillingMonth",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": "YYYY-MM"
+        },
+        {
+          "internalName": "ClientCode",
+          "displayName": "ClientCode",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "Notes",
+          "displayName": "Notes",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_OperationalAlerts",
+      "description": "Platform \u2014 Operational monitoring alerts",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "AlertType",
+          "displayName": "AlertType",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "DeploymentFailure",
+            "FlowFailure",
+            "RepeatedFlowFailure",
+            "StaleWorkflow",
+            "ProvisioningFailure",
+            "PermissionDrift",
+            "ExternalSharingChange",
+            "OnboardingFailure",
+            "DuplicateRecord",
+            "MissingMetadata",
+            "OrphanedLookup",
+            "MissingDocumentDeadline",
+            "StalledProject",
+            "AIJobFailed",
+            "AIJobAwaitingReview",
+            "AICostThreshold",
+            "BackupFailure",
+            "UpgradeFailure",
+            "HealthCheckFailure",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "Severity",
+          "displayName": "Severity",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Critical",
+            "High",
+            "Warning",
+            "Info"
+          ],
+          "default": "Warning"
+        },
+        {
+          "internalName": "EnvironmentName",
+          "displayName": "EnvironmentName",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "development",
+            "test",
+            "production"
+          ]
+        },
+        {
+          "internalName": "SourceComponent",
+          "displayName": "SourceComponent",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ClientCode",
+          "displayName": "ClientCode",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "DetectedDate",
+          "displayName": "DetectedDate",
+          "type": "DateTime",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "AlertStatus",
+          "displayName": "AlertStatus",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Open",
+            "Acknowledged",
+            "Resolved",
+            "Suppressed"
+          ],
+          "default": "Open"
+        },
+        {
+          "internalName": "Details",
+          "displayName": "Details",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "RecommendedAction",
+          "displayName": "RecommendedAction",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ResolvedDate",
+          "displayName": "ResolvedDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        }
+      ]
+    }
+  ],
+  "addColumns": [
+    {
+      "list": "HVCG_AI_Reviews",
+      "column": {
+        "internalName": "JobIdText",
+        "displayName": "JobIdText",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": "Links to HVCG_AIJobs.JobId"
+      }
+    },
+    {
+      "list": "HVCG_AI_Reviews",
+      "column": {
+        "internalName": "ApprovalType",
+        "displayName": "ApprovalType",
+        "type": "Choice",
+        "required": false,
+        "indexed": false,
+        "description": "",
+        "choices": [
+          "ClientEmail",
+          "Proposal",
+          "FinancialAnalysis",
+          "CapitalRecommendation",
+          "LenderRecommendation",
+          "InvestorRecommendation",
+          "LegalCompliance",
+          "Pricing",
+          "ScopeChange",
+          "ClientDeliverable",
+          "Other"
+        ]
+      }
+    },
+    {
+      "list": "HVCG_AI_Reviews",
+      "column": {
+        "internalName": "Confidence",
+        "displayName": "Confidence",
+        "type": "Number",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_AI_Escalations",
+      "column": {
+        "internalName": "JobIdText",
+        "displayName": "JobIdText",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_AI_Escalations",
+      "column": {
+        "internalName": "EscalationSeverity",
+        "displayName": "EscalationSeverity",
+        "type": "Choice",
+        "required": false,
+        "indexed": true,
+        "description": "",
+        "choices": [
+          "Low",
+          "Medium",
+          "High",
+          "Critical"
+        ]
+      }
+    },
+    {
+      "list": "HVCG_AI_Escalations",
+      "column": {
+        "internalName": "CostThresholdBreached",
+        "displayName": "CostThresholdBreached",
+        "type": "Boolean",
+        "required": false,
+        "indexed": false,
+        "description": "",
+        "default": false
+      }
+    }
+  ]
+}

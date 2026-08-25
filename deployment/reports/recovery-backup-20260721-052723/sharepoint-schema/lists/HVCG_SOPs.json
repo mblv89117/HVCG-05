@@ -1,0 +1,119 @@
+{
+  "title": "HVCG_SOPs",
+  "description": "Knowledge center index",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Category",
+      "displayName": "Category",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Onboarding",
+        "Delivery",
+        "Capital",
+        "Finance",
+        "Security",
+        "Admin",
+        "Communications",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "FileLink",
+      "displayName": "FileLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RelatedTemplateKeys",
+      "displayName": "RelatedTemplateKeys",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LastReviewed",
+      "displayName": "LastReviewed",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Draft",
+        "Active",
+        "Deprecated"
+      ],
+      "default": "Draft"
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Keywords/phrases to help Copilot retrieval"
+    },
+    {
+      "internalName": "Audience",
+      "displayName": "Audience",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Internal",
+        "Client Safe",
+        "Executive",
+        "All Staff"
+      ],
+      "default": "Internal"
+    },
+    {
+      "internalName": "RelatedWorkstreamKey",
+      "displayName": "RelatedWorkstreamKey",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "VersionLabel",
+      "displayName": "VersionLabel",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": "1.0"
+    }
+  ]
+}

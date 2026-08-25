@@ -1,0 +1,65 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001",
+  "requirementIds": ["HVCG-V2-PROP-001", "HVCG-V2-PROP-002", "HVCG-V2-PROP-003", "HVCG-V2-PROP-004", "HVCG-V2-PROP-005"],
+  "archetypes": [
+    {
+      "code": "STRUCTURED_OFFER",
+      "templatePath": "templates/proposals/STRUCTURED_OFFER.md",
+      "requiredSections": [
+        "Client Situation",
+        "Objective",
+        "Scope",
+        "Deliverables",
+        "Client Responsibilities",
+        "Timeline",
+        "Fee",
+        "Out-of-Scope",
+        "Compliance Disclaimer",
+        "Next Steps"
+      ]
+    },
+    {
+      "code": "RECURRING_RETAINER",
+      "templatePath": "templates/proposals/MONTHLY_RETAINER.md",
+      "requiredSections": [
+        "Monthly Role",
+        "Included Support",
+        "Meeting Cadence",
+        "Deliverables",
+        "Response Expectations",
+        "Exclusions",
+        "Setup Fee",
+        "Monthly Retainer",
+        "Minimum Term",
+        "Renewal / Termination",
+        "Special Projects"
+      ]
+    },
+    {
+      "code": "PREMIUM_SPECIAL_PROJECT",
+      "templatePath": "templates/proposals/PREMIUM_SPECIAL_PROJECT.md",
+      "requiredSections": [
+        "Special Situation",
+        "Immediate Risks",
+        "Strategic Objective",
+        "Work Phases",
+        "Documentation Needed",
+        "Professional Coordination",
+        "Project Fee",
+        "Premium Hourly / Replenishing Retainer",
+        "Success Fee if applicable",
+        "Urgency Premium",
+        "Limitations",
+        "Approval Points"
+      ]
+    }
+  ],
+  "rules": {
+    "aiMayDraft": true,
+    "humanApprovalRequired": true,
+    "autoSendForbidden": true,
+    "externalContactGate": "BL-C1"
+  }
+}
