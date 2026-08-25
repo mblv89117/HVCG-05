@@ -107,44 +107,12 @@ Write-Host "Target: $AppName / $ResourceGroup"
 Write-Host "Will NOT: set INTEGRATION_CAPITAL_* , grant Graph roles, or mutate SharePoint."
 
 if (-not $Apply) {
-  Write-Host 'Re-run with -Apply to archive current server.js and deploy this zip.'
+  Write-Host 'Re-run with -Apply only after restacking onto canonical workflow templates lineage (ecc3571+).'
   return
 }
 
-$stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$rollbackZip = Join-Path $rollbackDir "pre-$sha-$stamp.zip"
-Write-Host "Archiving current wwwroot via zipdeploy pull is not available; capturing Kudu vfs server.js if possible."
-try {
-  $publish = az webapp deployment list-publishing-credentials -g $ResourceGroup -n $AppName -o json | ConvertFrom-Json
-  $kuduUser = $publish.publishingUserName
-  $kuduPass = $publish.publishingPassword
-  $pair = "{0}:{1}" -f $kuduUser, $kuduPass
-  $bytes = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($pair))
-  $kudu = "https://$AppName.scm.azurewebsites.net/api/vfs/site/wwwroot/server.js"
-  $prev = Join-Path $rollbackDir "server.js.pre-$stamp"
-  Invoke-WebRequest -Uri $kudu -Headers @{ Authorization = "Basic $bytes" } -OutFile $prev
-  Compress-Archive -Path $prev -DestinationPath $rollbackZip -Force
-  Write-Host "Rollback copy: $rollbackZip"
-} catch {
-  Write-Host "WARN: could not download current server.js for rollback: $($_.Exception.Message)"
-  Write-Host 'Continue only if Azure deployment history can restore the previous zip.'
-}
-
-az webapp deploy -g $ResourceGroup -n $AppName --src-path $zipPath --type zip --async false --clean true
-Write-Host 'Deploy submitted. Waiting for /health...'
-$ok = $false
-for ($i = 0; $i -lt 18; $i++) {
-  Start-Sleep -Seconds 5
-  try {
-    $h = Invoke-RestMethod -Method GET -Uri "$HubBase/health"
-    if ($h.ok) {
-      Write-Host "Health ok. pmBackend=$($h.pmBackend.mode) capitalBackend=$(Get-HVCGCapitalBackendMode $h)"
-      $ok = $true
-      break
-    }
-  } catch {
-    Write-Host "Health not ready ($($_.Exception.Message))"
-  }
-}
-if (-not $ok) { throw 'Hub did not return /health ok after deploy.' }
-Write-Host "Deployed commit $sha. Next: Set-HVCGCapitalHubAppSettings.ps1 -Apply"
+throw @"
+BLOCKED: Direct Hub production deploy from cursor/atlas-project-related-capital-001 is disabled.
+This branch diverges from canonical production (Workflow Center + Templates at ecc357159277bccd76900961fd8e35ed1e7a4df0).
+Restack Capital work onto cursor/atlas-workflow-templates-6efb and deploy via scripts/deploy-hub-guarded.sh only.
+"@
