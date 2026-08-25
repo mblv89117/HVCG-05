@@ -106,8 +106,11 @@ import {
 import { readWorkflowDefinitionOverlay, resolveWorkflowDefinitionOverlayDir } from './workflowDefinitions.ts';
 import {
   answerOnboardingContext,
+  findEntitledOnboardingProject,
+  findEntitledOnboardingWorkflow,
   findOnboardingRunForQuestion,
   mapsToOnboardingContextIntent,
+  resolveEntitledClientCodeFromQuestion,
   runClientOnboardingAutomation,
 } from './clientOnboardingAutomation.ts';
 import { readOnboardingOverlay, resolveOnboardingStateDir, ONBOARDING_AUTOMATION_MISSION_KEY } from './onboardingState.ts';
@@ -909,15 +912,37 @@ export async function handleOperatorDesk(opts: {
     }
 
     if (mapsToOnboardingContextIntent(question)) {
+      const entitled = entitledClientCodes(principal);
       const onboardingOverlay = readOnboardingOverlay(resolveOnboardingStateDir(opts.cfg.dataDir));
-      const run = findOnboardingRunForQuestion(question, onboardingOverlay.records);
-      const onboardingAnswer = answerOnboardingContext(question, run);
+      const match = resolveEntitledClientCodeFromQuestion(question, entitled);
+      const run = findOnboardingRunForQuestion(question, onboardingOverlay.records, entitled);
+      let existingProject;
+      let existingWorkflow;
+      if (!run && match.clientCode) {
+        if (opts.sharepoint) {
+          const projects = await opts.sharepoint.listAuthorizedProjects(principal);
+          existingProject = findEntitledOnboardingProject(projects, match.clientCode);
+        }
+        const center = listWorkflowCenter({
+          cfg: opts.cfg,
+          principal,
+          dataDir: opts.cfg.dataDir,
+        });
+        existingWorkflow = findEntitledOnboardingWorkflow(center.workflows, match.clientCode);
+      }
+      const onboardingAnswer = answerOnboardingContext(question, run, {
+        match,
+        existingProject,
+        existingWorkflow,
+      });
       const askAtlas = buildConversationalAskAtlasAnswer({
         question,
         previewText: onboardingAnswer,
         workflowId: run?.workflowId ?? 'onboarding-context',
-        workflowName: run ? `Onboarding — ${run.clientName ?? run.clientCode ?? 'client'}` : 'Onboarding context',
-        clientCode: run?.clientCode,
+        workflowName: run
+          ? `Onboarding — ${run.clientName ?? run.clientCode ?? 'client'}`
+          : `Onboarding context${match.clientCode ? ` — ${match.clientCode}` : ''}`,
+        clientCode: run?.clientCode ?? match.clientCode,
       });
       sendJson(
         opts.res,

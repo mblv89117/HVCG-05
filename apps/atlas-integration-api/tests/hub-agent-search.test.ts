@@ -348,6 +348,7 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
     assert.equal(mapsToSearchAuthorizedKnowledge('Submit this to the lender and move money'), false);
     assert.equal(mapsToSearchAuthorizedKnowledge('search Prodigy and move money'), false);
     assert.equal(mapsToSearchAuthorizedKnowledge('search paid ads for Prodigy'), false);
+    assert.equal(mapsToSearchAuthorizedKnowledge('Where are we on onboarding ACCG?'), false);
   });
 
   it('does not invoke search for owner-gated questions', () => {

@@ -7,7 +7,10 @@ import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import type { WorkflowDefinitionRecord } from '../src/pm/operatorDesk/workflowDefinitions.ts';
 import {
   answerOnboardingContext,
+  ENTITLED_CANONICAL_CLIENT_CODES,
+  findOnboardingRunForQuestion,
   mapsToOnboardingContextIntent,
+  resolveEntitledClientCodeFromQuestion,
   runClientOnboardingAutomation,
 } from '../src/pm/operatorDesk/clientOnboardingAutomation.ts';
 import { getOnboardingRun, readOnboardingOverlay, resolveOnboardingStateDir } from '../src/pm/operatorDesk/onboardingState.ts';
@@ -148,6 +151,82 @@ describe('client onboarding automation', () => {
     };
     const answer = answerOnboardingContext('What documents are missing for ACCG?', record);
     assert.match(answer, /W-9/);
+  });
+
+  it('matches ACCG to entitled ACCG01 by unique prefix and not invented codes', () => {
+    const roster = [...ENTITLED_CANONICAL_CLIENT_CODES];
+    const prefix = resolveEntitledClientCodeFromQuestion('Where are we on onboarding ACCG?', roster);
+    assert.equal(prefix.kind, 'unique_prefix');
+    assert.equal(prefix.clientCode, 'ACCG01');
+    const exact = resolveEntitledClientCodeFromQuestion('Where are we on onboarding ACCG01?', roster);
+    assert.equal(exact.kind, 'exact');
+    assert.equal(exact.clientCode, 'ACCG01');
+    const invented = resolveEntitledClientCodeFromQuestion('Where are we on onboarding ACCG99?', roster);
+    assert.equal(invented.kind, 'none');
+    assert.equal(invented.clientCode, undefined);
+    const foreign = resolveEntitledClientCodeFromQuestion('Where are we on onboarding ACCG?', ['PDG01']);
+    assert.equal(foreign.kind, 'none');
+    const ambiguous = resolveEntitledClientCodeFromQuestion('Compare ACCG01 and PDG01 onboarding', roster);
+    assert.equal(ambiguous.kind, 'ambiguous');
+    assert.deepEqual(ambiguous.candidates.slice().sort(), ['ACCG01', 'PDG01']);
+  });
+
+  it('finds overlay run by ACCG prefix and fails closed when missing', () => {
+    const now = new Date().toISOString();
+    const accgRun = {
+      workflowId: 'wf-accg',
+      workflowDefinitionId: 'def',
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      status: 'DOCUMENT_COLLECTION' as const,
+      currentStep: 'Collect documents',
+      nextStep: 'Kickoff',
+      blockers: [],
+      ownerAttention: [],
+      taskIds: [],
+      milestoneIds: [],
+      assignedAgents: [],
+      documentGaps: [],
+      communicationPolicy: 'DRAFT_ONLY' as const,
+      capitalScope: false,
+      identityResolutionRequired: false,
+      workspaceReconciled: true,
+      dryRun: false,
+      createdAt: now,
+      updatedAt: now,
+      milestones: [],
+      provenance: 'test',
+    };
+    const pdgRun = { ...accgRun, workflowId: 'wf-pdg', clientCode: 'PDG01', clientName: 'Prodigy', updatedAt: now };
+    const found = findOnboardingRunForQuestion('Where are we on onboarding ACCG?', [pdgRun, accgRun]);
+    assert.equal(found?.clientCode, 'ACCG01');
+    const miss = findOnboardingRunForQuestion('Where are we on onboarding ACCG?', [pdgRun]);
+    assert.equal(miss, null);
+  });
+
+  it('answers honestly from entitled existing project when overlay run is missing', () => {
+    const match = resolveEntitledClientCodeFromQuestion(
+      'Where are we on onboarding ACCG?',
+      [...ENTITLED_CANONICAL_CLIENT_CODES],
+    );
+    const answer = answerOnboardingContext('Where are we on onboarding ACCG?', null, {
+      match,
+      existingProject: {
+        name: 'ACCG01 - Onboarding',
+        clientCode: 'ACCG01',
+        status: 'draft',
+        health: 'unknown',
+      },
+    });
+    assert.match(answer, /ACCG01/);
+    assert.match(answer, /ACCG01 - Onboarding/);
+    assert.match(answer, /Draft \| Unverified/);
+    assert.match(answer, /did not create a duplicate/);
+    assert.equal(/invented|created project|ACCG99/i.test(answer), false);
+    const ambiguous = answerOnboardingContext('Where are we on onboarding?', null, {
+      match: { kind: 'ambiguous', candidates: ['ACCG01', 'PDG01'] },
+    });
+    assert.match(ambiguous, /Which entitled code/);
   });
 
   it('restore env', () => {
