@@ -51,6 +51,7 @@ import {
   type OnboardingRelatedCommsRef,
   type OnboardingRelatedCapitalRef,
   type OnboardingRelatedKickoffRef,
+  type OnboardingRelatedBlockerRef,
   type OnboardingRealtimeDocumentsHonesty,
   type RealtimeDocumentsFabricSnapshot,
   type OnboardingRunRecord,
@@ -107,10 +108,18 @@ export type OnboardingKickoffSearchRow = {
   kind?: OnboardingRelatedKickoffRef['kind'];
 };
 
+export type OnboardingBlockerSearchRow = {
+  id?: string;
+  title?: string;
+  clientCode?: string;
+  kind?: OnboardingRelatedBlockerRef['kind'];
+};
+
 export type OnboardingCommsSearchRow = OnboardingCommsThreadInput;
 export type { OnboardingCapitalSearchRow };
 
 const KICKOFF_ITEM_TITLE = /^(prepare kickoff materials|kickoff ready|kickoff complete)$/i;
+const BLOCKER_ITEM_TITLE = /^(review onboarding blockers|clear onboarding blockers|onboarding blocker|owner attention)$/i;
 
 function kickoffRefsWithIds(rows?: OnboardingRelatedKickoffRef[]): OnboardingRelatedKickoffRef[] {
   const seen = new Set<string>();
@@ -188,6 +197,87 @@ export async function defaultOnboardingKickoffList(
     /* list failed — do not invent a kickoff milestone id */
   }
   return out;
+}
+
+function blockerRefsWithIds(rows?: OnboardingRelatedBlockerRef[]): OnboardingRelatedBlockerRef[] {
+  const seen = new Set<string>();
+  const out: OnboardingRelatedBlockerRef[] = [];
+  for (const row of rows ?? []) {
+    const id = row.id?.trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+      ...(row.kind ? { kind: row.kind } : {}),
+    });
+  }
+  return out;
+}
+
+/** Entitled same-scope blocker/task/attention refs. Drops rows without an id. Client A never receives Client B. */
+export function listRelatedBlockersForClient(
+  principal: AtlasPrincipal,
+  clientCode: string | undefined,
+  rows: OnboardingBlockerSearchRow[],
+): OnboardingRelatedBlockerRef[] {
+  const code = clientCode?.trim().toUpperCase();
+  if (!code || !isCanonicalClientCode(code)) return [];
+  if (!entitledClientCodes(principal).includes(code)) return [];
+  const out: OnboardingRelatedBlockerRef[] = [];
+  const seen = new Set<string>();
+  for (const row of rows ?? []) {
+    const id = row.id?.trim();
+    if (!id || seen.has(id)) continue;
+    const scoped = row.clientCode?.trim().toUpperCase();
+    if (scoped && scoped !== code) continue;
+    if (scoped && !isCanonicalClientCode(scoped)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+      ...(row.kind ? { kind: row.kind } : {}),
+    });
+  }
+  return out;
+}
+
+/** List entitled same-scope blocker/task/attention rows. Never invent ids. */
+export async function defaultOnboardingBlockerList(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  clientCode: string,
+  projectId: string,
+): Promise<OnboardingBlockerSearchRow[]> {
+  if (!sharepoint || !projectId.trim() || !clientCode.trim()) return [];
+  const out: OnboardingBlockerSearchRow[] = [];
+  try {
+    const tasks = await sharepoint.listAuthorizedTasks(principal, projectId);
+    for (const task of tasks ?? []) {
+      const id = task?.id?.trim();
+      if (!id || !BLOCKER_ITEM_TITLE.test(task.title || '')) continue;
+      out.push({ id, title: task.title, clientCode, kind: 'task' });
+    }
+  } catch {
+    /* list failed — do not invent a blocker task id */
+  }
+  return out;
+}
+
+/** Create a blocker review row only when entitled project context exists. Never invent an id. */
+export async function defaultOnboardingBlockerCreate(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  body: { title: string; projectId: string; clientCode: string },
+): Promise<{ id?: string; title?: string; kind?: OnboardingRelatedBlockerRef['kind'] }> {
+  if (!sharepoint || !body.projectId.trim() || !body.title.trim() || !body.clientCode.trim()) return {};
+  const created = await sharepoint.createTask(principal, {
+    title: body.title,
+    description: 'Onboarding blocker review',
+    projectId: body.projectId,
+    status: 'ready',
+  }, `atlas-onboarding-blocker-${body.clientCode}`);
+  return created?.id ? { id: created.id, title: created.title ?? body.title, kind: 'task' } : {};
 }
 
 /** Create a kickoff record only when entitled project context exists. Never invent an id. */
@@ -475,17 +565,27 @@ export function composeKickoff(record: {
 export function composeBlockerReview(record: {
   identityResolutionRequired?: boolean;
   workspaceReconciled?: boolean;
+  clientCode?: string;
   projectId?: string;
   projectName?: string;
   documentGaps?: OnboardingDocumentGap[];
   blockers?: string[];
   ownerAttention?: string[];
   communicationPolicy?: OnboardingBlockerReview['communicationPolicy'];
+  relatedBlockers?: OnboardingRelatedBlockerRef[];
+  reusedExisting?: boolean;
 }): OnboardingBlockerReview {
   const blockers = record.blockers ?? [];
   const ownerAttention = record.ownerAttention ?? [];
   const missingDocumentCount = record.documentGaps?.filter((d) => d.status === 'MISSING').length ?? 0;
   const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const identityResolutionRequired = Boolean(record.identityResolutionRequired);
+  const relatedBlockers = identityResolutionRequired || !clientCode || !isCanonicalClientCode(clientCode)
+    ? []
+    : blockerRefsWithIds(record.relatedBlockers);
+  const blockerReconciled = relatedBlockers.length > 0;
+  const reusedExisting = Boolean(record.reusedExisting && blockerReconciled);
   const items = [
     ...blockers,
     ...(missingDocumentCount ? [`${missingDocumentCount} missing document${missingDocumentCount === 1 ? '' : 's'}`] : []),
@@ -493,30 +593,44 @@ export function composeBlockerReview(record: {
   ];
   const nextOwnerAction =
     ownerAttention[0]
-    ?? (record.identityResolutionRequired
+    ?? (identityResolutionRequired
       ? 'Assign client scope before blocker clearance'
-      : blockers[0]
-        ? blockers[0]
-        : missingDocumentCount
-          ? 'Reconcile missing documents before clearance (draft only)'
-          : 'No open onboarding blockers');
-  if (record.identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
+      : !blockerReconciled
+        ? 'Confirm existing entitled same-scope blocker/task/attention rows; do not invent ids or send'
+        : blockers[0]
+          ? blockers[0]
+          : missingDocumentCount
+            ? 'Reconcile missing documents before clearance (draft only)'
+            : reusedExisting
+              ? 'Existing entitled blockers reused — no fabricated blockers'
+              : 'No open onboarding blockers');
+  const flags = {
+    itemCount: items.length,
+    items,
+    missingDocumentCount,
+    ownerAttention,
+    blockerReconciled,
+    reusedExisting,
+    relatedBlockers,
+    communicationPolicy,
+    nextOwnerAction,
+    send: COMMUNICATIONS_SEND,
+    autoRespond: COMMUNICATIONS_AUTO_RESPOND,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
     return {
-      status: record.identityResolutionRequired ? 'NOT_READY' : blockers.length ? 'BLOCKED' : 'NOT_READY',
+      status: identityResolutionRequired ? 'NOT_READY' : blockers.length ? 'BLOCKED' : 'NOT_READY',
       ready: false,
       ...(record.projectId ? { projectId: record.projectId } : {}),
       ...(record.projectName ? { projectName: record.projectName } : {}),
-      itemCount: items.length,
-      items,
-      missingDocumentCount,
-      ownerAttention,
-      communicationPolicy,
-      nextOwnerAction,
-      send: false,
-      liveGtmOutbound: false,
-      capitalSubmit: false,
-      outbound: false,
-      provenance: record.identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
+      ...flags,
+      blockerReconciled: false,
+      reusedExisting: false,
+      relatedBlockers: [],
+      provenance: identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
     };
   }
   const status = blockers.length ? 'BLOCKED' : items.length ? 'OPEN' : 'CLEAR';
@@ -525,17 +639,8 @@ export function composeBlockerReview(record: {
     ready: status === 'CLEAR',
     projectId: record.projectId,
     ...(record.projectName ? { projectName: record.projectName } : {}),
-    itemCount: items.length,
-    items,
-    missingDocumentCount,
-    ownerAttention,
-    communicationPolicy,
-    nextOwnerAction,
-    send: false,
-    liveGtmOutbound: false,
-    capitalSubmit: false,
-    outbound: false,
-    provenance: 'CONFIRMED',
+    ...flags,
+    provenance: blockerReconciled ? 'CONFIRMED' : 'PROPOSED',
   };
 }
 
@@ -1627,6 +1732,7 @@ function buildIdentityReconciliationRecord(opts: {
   const blockerReview = composeBlockerReview({
     identityResolutionRequired,
     workspaceReconciled,
+    ...(opts.clientCode ? { clientCode: opts.clientCode } : {}),
     blockers: opts.blockers,
     ownerAttention: opts.ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
@@ -1667,6 +1773,7 @@ function buildIdentityReconciliationRecord(opts: {
     communicationContextReconciled: false,
     capitalContextReconciled: false,
     kickoffReconciled: false,
+    blockerReconciled: false,
     dryRun: Boolean(opts.dryRun),
     createdAt: opts.now,
     updatedAt: opts.now,
@@ -1812,6 +1919,16 @@ export async function runClientOnboardingAutomation(opts: {
     body: { title: string; projectId: string; clientCode: string },
   ) => { id?: string; title?: string; kind?: OnboardingRelatedKickoffRef['kind'] }
     | Promise<{ id?: string; title?: string; kind?: OnboardingRelatedKickoffRef['kind'] }>;
+  blockerList?: (
+    principal: AtlasPrincipal,
+    clientCode: string,
+    projectId: string,
+  ) => OnboardingBlockerSearchRow[] | Promise<OnboardingBlockerSearchRow[]>;
+  blockerCreate?: (
+    principal: AtlasPrincipal,
+    body: { title: string; projectId: string; clientCode: string },
+  ) => { id?: string; title?: string; kind?: OnboardingRelatedBlockerRef['kind'] }
+    | Promise<{ id?: string; title?: string; kind?: OnboardingRelatedBlockerRef['kind'] }>;
 }): Promise<OnboardingAutomationResult> {
   if (!isOnboardingWorkflow(opts.workflow)) {
     return { ok: false, error: 'not_onboarding_workflow' };
@@ -1876,6 +1993,8 @@ export async function runClientOnboardingAutomation(opts: {
   let reusedExistingMilestones = false;
   const discoveredKickoff: OnboardingKickoffSearchRow[] = [];
   let discoveredKickoffFromReuse = false;
+  const discoveredBlockers: OnboardingBlockerSearchRow[] = [];
+  let discoveredBlockersFromReuse = false;
   const blockers: string[] = [];
   const ownerAttention: string[] = [];
   const documentGaps: OnboardingDocumentGap[] = [];
@@ -1927,6 +2046,10 @@ export async function runClientOnboardingAutomation(opts: {
           discoveredKickoff.push({ id: found.id, title: taskDef.title, clientCode, kind: 'task' });
           discoveredKickoffFromReuse = true;
         }
+        if (BLOCKER_ITEM_TITLE.test(taskDef.title)) {
+          discoveredBlockers.push({ id: found.id, title: taskDef.title, clientCode, kind: 'task' });
+          discoveredBlockersFromReuse = true;
+        }
       } else {
         missingTasks.push(taskDef);
       }
@@ -1946,6 +2069,9 @@ export async function runClientOnboardingAutomation(opts: {
             createdWithId = true;
             if (KICKOFF_ITEM_TITLE.test(taskDef.title)) {
               discoveredKickoff.push({ id: task.id, title: taskDef.title, clientCode, kind: 'task' });
+            }
+            if (BLOCKER_ITEM_TITLE.test(taskDef.title)) {
+              discoveredBlockers.push({ id: task.id, title: taskDef.title, clientCode, kind: 'task' });
             }
           }
         }
@@ -2173,6 +2299,51 @@ export async function runClientOnboardingAutomation(opts: {
     }
   }
 
+  const relatedBlockers: OnboardingRelatedBlockerRef[] = [];
+  let reusedExistingBlockers = false;
+  let blockerReconciled = false;
+  if (projectId) {
+    try {
+      const rows = opts.blockerList
+        ? await opts.blockerList(opts.principal, clientCode, projectId)
+        : discoveredBlockers.length
+          ? discoveredBlockers
+          : await defaultOnboardingBlockerList(sp, opts.principal, clientCode, projectId);
+      const attached = listRelatedBlockersForClient(opts.principal, clientCode, rows ?? []);
+      relatedBlockers.push(...attached);
+      if (relatedBlockers.length > 0) {
+        blockerReconciled = true;
+        reusedExistingBlockers = opts.blockerList
+          ? true
+          : discoveredBlockersFromReuse;
+        events.push('BLOCKER_RECONCILED');
+      }
+    } catch {
+      /* list failed — do not invent blocker ids, ClientCodes, or outbound mail */
+    }
+    if (!blockerReconciled && !opts.dryRun && opts.blockerCreate) {
+      try {
+        const created = await opts.blockerCreate(opts.principal, {
+          title: 'Review onboarding blockers',
+          projectId,
+          clientCode,
+        });
+        const id = created?.id?.trim();
+        if (id) {
+          relatedBlockers.push({
+            id,
+            ...(created.title?.trim() ? { title: created.title.trim() } : { title: 'Review onboarding blockers' }),
+            ...(created.kind ? { kind: created.kind } : { kind: 'blocker' }),
+          });
+          blockerReconciled = true;
+          events.push('BLOCKER_CREATED', 'BLOCKER_RECONCILED');
+        }
+      } catch {
+        /* create failed — do not invent a blocker id or send outbound mail */
+      }
+    }
+  }
+
   const capitalScope = Boolean(opts.workflow.scope.capitalMatter);
   if (capitalScope) {
     ownerAttention.push('Capital scope detected — external lender submission remains owner-gated');
@@ -2188,6 +2359,7 @@ export async function runClientOnboardingAutomation(opts: {
     communicationContextReconciled,
     capitalContextReconciled,
     kickoffReconciled,
+    blockerReconciled,
     projectId,
     documentGaps,
     milestones,
@@ -2227,12 +2399,15 @@ export async function runClientOnboardingAutomation(opts: {
   const blockerReview = composeBlockerReview({
     identityResolutionRequired: false,
     workspaceReconciled,
+    clientCode,
     projectId,
     projectName,
     documentGaps,
     blockers,
     ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
+    relatedBlockers,
+    reusedExisting: reusedExistingBlockers,
   });
   const ownerAttentionPackage = composeOwnerAttention({
     identityResolutionRequired: false,
@@ -2399,6 +2574,7 @@ export async function runClientOnboardingAutomation(opts: {
     communicationContextReconciled,
     capitalContextReconciled,
     kickoffReconciled,
+    blockerReconciled,
     dryRun: Boolean(opts.dryRun),
     createdAt: now,
     updatedAt: now,
@@ -2988,10 +3164,29 @@ export function answerOnboardingContext(
       .join('\n');
   }
   if (q.includes('blocked') || q.includes('waiting') || q.includes('blocker')) {
-    const review = record.blockerReview;
+    const review = composeBlockerReview({
+      identityResolutionRequired: record.identityResolutionRequired,
+      workspaceReconciled: record.workspaceReconciled,
+      clientCode: record.clientCode,
+      projectId: record.projectId,
+      projectName: record.projectName,
+      documentGaps: record.documentGaps,
+      blockers: record.blockers,
+      ownerAttention: record.ownerAttention,
+      communicationPolicy: record.communicationPolicy,
+      relatedBlockers: record.blockerReview?.relatedBlockers,
+      reusedExisting: Boolean(record.blockerReview?.reusedExisting),
+    });
     return [
       `Blocker review for ${record.clientCode ?? 'client'}: ${review.status}`,
       review.projectName ? `Project: ${review.projectName}` : '',
+      `Related entitled blockers: ${review.relatedBlockers.length} (from entitled ids)`,
+      review.blockerReconciled
+        ? review.reusedExisting
+          ? 'Existing entitled blockers: reused'
+          : 'Governed onboarding blockers: reconciled'
+        : 'Existing entitled blockers: not confirmed',
+      review.reusedExisting ? 'No fabricated blockers.' : 'Atlas did not invent blocker ids, ClientCodes, or outbound mail.',
       review.itemCount ? `Items: ${review.items.join('; ')}` : 'No open onboarding blockers.',
       `Documents missing: ${review.missingDocumentCount}`,
       `Communication policy: ${review.communicationPolicy}`,
@@ -3086,6 +3281,11 @@ export function answerOnboardingContext(
         ? 'Existing entitled kickoff: reused'
         : 'Governed onboarding kickoff: reconciled'
       : 'Existing entitled kickoff: not confirmed',
+    record.blockerReconciled
+      ? record.blockerReview.reusedExisting
+        ? 'Existing entitled blockers: reused'
+        : 'Governed onboarding blockers: reconciled'
+      : 'Existing entitled blockers: not confirmed',
   ]
     .filter(Boolean)
     .join('\n');

@@ -185,6 +185,14 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.kickoff.autoRespond, false);
     assert.equal(result.record.kickoff.outbound, false);
     assert.equal(result.record.kickoff.capitalSubmit, false);
+    assert.equal(result.record.blockerReconciled, false);
+    assert.equal(result.record.blockerReview.blockerReconciled, false);
+    assert.equal(result.record.blockerReview.reusedExisting, false);
+    assert.deepEqual(result.record.blockerReview.relatedBlockers, []);
+    assert.equal(result.record.blockerReview.send, false);
+    assert.equal(result.record.blockerReview.autoRespond, false);
+    assert.equal(result.record.blockerReview.outbound, false);
+    assert.equal(result.record.blockerReview.capitalSubmit, false);
     assert.equal(result.record.communicationPolicy, 'DRAFT_ONLY');
     assert.equal(result.record.identityReview.send, false);
     assert.equal(result.record.identityReview.outbound, false);
@@ -237,8 +245,12 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.kickoffReconciled, false);
     assert.equal(result.record.kickoff.kickoffReconciled, false);
     assert.deepEqual(result.record.kickoff.relatedKickoff, []);
+    assert.equal(result.record.blockerReconciled, false);
+    assert.equal(result.record.blockerReview.blockerReconciled, false);
+    assert.deepEqual(result.record.blockerReview.relatedBlockers, []);
     assert.equal(result.events.includes('MILESTONE_CREATED'), false);
     assert.equal(result.events.includes('KICKOFF_CREATED'), false);
+    assert.equal(result.events.includes('BLOCKER_CREATED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -1533,6 +1545,152 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(blockedIdentity.record.identityResolutionRequired, true);
     assert.equal(blockedIdentity.record.kickoffReconciled, false);
     assert.deepEqual(blockedIdentity.record.kickoff.relatedKickoff, []);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('does not invent blockers when reuse is empty, create fails, or is the wrong client', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const live = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+    });
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [
+        { id: 'blocker-accg-1', title: 'Review onboarding blockers', clientCode: 'ACCG01', kind: 'task' },
+      ],
+      blockerCreate: async () => {
+        throw new Error('reuse-only must not create blocker');
+      },
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.equal(reused.record.blockerReconciled, true);
+    assert.equal(reused.record.blockerReview.blockerReconciled, true);
+    assert.equal(reused.record.blockerReview.reusedExisting, true);
+    assert.deepEqual(reused.record.blockerReview.relatedBlockers.map((row) => row.id), ['blocker-accg-1']);
+    assert.equal(reused.record.blockerReview.send, false);
+    assert.equal(reused.record.blockerReview.autoRespond, false);
+    assert.equal(reused.record.blockerReview.outbound, false);
+    assert.equal(reused.record.blockerReview.capitalSubmit, false);
+    assert.equal(reused.record.kickoffReconciled, false);
+    assert.equal(reused.record.capitalContextReconciled, false);
+    assert.equal(reused.record.communicationContextReconciled, false);
+    assert.ok(reused.events.includes('BLOCKER_RECONCILED'));
+    assert.equal(reused.events.includes('BLOCKER_CREATED'), false);
+
+    const created = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      blockerList: async () => [],
+      blockerCreate: async () => ({ id: 'blocker-created-1', title: 'Review onboarding blockers', kind: 'blocker' }),
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+    assert.equal(created.record.blockerReconciled, true);
+    assert.equal(created.record.blockerReview.blockerReconciled, true);
+    assert.equal(created.record.blockerReview.reusedExisting, false);
+    assert.deepEqual(created.record.blockerReview.relatedBlockers.map((row) => row.id), ['blocker-created-1']);
+    assert.ok(created.events.includes('BLOCKER_CREATED'));
+    assert.ok(created.events.includes('BLOCKER_RECONCILED'));
+
+    const empty = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      blockerList: async () => [],
+    });
+    assert.equal(empty.ok, true);
+    if (!empty.ok) return;
+    assert.equal(empty.record.blockerReconciled, false);
+    assert.deepEqual(empty.record.blockerReview.relatedBlockers, []);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      blockerList: async () => [],
+      blockerCreate: async () => {
+        throw new Error('blocker create failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.equal(thrown.record.blockerReconciled, false);
+    assert.deepEqual(thrown.record.blockerReview.relatedBlockers, []);
+    assert.equal(thrown.events.includes('BLOCKER_CREATED'), false);
+
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      blockerList: async () => [],
+      blockerCreate: async () => {
+        throw new Error('dry-run must not create blocker');
+      },
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.equal(dry.record.blockerReconciled, false);
+    assert.deepEqual(dry.record.blockerReview.relatedBlockers, []);
+    assert.equal(dry.events.includes('BLOCKER_CREATED'), false);
+
+    const foreign = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      blockerList: async () => [
+        { id: 'blocker-pdg', title: 'PDG01 blocker', clientCode: 'PDG01' },
+      ],
+      blockerCreate: async () => {
+        throw new Error('wrong-client must not create blocker');
+      },
+    });
+    assert.equal(foreign.ok, true);
+    if (!foreign.ok) return;
+    assert.equal(foreign.record.blockerReconciled, false);
+    assert.deepEqual(foreign.record.blockerReview.relatedBlockers, []);
+    assert.equal(JSON.stringify(foreign.record.blockerReview).includes('PDG01'), false);
+    assert.equal(foreign.record.blockerReview.send, false);
+    assert.equal(foreign.record.blockerReview.autoRespond, false);
+    assert.equal(foreign.record.blockerReview.capitalSubmit, false);
+
+    const blockedIdentity = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: mockSharePoint({ clients: [{ clientCode: 'PDG01', displayName: 'Prodigy' }] }).sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      blockerList: async () => [
+        { id: 'blocker-should-not-attach', title: 'should not attach', clientCode: 'ACCG01' },
+      ],
+      blockerCreate: async () => {
+        throw new Error('identity must not create blocker');
+      },
+    });
+    assert.equal(blockedIdentity.ok, true);
+    if (!blockedIdentity.ok) return;
+    assert.equal(blockedIdentity.record.identityResolutionRequired, true);
+    assert.equal(blockedIdentity.record.blockerReconciled, false);
+    assert.deepEqual(blockedIdentity.record.blockerReview.relatedBlockers, []);
     rmSync(dir, { recursive: true, force: true });
   });
 
