@@ -362,6 +362,7 @@ export type OnboardingRunRecord = {
   projectName?: string;
   taskIds: string[];
   milestoneIds: string[];
+  /** Agent ids recorded only after entitled project/task context exists and assign returns an id. */
   assignedAgents: string[];
   documentGaps: OnboardingDocumentGap[];
   communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
