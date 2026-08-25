@@ -42,6 +42,11 @@ import {
 } from './businessMemoryState.ts';
 import { allowedFabricMailboxOids } from '../sharepoint/fabric/graph.ts';
 import { isAllowedFabricGraphPath } from '../sharepoint/fabric/graph.ts';
+import {
+  applyConflictAndStaleness,
+  buildDocumentVersionChains,
+  reconcileAttachmentsToFiles,
+} from './businessMemoryReconciliation.ts';
 
 const HVS_MAIL_PROOF_FILE = 'hvs-mail-read-proof.json';
 
@@ -422,8 +427,18 @@ export async function reconcileClientOperatingRecord(opts: {
     if (hit.preview) commitments.push(...extractCommitmentsFromPreview(hit.preview, `mail:${hit.id}`));
   }
 
-  const decisions = extractDecisionsFromRecord(picture, clientCode);
+  const decisions = applyConflictAndStaleness(extractDecisionsFromRecord(picture, clientCode), {
+    hubMiOperationalized: picture.realClientsOperationalized.includes(clientCode),
+    newerSources: hits.map((h) => h.id),
+  });
   const waiting = extractWaitingFromRecord(picture, clientCode);
+
+  const attachmentRecon = reconcileAttachmentsToFiles(hits, clientCode);
+  const documentVersionChains = buildDocumentVersionChains(hits, attachmentRecon.links, clientCode);
+  const commitmentsAdjusted = applyConflictAndStaleness(commitments, {
+    hubMiOperationalized: picture.realClientsOperationalized.includes(clientCode),
+    newerSources: mailHits.map((h) => h.id),
+  });
 
   const hvsRecord = picture.hvsRecoveredClientRecords.find((r) => r.clientCode === clientCode);
   const projectsFromPicture = picture.hvsRecoveredProjects.filter(
@@ -463,7 +478,7 @@ export async function reconcileClientOperatingRecord(opts: {
     hits.length > 0 ||
     Boolean(hvsRecord) ||
     projectsFromPicture.length > 0 ||
-    commitments.length > 0;
+    commitmentsAdjusted.length > 0;
 
   let phase: ClientOperatingRecordOverlay['phase'] = 'NOT_STARTED';
   if (!hasEvidence) phase = hubMi ? 'PARTIAL' : 'BLOCKED';
@@ -487,15 +502,17 @@ export async function reconcileClientOperatingRecord(opts: {
     documentsThatMatter: documentsThatMatter.length ? documentsThatMatter : undefined,
     needsOwnerAttention: needsOwnerAttention.length ? needsOwnerAttention : undefined,
     nextAction: hvsRecord?.nextAction || whatIsOpen[0],
-    commitments,
+    commitments: commitmentsAdjusted,
     decisions,
     waiting,
     mailMessagesReconciled: mailHits.length,
     threadsReconstructed: threads.items.length,
-    attachmentsReconciled: hits.filter((h) => h.kind === 'attachment').length,
+    attachmentsReconciled: attachmentRecon.reconciledCount,
     filesReconciled: fileHits.length,
     projectsReconstructed: projectHits.length + projectsFromPicture.length,
     contractsSowReconciled: contractHits.length,
+    attachmentLinks: attachmentRecon.links.length ? attachmentRecon.links : undefined,
+    documentVersionChains: documentVersionChains.length ? documentVersionChains : undefined,
     capitalHistoryPresent: Boolean(
       hvsRecord?.capitalPacketNames?.length ||
         picture.hvsRecoveredCapitalPackets.some((p) => p.clientCode === clientCode),
@@ -609,6 +626,60 @@ export async function runCurrentClientBackfill(opts: {
     });
   }
 
+  return overlay;
+}
+
+/** Bounded PDG01-only reconstruction — does not rerun the full current-client roster. */
+export async function runPdg01TargetedReconstruction(opts: {
+  dataDir: string;
+  principal: AtlasPrincipal;
+  picture: OperatorOperatingPicture;
+  service: SharePointPmService;
+  fabric?: FabricGraphClient;
+}): Promise<BusinessMemoryOverlay> {
+  const memDir = resolveBusinessMemoryDir(opts.dataDir);
+  const overlay = readBusinessMemoryOverlay(memDir);
+  const clientCode = 'PDG01';
+  const clients = await enumerateAuthoritativeCurrentClients(opts.principal, opts.service);
+  const client = clients.find((c) => c.clientCode === clientCode);
+  if (!client) return overlay;
+
+  const queries = [clientCode, 'Prodigy', 'Prodigy Games', 'contract', 'SOW'];
+  const mergedHits: import('../sharepoint/search.ts').PmSearchHit[] = [];
+  const seen = new Set<string>();
+  for (const query of queries) {
+    const found = await searchSharePointPm(opts.service, opts.principal, query);
+    for (const hit of found.results) {
+      if (hit.clientCode && hit.clientCode !== clientCode) continue;
+      const key = `${hit.kind}:${hit.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      mergedHits.push(hit);
+    }
+  }
+
+  const record = await reconcileClientOperatingRecord({
+    clientCode,
+    clientName: client.displayName,
+    picture: opts.picture,
+    principal: opts.principal,
+    pmSearch: { results: mergedHits },
+  });
+
+  if (!record.threadsReconstructed) {
+    record.phase = record.phase === 'BACKFILLED' ? 'PARTIAL' : record.phase;
+    record.blockers = [
+      ...(record.blockers || []),
+      'PDG01_MAIL=HONEST_EMPTY: no qualifying entitled mail threads after deeper PDG01-only retrieval',
+    ];
+  }
+
+  upsertOperatingRecord(overlay, record);
+  overlay.progress = {
+    ...recomputeProgress(overlay),
+    lastRunAt: new Date().toISOString(),
+  };
+  writeBusinessMemoryOverlay(memDir, overlay);
   return overlay;
 }
 

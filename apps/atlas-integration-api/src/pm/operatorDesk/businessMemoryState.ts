@@ -111,6 +111,30 @@ export type ClientOperatingRecordOverlay = {
   provenance: string;
   lastBackfillAt?: string;
   blockers?: string[];
+  attachmentLinks?: Array<{
+    attachmentId: string;
+    attachmentTitle: string;
+    fileId?: string;
+    fileTitle?: string;
+    relationship: IdentityConfidence;
+    matchBasis: string[];
+    parentMessageId?: string;
+    clientCode: string;
+  }>;
+  documentVersionChains?: Array<{
+    chainId: string;
+    clientCode: string;
+    projectHint?: string;
+    steps: Array<{
+      kind: 'email_attachment' | 'saved_document' | 'modified_document' | 'current_version';
+      title: string;
+      id?: string;
+      modifiedAt?: string;
+      confidence: IdentityConfidence;
+      provenance: string;
+    }>;
+    confidence: IdentityConfidence;
+  }>;
 };
 
 export type BusinessMemoryProgress = {
