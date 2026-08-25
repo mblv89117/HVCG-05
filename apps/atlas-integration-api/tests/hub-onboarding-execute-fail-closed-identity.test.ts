@@ -1561,6 +1561,7 @@ describe('onboarding execute fail-closed identity', () => {
       dataDir: dir,
       sharepoint: live.sharepoint,
       workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
       blockerList: async () => [
         { id: 'blocker-accg-1', title: 'Review onboarding blockers', clientCode: 'ACCG01', kind: 'task' },
       ],

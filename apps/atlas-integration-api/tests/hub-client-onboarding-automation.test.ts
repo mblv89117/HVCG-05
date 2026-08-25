@@ -2953,6 +2953,7 @@ describe('client onboarding automation', () => {
       dataDir: dir,
       sharepoint,
       workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
       blockerList: async () => [
         { id: 'blocker-accg-1', title: 'Review onboarding blockers', clientCode: 'ACCG01', kind: 'task' },
         { id: 'blocker-pdg', title: 'PDG01 blocker', clientCode: 'PDG01', kind: 'blocker' },
@@ -2991,6 +2992,7 @@ describe('client onboarding automation', () => {
       dataDir: dir,
       sharepoint,
       workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
       blockerList: async () => [],
       blockerCreate: async (_principal, body) => {
         createdCalls += 1;
@@ -3018,6 +3020,7 @@ describe('client onboarding automation', () => {
       sharepoint,
       workflow: onboardingWorkflow('ACCG01'),
       dryRun: true,
+      kickoffList: async () => [],
       blockerList: async () => [],
       blockerCreate: async () => {
         dryCreates += 1;
@@ -3039,6 +3042,7 @@ describe('client onboarding automation', () => {
       dataDir: dir,
       sharepoint,
       workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
       blockerList: async () => [],
     });
     assert.equal(empty.ok, true);
@@ -3055,6 +3059,7 @@ describe('client onboarding automation', () => {
       dataDir: dir,
       sharepoint,
       workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
       blockerList: async () => [],
       blockerCreate: async () => {
         throw new Error('sharepoint blocker create failed');
@@ -3074,6 +3079,7 @@ describe('client onboarding automation', () => {
       dataDir: dir,
       sharepoint,
       workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
       blockerList: async () => [],
       blockerCreate: async (_principal, body) => ({ title: body.title }),
     });
@@ -3090,6 +3096,7 @@ describe('client onboarding automation', () => {
       dataDir: dir,
       sharepoint,
       workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
       blockerList: async () => [
         { id: 'blocker-pdg', title: 'PDG01 blocker', clientCode: 'PDG01', kind: 'blocker' },
         { id: 'blocker-hfd', title: 'HFD01 blocker', clientCode: 'HFD01', kind: 'task' },
