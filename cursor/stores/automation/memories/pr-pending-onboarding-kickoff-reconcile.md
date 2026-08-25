@@ -8,7 +8,9 @@ KEEP_DRAFT. Do not merge to v1.1.0. Do not zipdeploy. Elite unchanged.
 - Base branch: `cursor/atlas-onboarding-capital-reconcile-001`
 - Base SHA: `e0f19d05e53e2a35dc4353dfea743afc6b9f77cb`
 - Branch: `cursor/atlas-onboarding-kickoff-reconcile-001`
-- PR target: `cursor/atlas-onboarding-capital-reconcile-001` (not v1.1.0)
+- HEAD: `bc6091bd1d85b4f1c5d4480aa568f723281df0d5`
+- PR: https://github.com/mblv89117/HVCG-05/pull/196 (KEEP_DRAFT against capital parent)
+- Closed wrong-base PR: #195 (opened against v1.1.0, closed immediately)
 - Live Hub (do not deploy): `c666585865b519c8e3953fd5eab47495a78e2851`
 - Reuses kickoff package lineage from PR #165 — not a new kickoff product
 
