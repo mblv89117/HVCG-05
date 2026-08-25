@@ -11,6 +11,7 @@ import {
   composeBlockerReview,
   composeKickoff,
   composeOperationsHandoff,
+  composeOwnerAttention,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
   isOnboardingProjectTitle,
@@ -95,6 +96,10 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.kickoff.ready, false);
     assert.equal(result.record.kickoff.send, false);
     assert.equal(result.record.kickoff.outbound, false);
+    assert.equal(result.record.ownerAttentionPackage.status, 'NOT_READY');
+    assert.equal(result.record.ownerAttentionPackage.ready, false);
+    assert.equal(result.record.ownerAttentionPackage.send, false);
+    assert.equal(result.record.ownerAttentionPackage.outbound, false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -191,6 +196,10 @@ describe('client onboarding automation', () => {
         documentGaps: [{ label: 'W-9', status: 'MISSING' }],
         communicationPolicy: 'DRAFT_ONLY',
       }),
+      ownerAttentionPackage: composeOwnerAttention({
+        workspaceReconciled: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'test',
     };
     const answer = answerOnboardingContext('What documents are missing for ACCG?', record);
@@ -248,6 +257,10 @@ describe('client onboarding automation', () => {
         communicationPolicy: 'DRAFT_ONLY',
       }),
       blockerReview: composeBlockerReview({
+        workspaceReconciled: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      ownerAttentionPackage: composeOwnerAttention({
         workspaceReconciled: true,
         communicationPolicy: 'DRAFT_ONLY',
       }),
@@ -415,6 +428,10 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.blockerReview.send, false);
     assert.equal(first.record?.blockerReview.outbound, false);
     assert.equal(first.record?.blockerReview.capitalSubmit, false);
+    assert.equal(first.record?.ownerAttentionPackage.send, false);
+    assert.equal(first.record?.ownerAttentionPackage.outbound, false);
+    assert.equal(first.record?.ownerAttentionPackage.capitalSubmit, false);
+    assert.equal(first.record?.ownerAttentionPackage.status, 'OPEN');
     assert.equal(first.record?.dryRun, false);
     assert.equal(createProjectCalls, 1);
     const firstWorkflowId = first.workflow?.workflowId;
@@ -539,6 +556,12 @@ describe('client onboarding automation', () => {
         documentGaps: [{ label: 'W-9', status: 'MISSING' }],
         communicationPolicy: 'DRAFT_ONLY',
       }),
+      ownerAttentionPackage: composeOwnerAttention({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        projectName: 'Client Onboarding — ACCG',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'test',
     };
     assert.equal(mapsToOnboardingContextIntent('What is the onboarding handoff for ACCG?'), true);
@@ -646,6 +669,12 @@ describe('client onboarding automation', () => {
       }),
       kickoff: prepared,
       blockerReview: composeBlockerReview({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        projectName: 'Client Onboarding — ACCG',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      ownerAttentionPackage: composeOwnerAttention({
         workspaceReconciled: true,
         projectId: 'proj-1',
         projectName: 'Client Onboarding — ACCG',
@@ -760,6 +789,13 @@ describe('client onboarding automation', () => {
         communicationPolicy: 'DRAFT_ONLY',
       }),
       blockerReview: blocked,
+      ownerAttentionPackage: composeOwnerAttention({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        projectName: 'Client Onboarding — ACCG',
+        ownerAttention: ['Review SharePoint PM availability'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'test',
     };
     assert.equal(mapsToOnboardingContextIntent('What are the onboarding blockers for ACCG?'), true);
@@ -768,6 +804,95 @@ describe('client onboarding automation', () => {
     const answer = answerOnboardingContext('What are the onboarding blockers for ACCG?', record);
     assert.match(answer, /Blocker review for ACCG01: BLOCKED/);
     assert.match(answer, /SharePoint PM backend unavailable/);
+    assert.match(answer, /did not send mail/);
+    assert.equal(/ACCG99|invented|submitted|AUTO_RESPOND/i.test(answer), false);
+  });
+
+  it('prepares owner attention from entitled run facts and answers Ask Atlas attention', () => {
+    const prepared = composeOwnerAttention({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(prepared.status, 'CLEAR');
+    assert.equal(prepared.ready, true);
+    assert.equal(prepared.send, false);
+    assert.equal(prepared.outbound, false);
+    assert.equal(prepared.liveGtmOutbound, false);
+    assert.equal(prepared.capitalSubmit, false);
+    assert.equal(prepared.itemCount, 0);
+
+    const open = composeOwnerAttention({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      ownerAttention: ['Outbound onboarding communications remain DRAFT_ONLY unless explicit policy permits'],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(open.status, 'OPEN');
+    assert.equal(open.ready, false);
+    assert.equal(open.itemCount, 1);
+
+    const identity = composeOwnerAttention({
+      identityResolutionRequired: true,
+      ownerAttention: ['Assign client scope to onboarding workflow'],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(identity.status, 'NOT_READY');
+    assert.equal(identity.ready, false);
+
+    const now = new Date().toISOString();
+    const record = {
+      workflowId: 'wf-1',
+      workflowDefinitionId: 'def',
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      status: 'WAITING_ON_OWNER' as const,
+      currentStep: 'Establish onboarding operating structure',
+      nextStep: 'Owner review',
+      blockers: [],
+      ownerAttention: ['Outbound onboarding communications remain DRAFT_ONLY unless explicit policy permits'],
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      taskIds: ['t1'],
+      milestoneIds: ['m1'],
+      assignedAgents: ['atlas-onboarding-agent'],
+      documentGaps: [],
+      communicationPolicy: 'DRAFT_ONLY' as const,
+      capitalScope: false,
+      identityResolutionRequired: false,
+      workspaceReconciled: true,
+      dryRun: false,
+      createdAt: now,
+      updatedAt: now,
+      milestones: [],
+      operationsHandoff: composeOperationsHandoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        ownerAttention: ['Outbound onboarding communications remain DRAFT_ONLY unless explicit policy permits'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      kickoff: composeKickoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        ownerAttention: ['Outbound onboarding communications remain DRAFT_ONLY unless explicit policy permits'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      blockerReview: composeBlockerReview({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        ownerAttention: ['Outbound onboarding communications remain DRAFT_ONLY unless explicit policy permits'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      ownerAttentionPackage: open,
+      provenance: 'test',
+    };
+    assert.equal(mapsToOnboardingContextIntent('What needs owner attention for onboarding ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('What needs owner attention for onboarding ACCG?'), 'status');
+    assert.equal(mapsToOnboardingExecuteIntent('What needs owner attention for onboarding ACCG?'), false);
+    const answer = answerOnboardingContext('What needs owner attention for onboarding ACCG?', record);
+    assert.match(answer, /Owner attention for ACCG01: OPEN/);
+    assert.match(answer, /DRAFT_ONLY unless explicit policy permits/);
     assert.match(answer, /did not send mail/);
     assert.equal(/ACCG99|invented|submitted|AUTO_RESPOND/i.test(answer), false);
   });

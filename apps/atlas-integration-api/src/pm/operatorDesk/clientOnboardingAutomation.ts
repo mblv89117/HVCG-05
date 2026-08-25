@@ -24,6 +24,7 @@ import {
   type OnboardingKickoff,
   type OnboardingMilestoneState,
   type OnboardingOperationsHandoff,
+  type OnboardingOwnerAttention,
   type OnboardingRunRecord,
   resolveOnboardingStateDir,
   upsertOnboardingRun,
@@ -338,6 +339,56 @@ export function composeBlockerReview(record: {
   };
 }
 
+export function composeOwnerAttention(record: {
+  identityResolutionRequired?: boolean;
+  workspaceReconciled?: boolean;
+  projectId?: string;
+  projectName?: string;
+  ownerAttention?: string[];
+  communicationPolicy?: OnboardingOwnerAttention['communicationPolicy'];
+}): OnboardingOwnerAttention {
+  const items = record.ownerAttention ?? [];
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const nextOwnerAction =
+    items[0]
+    ?? (record.identityResolutionRequired
+      ? 'Assign client scope before owner attention can clear'
+      : 'No owner attention items');
+  if (record.identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
+    return {
+      status: 'NOT_READY',
+      ready: false,
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      itemCount: items.length,
+      items,
+      communicationPolicy,
+      nextOwnerAction,
+      send: false,
+      liveGtmOutbound: false,
+      capitalSubmit: false,
+      outbound: false,
+      provenance: record.identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
+    };
+  }
+  const status = items.length ? 'OPEN' : 'CLEAR';
+  return {
+    status,
+    ready: status === 'CLEAR',
+    projectId: record.projectId,
+    ...(record.projectName ? { projectName: record.projectName } : {}),
+    itemCount: items.length,
+    items,
+    communicationPolicy,
+    nextOwnerAction,
+    send: false,
+    liveGtmOutbound: false,
+    capitalSubmit: false,
+    outbound: false,
+    provenance: 'CONFIRMED',
+  };
+}
+
 function computeStatus(record: Partial<OnboardingRunRecord>): OnboardingLifecycleStatus {
   if (record.identityResolutionRequired) return 'IDENTITY_RECONCILIATION';
   const missingDocs = record.documentGaps?.filter((d) => d.status === 'MISSING').length ?? 0;
@@ -410,6 +461,12 @@ export async function runClientOnboardingAutomation(opts: {
         identityResolutionRequired: true,
         workspaceReconciled: false,
         blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+        ownerAttention: ['Assign client scope to onboarding workflow'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      ownerAttentionPackage: composeOwnerAttention({
+        identityResolutionRequired: true,
+        workspaceReconciled: false,
         ownerAttention: ['Assign client scope to onboarding workflow'],
         communicationPolicy: 'DRAFT_ONLY',
       }),
@@ -595,9 +652,18 @@ export async function runClientOnboardingAutomation(opts: {
     ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
   });
+  const ownerAttentionPackage = composeOwnerAttention({
+    identityResolutionRequired: false,
+    workspaceReconciled,
+    projectId,
+    projectName,
+    ownerAttention,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
   if (operationsHandoff.status !== 'NOT_READY') events.push('OPERATIONS_HANDOFF');
   if (kickoff.status !== 'NOT_READY') events.push('KICKOFF');
   if (blockerReview.status !== 'NOT_READY') events.push('BLOCKER_REVIEW');
+  if (ownerAttentionPackage.status !== 'NOT_READY') events.push('OWNER_ATTENTION');
 
   const record: OnboardingRunRecord = {
     workflowId: opts.workflow.workflowId,
@@ -632,6 +698,7 @@ export async function runClientOnboardingAutomation(opts: {
     operationsHandoff,
     kickoff,
     blockerReview,
+    ownerAttentionPackage,
     provenance: 'onboarding_automation',
   };
 
@@ -755,6 +822,8 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'status',
   'handoff',
   'blocker',
+  'owner attention',
+  'attention',
 ] as const;
 
 const ONBOARDING_EXECUTE_VERB = /\b(start|run|execute|activate|begin)\b/;
@@ -824,6 +893,19 @@ export function answerOnboardingContext(
       return answerFromExistingOnboarding(extras.match ?? { kind: 'none', candidates: [] }, extras);
     }
     return 'No onboarding run found for the requested client. Activate a Client Onboarding workflow or provide a client code.';
+  }
+  if (q.includes('owner attention') || (q.includes('attention') && !q.includes('kickoff'))) {
+    const pack = record.ownerAttentionPackage;
+    return [
+      `Owner attention for ${record.clientCode ?? 'client'}: ${pack.status}`,
+      pack.projectName ? `Project: ${pack.projectName}` : '',
+      pack.itemCount ? `Items: ${pack.items.join('; ')}` : 'No owner attention items.',
+      `Communication policy: ${pack.communicationPolicy}`,
+      `Next owner action: ${pack.nextOwnerAction}`,
+      'Atlas did not send mail, launch GTM, or submit capital.',
+    ]
+      .filter(Boolean)
+      .join('\n');
   }
   if (q.includes('missing') || q.includes('document')) {
     const missing = record.documentGaps.filter((d) => d.status === 'MISSING');
