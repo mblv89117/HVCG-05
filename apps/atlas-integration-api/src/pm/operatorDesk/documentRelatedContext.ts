@@ -3,8 +3,9 @@
  * items, the inverse on MeetingOperatingRecord items, the inverse
  * project → meetings and project → documents links on
  * ProjectOperatingRecord items, the inverse
- * mail-thread → meetings, mail-thread → documents, and
- * mail-thread suggestedDraft.suggestedAttachments links on
+ * mail-thread → meetings, mail-thread → documents,
+ * mail-thread suggestedDraft.suggestedAttachments, and
+ * mail-thread suggestedDraft.suggestedProjects links on
  * MailThreadOperatingRecord items, the
  * inverse capital-prepare → meetings, capital-prepare → documents,
  * and capital-prepare → research links on CapitalSubmissionPrepareRecord
@@ -653,17 +654,27 @@ export function attachRelatedContextToProjects(
  * relatedAttachments / RelatedDocumentAttachmentRef — no new Graph /
  * search / attachment query, no contentBytes). Copied onto
  * suggestedDraft.suggestedAttachments only — not a second
- * relatedAttachments inverse on the thread record.
+ * relatedAttachments inverse on the thread record. Entitled
+ * same-scope project operating records already on
+ * authorizedSearch.projects.items (reuses relatedProjects /
+ * RelatedDocumentProjectRef — no new project query) are copied onto
+ * suggestedDraft.suggestedProjects only — not a relatedProjects
+ * inverse on the thread record. Existing project-ref fields stay as
+ * composed; no invented milestone rows. historicalHvs / hubMiRow
+ * copy from the entitled project record only — never invent
+ * hubMiRow=true.
  * Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
  * non-canonical — omit researchRelationship / relatedDocuments /
- * suggestedDraft.suggestedAttachments rather than guess. Unscoped
+ * suggestedDraft.suggestedAttachments /
+ * suggestedDraft.suggestedProjects rather than guess. Unscoped
  * never receives scoped relations. Unscoped lender catalog titles
  * never attach to a scoped thread. Client A never receives Client B.
  * SAS / anonymous webUrl dropped. No downloadUrl. No contentBytes.
  * binariesInAtlas stays false. No transcript text. No preview body /
- * send on the document refs. Never invent attachment names, ids, or
- * counts. DRAFT_ONLY / autoRespond=false / send=false /
+ * send on the document refs. Never invent attachment / project names,
+ * ids, counts, ClientCodes, Hub-MI, financing, or TargetAmount.
+ * DRAFT_ONLY / autoRespond=false / send=false /
  * indexedPreviewOnly stay as composed on the thread payload.
  */
 export function attachRelatedContextToMailThread(
@@ -680,16 +691,23 @@ export function attachRelatedContextToMailThread(
   const suggestedAttachments = canonicalClientCode(item.clientCode)
     ? relatedAttachments(item, search)
     : [];
+  const suggestedProjects = canonicalClientCode(item.clientCode)
+    ? relatedProjects(item, search)
+    : [];
+  const suggestedDraftExtras = {
+    ...(suggestedAttachments.length ? { suggestedAttachments } : {}),
+    ...(suggestedProjects.length ? { suggestedProjects } : {}),
+  };
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(researchRelationship.length ? { researchRelationship } : {}),
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
-    ...(suggestedAttachments.length
+    ...(Object.keys(suggestedDraftExtras).length
       ? {
           suggestedDraft: {
             ...item.suggestedDraft,
-            suggestedAttachments,
+            ...suggestedDraftExtras,
           },
         }
       : {}),
