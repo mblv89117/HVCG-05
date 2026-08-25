@@ -1,0 +1,161 @@
+{
+  "templateKey": "engagement-closeout",
+  "title": "Engagement Closeout",
+  "templateType": "Project",
+  "defaultDurationDays": 14,
+  "workstreams": [
+    "Engagement closeout",
+    "Client reporting"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Wind Down",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Archive",
+      "seq": 2
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Client acceptance",
+      "offsetDays": 7,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Archive complete",
+      "offsetDays": 14,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Confirm deliverables accepted",
+      "phase": "p1",
+      "offsetDays": 2,
+      "defaultRole": "ProjectManager",
+      "description": "Client approval status.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Final financial milestone reconciliation",
+      "phase": "p1",
+      "offsetDays": 3,
+      "defaultRole": "OperationsManager",
+      "description": "Fees, success fee status.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t3",
+      "title": "Lessons learned",
+      "phase": "p1",
+      "offsetDays": 5,
+      "defaultRole": "ProjectManager",
+      "description": "Internal notes.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 2,
+      "isCritical": false
+    },
+    {
+      "key": "t4",
+      "title": "Archive library to folder 23",
+      "phase": "p2",
+      "offsetDays": 10,
+      "defaultRole": "OperationsAssistant",
+      "description": "Move closed materials.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 2,
+      "isCritical": false
+    },
+    {
+      "key": "t5",
+      "title": "Revoke temporary external access",
+      "phase": "p2",
+      "offsetDays": 12,
+      "defaultRole": "Administrator",
+      "description": "Guests/links.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 1,
+      "isCritical": true
+    },
+    {
+      "key": "t6",
+      "title": "Set engagement Completed + Alumni if applicable",
+      "phase": "p2",
+      "offsetDays": 14,
+      "defaultRole": "OperationsManager",
+      "description": "Status hygiene.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 1,
+      "isCritical": true
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "Client acceptance email/sign-off",
+      "documentCategory": "Engagement Administration",
+      "folderTarget": "00 - Engagement Administration",
+      "dueOffsetDays": 5,
+      "isCritical": true,
+      "description": "Please provide: Client acceptance email/sign-off"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Closeout report",
+      "deliverableType": "Client Report",
+      "draftOffsetDays": 5,
+      "finalOffsetDays": 10,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Orphaned guest access",
+      "likelihood": "Medium",
+      "impact": "Critical",
+      "mitigation": "Mandatory revoke task"
+    }
+  ],
+  "qualityControlChecks": [
+    "Access revoked evidence",
+    "Final invoice status noted"
+  ],
+  "automationTriggers": [
+    "Archive automation optional"
+  ],
+  "clientResponsibilities": [
+    "Provide acceptance"
+  ],
+  "internalResponsibilities": [
+    "Secure archive"
+  ],
+  "approvalPoints": [
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

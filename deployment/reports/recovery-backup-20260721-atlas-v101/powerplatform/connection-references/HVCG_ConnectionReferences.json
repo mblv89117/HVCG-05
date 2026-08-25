@@ -1,0 +1,24 @@
+{
+  "connectionReferences": [
+    {
+      "logicalName": "hvcg_sharedsharepointonline",
+      "displayName": "HVCG SharePoint",
+      "connectorId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+    },
+    {
+      "logicalName": "hvcg_sharedoffice365",
+      "displayName": "HVCG Outlook",
+      "connectorId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+    },
+    {
+      "logicalName": "hvcg_sharedteams",
+      "displayName": "HVCG Teams",
+      "connectorId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+    },
+    {
+      "logicalName": "hvcg_sharedapprovals",
+      "displayName": "HVCG Approvals",
+      "connectorId": "/providers/Microsoft.PowerApps/apis/shared_approvals"
+    }
+  ]
+}

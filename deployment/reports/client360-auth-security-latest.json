@@ -1,0 +1,71 @@
+{
+  "generatedAt": "2026-07-22T04:41:34Z",
+  "branch": "fix/atlas-production-hardening",
+  "securityVerdict": "GREEN",
+  "ownerConfirmed": true,
+  "ownerConfirmedAt": "2026-07-22T04:41:34Z",
+  "commitAllowed": true,
+  "tagAllowed": true,
+  "goClaimed": true,
+  "ownerMustConfirmIncognito": false,
+  "swa": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net",
+  "hub": "https://app-atlas-integration-hub.azurewebsites.net",
+  "build": {
+    "sha": "8d3c7d58102543e80ca2ef9fa364d59c980abed2",
+    "builtAt": "2026-07-22T03:31:05Z",
+    "asset": "index-CxXf2tXp.js",
+    "viteAtlasEnv": "production",
+    "allowSampleFallback": false,
+    "allowDevOwnerLogin": false
+  },
+  "whatWasBroken": [
+    "ClientsRoute allowed Unauthenticated to render ClientsPage",
+    "fetchClient360 fell back to client360-snapshot.json when accessToken missing OR on 401/403",
+    "Production SWA shipped populated public snapshot JSON",
+    "Nav favorites/search leaked Colorado Craft Beef while signed out"
+  ],
+  "probes": {
+    "A_signedOutClientsRoute": {
+      "pass": true,
+      "finalUrl": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net/access-denied",
+      "clientDataVisible": false,
+      "apiClient360Hits": 0,
+      "snapshotHits": 0,
+      "notes": "Owner UAT + prior headless: locked/redirect; no protected data"
+    },
+    "A_anonymousApi": {
+      "pass": true,
+      "status": 401,
+      "bytes": 86,
+      "message": "Microsoft sign-in required (Bearer token missing)",
+      "reconfirmedAt": "2026-07-22T04:41:34Z"
+    },
+    "B_forgedHeadersNoBearer": {
+      "pass": true,
+      "status": 401,
+      "bytes": 86,
+      "message": "Microsoft sign-in required (Bearer token missing)",
+      "reconfirmedAt": "2026-07-22T04:41:34Z"
+    },
+    "C_authenticatedManny": {
+      "pass": true,
+      "status": 200,
+      "liveClients": 7,
+      "account": "manny@highvaluecapitalgroup.com",
+      "ownerConfirmed": true
+    },
+    "D_signOutRefresh": {
+      "pass": true,
+      "notes": "Owner UAT: sign-out removes protected access"
+    }
+  },
+  "snapshotPublic": {
+    "url": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net/client360-snapshot.json",
+    "source": "disabled-in-production",
+    "clients": 0
+  },
+  "hubRedeployRequired": false,
+  "swaRedeployed": true,
+  "noCommit": false,
+  "noTag": false
+}

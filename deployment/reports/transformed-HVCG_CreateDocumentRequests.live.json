@@ -1,0 +1,126 @@
+{
+  "name": "HVCG_CreateDocumentRequests",
+  "top": [
+    "Log_Start",
+    "Init_ClientId",
+    "Init_Created",
+    "Init_Skipped",
+    "Init_DocsToCreate",
+    "Condition_NeedClientLookup",
+    "Condition_HasTitles",
+    "Apply_to_each_Doc",
+    "Log_Success"
+  ],
+  "foreach": "@variables('DocsToCreate')",
+  "inner": [
+    "Get_Open_Duplicates",
+    "Condition_OpenExists"
+  ],
+  "Get_Open_Duplicates": {
+    "type": "OpenApiConnection",
+    "inputs": {
+      "host": {
+        "connectionName": "shared_sharepointonline",
+        "operationId": "HttpRequest",
+        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+      },
+      "parameters": {
+        "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+        "parameters/method": "GET",
+        "parameters/uri": "_api/web/lists/getbytitle('HVCG_DocumentRequests')/items?$select=Id,Title,ClientCode,Status,DocumentType&$filter=ClientCode eq '@{triggerBody()?['ClientCode']}' and Title eq '@{item()?['Title']}' and Status ne 'Received' and Status ne 'Waived' and Status ne 'Cancelled'&$top=1",
+        "parameters/headers": {
+          "Accept": "application/json;odata=nometadata"
+        }
+      }
+    },
+    "runAfter": {}
+  },
+  "Init_DocsToCreate": {
+    "type": "InitializeVariable",
+    "inputs": {
+      "variables": [
+        {
+          "name": "DocsToCreate",
+          "type": "array",
+          "value": [
+            {
+              "Title": "Corporate formation and governance documents",
+              "Category": "Corporate",
+              "FolderTarget": "01 - Corporate Documents"
+            },
+            {
+              "Title": "Trailing twelve months financial statements",
+              "Category": "Current Financials",
+              "FolderTarget": "04 - Current Financials"
+            },
+            {
+              "Title": "Most recent business tax return",
+              "Category": "Tax Returns",
+              "FolderTarget": "05 - Tax Returns"
+            }
+          ]
+        }
+      ]
+    },
+    "runAfter": {
+      "Init_Skipped": [
+        "Succeeded"
+      ]
+    }
+  },
+  "Condition_HasTitles": {
+    "expression": {
+      "and": [
+        {
+          "greater": [
+            "@length(coalesce(triggerBody()?['DocumentTitles'], json('[]')))",
+            0
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "Select_Titles": {
+        "type": "Select",
+        "inputs": {
+          "from": "@triggerBody()?['DocumentTitles']",
+          "select": {
+            "Title": "@item()",
+            "Category": "Other",
+            "FolderTarget": "00 - Engagement Administration"
+          }
+        },
+        "runAfter": {}
+      },
+      "Set_DocsToCreate": {
+        "type": "SetVariable",
+        "inputs": {
+          "name": "DocsToCreate",
+          "value": "@body('Select_Titles')"
+        },
+        "runAfter": {
+          "Select_Titles": [
+            "Succeeded"
+          ]
+        }
+      }
+    },
+    "else": {
+      "actions": {}
+    }
+  },
+  "Condition_HasTitles_expr": {
+    "and": [
+      {
+        "greater": [
+          "@length(coalesce(triggerBody()?['DocumentTitles'], json('[]')))",
+          0
+        ]
+      }
+    ]
+  },
+  "Condition_HasTitles_then_keys": [
+    "Select_Titles",
+    "Set_DocsToCreate"
+  ]
+}

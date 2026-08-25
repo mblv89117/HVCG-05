@@ -1,0 +1,127 @@
+{
+  "title": "HVCG_OpportunityActivities",
+  "description": "CRM — activity timeline for leads and opportunities (calls, emails, notes, stage changes, capital handoffs)",
+  "template": "genericList",
+  "domain": "CRM",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Short activity headline"
+    },
+    {
+      "internalName": "OpportunityId",
+      "displayName": "OpportunityId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Opportunities"
+    },
+    {
+      "internalName": "LeadId",
+      "displayName": "LeadId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Leads"
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ActivityType",
+      "displayName": "ActivityType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Call",
+        "Email",
+        "Meeting",
+        "Note",
+        "StageChange",
+        "Proposal",
+        "Handoff",
+        "FundingUpdate",
+        "Other"
+      ],
+      "default": "Note"
+    },
+    {
+      "internalName": "ActivityDate",
+      "displayName": "ActivityDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Outcome",
+      "displayName": "Outcome",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PriorStage",
+      "displayName": "PriorStage",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Optional prior Stage / FundingStatus"
+    },
+    {
+      "internalName": "NewStage",
+      "displayName": "NewStage",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Optional new Stage / FundingStatus"
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

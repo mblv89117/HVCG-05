@@ -1,0 +1,95 @@
+{
+  "title": "HVCG_PortalAccess",
+  "description": "Portal \u2014 Client portal access grants (V2-ready)",
+  "template": "genericList",
+  "domain": "Portal",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ContactId",
+      "displayName": "ContactId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Contacts"
+    },
+    {
+      "internalName": "GuestUpn",
+      "displayName": "GuestUpn",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "AccessLevel",
+      "displayName": "AccessLevel",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Read",
+        "Upload",
+        "Approve"
+      ],
+      "default": "Read"
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Invited",
+        "Active",
+        "Revoked",
+        "Expired"
+      ],
+      "default": "Invited"
+    },
+    {
+      "internalName": "ExpiresOn",
+      "displayName": "ExpiresOn",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PortalUserId",
+      "displayName": "PortalUserId",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Future Power Pages / Entra external id"
+    }
+  ]
+}

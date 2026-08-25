@@ -1,7 +1,7 @@
 {
   "name": "HVCG_CreateClientWorkspace",
   "displayName": "HVCG_CreateClientWorkspace",
-  "description": "Create client library + 00-23 folders + permissions",
+  "description": "Create client document library (BaseTemplate 101) + 00-23 folders on the Clients site and link SharePointLibraryUrl back on the client record. Idempotent.",
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "contentVersion": "10.0.0.0",
@@ -13,6 +13,26 @@
       "$connections": {
         "defaultValue": {},
         "type": "Object"
+      },
+      "hvcg_CommandCenterSiteUrl": {
+        "type": "String",
+        "defaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter"
+      },
+      "hvcg_ClientsSiteUrl": {
+        "type": "String",
+        "defaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients"
+      },
+      "hvcg_ExecutiveEmail": {
+        "type": "String",
+        "defaultValue": "manny@highvaluecapitalgroup.com"
+      },
+      "hvcg_OpsEmail": {
+        "type": "String",
+        "defaultValue": "manny@highvaluecapitalgroup.com"
+      },
+      "hvcg_EnableClientEmails": {
+        "type": "Bool",
+        "defaultValue": false
       }
     },
     "triggers": {
@@ -24,19 +44,19 @@
             "type": "object",
             "properties": {
               "ClientCode": {
-                "type": "string"
+                "type": "string",
+                "title": "ClientCode",
+                "description": "Short unique client code, e.g. ACME01"
               },
               "ClientListItemId": {
-                "type": "integer"
+                "type": "integer",
+                "title": "ClientListItemId",
+                "description": "Optional HVCG_Clients item Id (skips ClientCode lookup)"
               },
-              "TemplateKey": {
-                "type": "string"
-              },
-              "EngagementId": {
-                "type": "integer"
-              },
-              "StartDate": {
-                "type": "string"
+              "ClientDisplayName": {
+                "type": "string",
+                "title": "ClientDisplayName",
+                "description": "Optional display name used in the library description"
               }
             },
             "required": [
@@ -58,18 +78,28 @@
           "parameters": {
             "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
             "table": "HVCG_AutomationLogs",
-            "item/Title": "Started",
-            "item/FlowName": "@workflow()?['name']",
-            "item/Status": "Started"
+            "item": {
+              "Title": "Started",
+              "FlowName": "@workflow()?['name']",
+              "Status": {
+                "Value": "Started"
+              },
+              "ClientCode": "@triggerBody()?['ClientCode']"
+            }
           }
         },
         "runAfter": {}
       },
-      "Compose_Inputs": {
-        "type": "Compose",
+      "Init_ClientId": {
+        "type": "InitializeVariable",
         "inputs": {
-          "note": "Manual or child flow: Create client library + 00-23 folders + permissions",
-          "buildSheet": "src/power-automate/flows/HVCG_CreateClientWorkspace.json"
+          "variables": [
+            {
+              "name": "ClientId",
+              "type": "integer",
+              "value": "@coalesce(triggerBody()?['ClientListItemId'], 0)"
+            }
+          ]
         },
         "runAfter": {
           "Log_Start": [
@@ -77,12 +107,335 @@
           ]
         }
       },
-      "Log_Success": {
-        "type": "Compose",
-        "inputs": "Succeeded scaffold",
+      "Init_RunOutcome": {
+        "type": "InitializeVariable",
+        "inputs": {
+          "variables": [
+            {
+              "name": "RunOutcome",
+              "type": "string",
+              "value": "Succeeded"
+            }
+          ]
+        },
         "runAfter": {
-          "Compose_Inputs": [
+          "Init_ClientId": [
             "Succeeded"
+          ]
+        }
+      },
+      "Compose_LibraryTitle": {
+        "type": "Compose",
+        "inputs": "@concat('HVCG_', triggerBody()?['ClientCode'])",
+        "runAfter": {
+          "Init_RunOutcome": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Condition_NeedClientLookup": {
+        "type": "If",
+        "expression": {
+          "and": [
+            {
+              "lessOrEquals": [
+                "@variables('ClientId')",
+                0
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Get_Client_ByCode": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "GetItems",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                "table": "HVCG_Clients",
+                "$filter": "ClientCode eq '@{triggerBody()?['ClientCode']}'",
+                "$top": 1
+              }
+            },
+            "runAfter": {}
+          },
+          "Set_ClientId": {
+            "type": "SetVariable",
+            "inputs": {
+              "name": "ClientId",
+              "value": "@int(first(outputs('Get_Client_ByCode')?['body/value'])?['ID'])"
+            },
+            "runAfter": {
+              "Get_Client_ByCode": [
+                "Succeeded"
+              ]
+            }
+          }
+        },
+        "runAfter": {
+          "Compose_LibraryTitle": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Compose_SiteServerRelative": {
+        "type": "Compose",
+        "inputs": "@concat('/', join(skip(split(parameters('hvcg_ClientsSiteUrl'), '/'), 3), '/'))",
+        "runAfter": {
+          "Condition_NeedClientLookup": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Check_Library": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "HttpRequest",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_ClientsSiteUrl')",
+            "parameters/method": "GET",
+            "parameters/uri": "_api/web/lists/getbytitle('@{outputs('Compose_LibraryTitle')}')?$select=Title",
+            "parameters/headers": {
+              "Accept": "application/json;odata=nometadata"
+            }
+          }
+        },
+        "runAfter": {
+          "Compose_SiteServerRelative": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Condition_LibraryMissing": {
+        "type": "If",
+        "expression": {
+          "and": [
+            {
+              "not": [
+                {
+                  "equals": [
+                    "@outputs('Check_Library')?['statusCode']",
+                    200
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Create_Library": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "HttpRequest",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_ClientsSiteUrl')",
+                "parameters/method": "POST",
+                "parameters/uri": "_api/web/lists",
+                "parameters/headers": {
+                  "Accept": "application/json;odata=verbose",
+                  "Content-Type": "application/json;odata=verbose"
+                },
+                "parameters/body": "{\"__metadata\":{\"type\":\"SP.List\"},\"BaseTemplate\":101,\"Title\":\"@{outputs('Compose_LibraryTitle')}\",\"Description\":\"HVCG client workspace for @{coalesce(triggerBody()?['ClientDisplayName'], triggerBody()?['ClientCode'])}\"}"
+              }
+            },
+            "runAfter": {}
+          }
+        },
+        "else": {
+          "actions": {
+            "Set_Outcome_Skipped": {
+              "type": "SetVariable",
+              "inputs": {
+                "name": "RunOutcome",
+                "value": "SkippedDuplicate"
+              },
+              "runAfter": {}
+            }
+          }
+        },
+        "runAfter": {
+          "Check_Library": [
+            "Succeeded",
+            "Failed"
+          ]
+        }
+      },
+      "Compose_Folders": {
+        "type": "Compose",
+        "inputs": [
+          "00 - Engagement Administration",
+          "01 - Corporate Documents",
+          "02 - Ownership and Management",
+          "03 - Historical Financials",
+          "04 - Current Financials",
+          "05 - Tax Returns",
+          "06 - Bank Statements",
+          "07 - Debt Schedule",
+          "08 - Accounts Receivable",
+          "09 - Accounts Payable",
+          "10 - Payroll and Employees",
+          "11 - Contracts",
+          "12 - Real Estate",
+          "13 - Insurance",
+          "14 - Legal and Compliance",
+          "15 - Financial Models",
+          "16 - Lender Package",
+          "17 - Investor Package",
+          "18 - Presentations",
+          "19 - Deliverables",
+          "20 - Meeting Notes",
+          "21 - Communications",
+          "22 - Approvals",
+          "23 - Closed and Archived"
+        ],
+        "runAfter": {
+          "Condition_LibraryMissing": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Apply_to_each_Folder": {
+        "type": "Foreach",
+        "foreach": "@outputs('Compose_Folders')",
+        "actions": {
+          "Create_Folder": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "HttpRequest",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_ClientsSiteUrl')",
+                "parameters/method": "POST",
+                "parameters/uri": "_api/web/folders/addUsingPath(decodedUrl='@{concat(outputs('Compose_SiteServerRelative'), '/', outputs('Compose_LibraryTitle'), '/', item())}')",
+                "parameters/headers": {
+                  "Accept": "application/json;odata=nometadata"
+                }
+              }
+            },
+            "runAfter": {}
+          },
+          "Ignore_Folder_Result": {
+            "type": "Compose",
+            "inputs": "@concat('folder ensured: ', item())",
+            "runAfter": {
+              "Create_Folder": [
+                "Succeeded",
+                "Failed"
+              ]
+            }
+          }
+        },
+        "runAfter": {
+          "Compose_Folders": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Compose_LibraryUrl": {
+        "type": "Compose",
+        "inputs": "@concat(parameters('hvcg_ClientsSiteUrl'), '/', outputs('Compose_LibraryTitle'))",
+        "runAfter": {
+          "Apply_to_each_Folder": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Patch_Client_Url": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PatchItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_Clients",
+            "id": "@variables('ClientId')",
+            "item": {
+              "SharePointLibraryUrl": "@outputs('Compose_LibraryUrl')",
+              "Title": "@coalesce(triggerBody()?['ClientDisplayName'], triggerBody()?['ClientCode'], 'HVCG Client')",
+              "ClientCode": "@triggerBody()?['ClientCode']"
+            }
+          }
+        },
+        "runAfter": {
+          "Compose_LibraryUrl": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Log_Result": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item": {
+              "Title": "@concat('Workspace ', variables('RunOutcome'))",
+              "FlowName": "@workflow()?['name']",
+              "Status": {
+                "Value": "@variables('RunOutcome')"
+              },
+              "ClientCode": "@triggerBody()?['ClientCode']",
+              "RelatedList": "HVCG_Clients",
+              "RelatedItemId": "@variables('ClientId')",
+              "Message": "@concat('Library: ', outputs('Compose_LibraryUrl'))"
+            }
+          }
+        },
+        "runAfter": {
+          "Patch_Client_Url": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Log_Failed": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item": {
+              "Title": "Workspace Failed",
+              "FlowName": "@workflow()?['name']",
+              "Status": {
+                "Value": "Failed"
+              },
+              "ClientCode": "@triggerBody()?['ClientCode']",
+              "Message": "@concat('Failed creating workspace for ', triggerBody()?['ClientCode'])"
+            }
+          }
+        },
+        "runAfter": {
+          "Patch_Client_Url": [
+            "Failed",
+            "TimedOut"
           ]
         }
       }
@@ -120,6 +473,8 @@
     "Flow appears in solution or My flows",
     "Connection references resolved",
     "Test run writes HVCG_AutomationLogs Started/Succeeded or SkippedDuplicate",
+    "Document library HVCG_{ClientCode} created with folders 00-23 on the Clients site",
+    "HVCG_Clients.SharePointLibraryUrl populated",
     "Idempotent re-run does not duplicate business records"
   ]
 }

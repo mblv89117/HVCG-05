@@ -1,0 +1,230 @@
+{
+  "title": "HVCG_Meetings",
+  "description": "Meeting log",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "MeetingType",
+      "displayName": "MeetingType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Client",
+        "Internal",
+        "Lender",
+        "Investor",
+        "Advisor",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "MeetingDate",
+      "displayName": "MeetingDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Attendees",
+      "displayName": "Attendees",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Objective",
+      "displayName": "Objective",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Summary",
+      "displayName": "Summary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "DecisionsSummary",
+      "displayName": "DecisionsSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ActionItemsSummary",
+      "displayName": "ActionItemsSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientCommitments",
+      "displayName": "ClientCommitments",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "InternalCommitments",
+      "displayName": "InternalCommitments",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RisksRaised",
+      "displayName": "RisksRaised",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Questions",
+      "displayName": "Questions",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "NextMeetingDate",
+      "displayName": "NextMeetingDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OutlookEventLink",
+      "displayName": "OutlookEventLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TeamsMeetingLink",
+      "displayName": "TeamsMeetingLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CommunicationOwnerEmail",
+      "displayName": "CommunicationOwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "FollowUpDraftApproved",
+      "displayName": "FollowUpDraftApproved",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "NotesFileLink",
+      "displayName": "NotesFileLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PlaybookKey",
+      "displayName": "PlaybookKey",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AISummaryId",
+      "displayName": "AISummaryId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_AI_MeetingSummaries"
+    },
+    {
+      "internalName": "DiscoveryCallId",
+      "displayName": "DiscoveryCallId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_DiscoveryCalls"
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}
