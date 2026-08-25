@@ -1,0 +1,98 @@
+{
+  "title": "HVCG_FundingMilestones",
+  "description": "Capital \u2014 Funding process milestones",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "MilestoneType",
+      "displayName": "MilestoneType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Package Complete",
+        "First Outreach",
+        "Term Sheet",
+        "Appraisal",
+        "Commitment",
+        "Closing",
+        "Funding"
+      ]
+    },
+    {
+      "internalName": "DueDate",
+      "displayName": "DueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "CompletedDate",
+      "displayName": "CompletedDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Pending",
+        "Complete",
+        "Missed",
+        "Cancelled"
+      ],
+      "default": "Pending"
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IsCritical",
+      "displayName": "IsCritical",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    }
+  ]
+}

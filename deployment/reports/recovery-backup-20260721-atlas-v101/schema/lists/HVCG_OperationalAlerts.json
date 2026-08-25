@@ -1,0 +1,144 @@
+{
+  "title": "HVCG_OperationalAlerts",
+  "description": "Platform \u2014 Operational monitoring alerts",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AlertType",
+      "displayName": "AlertType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "DeploymentFailure",
+        "FlowFailure",
+        "RepeatedFlowFailure",
+        "StaleWorkflow",
+        "ProvisioningFailure",
+        "PermissionDrift",
+        "ExternalSharingChange",
+        "OnboardingFailure",
+        "DuplicateRecord",
+        "MissingMetadata",
+        "OrphanedLookup",
+        "MissingDocumentDeadline",
+        "StalledProject",
+        "AIJobFailed",
+        "AIJobAwaitingReview",
+        "AICostThreshold",
+        "BackupFailure",
+        "UpgradeFailure",
+        "HealthCheckFailure",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Severity",
+      "displayName": "Severity",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Critical",
+        "High",
+        "Warning",
+        "Info"
+      ],
+      "default": "Warning"
+    },
+    {
+      "internalName": "EnvironmentName",
+      "displayName": "EnvironmentName",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "development",
+        "test",
+        "production"
+      ]
+    },
+    {
+      "internalName": "SourceComponent",
+      "displayName": "SourceComponent",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DetectedDate",
+      "displayName": "DetectedDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "AlertStatus",
+      "displayName": "AlertStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Open",
+        "Acknowledged",
+        "Resolved",
+        "Suppressed"
+      ],
+      "default": "Open"
+    },
+    {
+      "internalName": "Details",
+      "displayName": "Details",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RecommendedAction",
+      "displayName": "RecommendedAction",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ResolvedDate",
+      "displayName": "ResolvedDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

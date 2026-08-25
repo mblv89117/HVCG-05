@@ -1,0 +1,31 @@
+{
+  "subscriptionName": "HVCG Production",
+  "subscriptionId": "ebc84d85-b5ff-4c4b-add1-b0a8de31b319",
+  "tenantName": "High Value Capital Group",
+  "tenantId": "3df46563-86f3-4414-87fd-84ba967741ef",
+  "directory": "highvaluecapitalgroup.com",
+  "owner": "Manuel Barela",
+  "platform": "Microsoft Azure",
+  "deprecatedSubscriptionId": "866189c6-5aa0-4037-8094-05771caceb0d",
+  "deprecatedSubscriptionName": "Azure subscription 1",
+  "deprecatedNote": "Permanently deprecated for Project Atlas. Never target in deploy, infra, docs, or automation.",
+  "defaultLocation": "westus3",
+  "budgetUsdPerMonth": 100,
+  "budgetAlertThresholdsPercent": [50, 75, 90, 100],
+  "resourceGroups": [
+    "rg-atlas-dev",
+    "rg-atlas-prod",
+    "rg-atlas-shared",
+    "rg-atlas-network",
+    "rg-atlas-security",
+    "rg-atlas-monitoring"
+  ],
+  "standardTags": {
+    "Company": "HVCG",
+    "Application": "Project Atlas",
+    "Project": "Atlas",
+    "Owner": "Manuel Barela",
+    "Platform": "Microsoft",
+    "ManagedBy": "Azure"
+  }
+}

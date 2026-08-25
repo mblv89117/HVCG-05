@@ -1,0 +1,107 @@
+{
+  "$schemaComment": "Copy to development.json and fill REQUIRED values. Never commit secrets.",
+  "environment": "development",
+  "label": "HVCG Development",
+  "region": "NAM",
+  "timeZone": "America/Los_Angeles",
+  "locale": "en-US",
+  "currency": "USD",
+  "tenant": {
+    "domain": "highvaluecapitalgroup.onmicrosoft.com",
+    "tenantId": "3df46563-86f3-4414-87fd-84ba967741ef",
+    "sharePointAdminUrl": "https://highvaluecapitalgroup-admin.sharepoint.com",
+    "sharePointRoot": "https://highvaluecapitalgroup.sharepoint.com"
+  },
+  "sites": {
+    "commandCenter": {
+      "title": "HVCG Project Command Center - DEV",
+      "alias": "HVCG-CommandCenter-Dev",
+      "url": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev",
+      "template": "STS#3",
+      "isHub": true
+    },
+    "knowledgeCenter": {
+      "title": "HVCG Knowledge Center - DEV",
+      "alias": "HVCG-Knowledge-Dev",
+      "url": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge-Dev",
+      "template": "STS#3",
+      "isHub": false
+    },
+    "clientsHub": {
+      "title": "HVCG Clients Hub - DEV",
+      "alias": "HVCG-Clients-Dev",
+      "url": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients-Dev",
+      "template": "STS#3",
+      "isHub": false,
+      "note": "Client document libraries (no external users in DEV)"
+    },
+    "secureDataRooms": {
+      "enabled": false,
+      "title": "HVCG Secure Data Rooms - DEV",
+      "alias": "HVCG-DataRooms-Dev",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-DataRooms-Dev",
+      "note": "Deferred in V1 unless enabled=true"
+    }
+  },
+  "powerPlatform": {
+    "environmentDisplayName": "HVCG Development",
+    "environmentId": "OPTIONAL_RESOLVE_AT_RUNTIME",
+    "solutionUniqueName": "HVCGCommandCenterDev",
+    "solutionDisplayName": "HVCG Command Center DEV"
+  },
+  "authentication": {
+    "pnpEntraAppClientId": "836fb743-6439-4836-b1f2-4a144ce2f762",
+    "pnpEntraAppDisplayName": "HVCG-PnP-PowerShell",
+    "notes": "PnP.PowerShell Interactive requires your Entra app Client ID (mandatory since Sept 2024). Run: pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1"
+  },
+  "identities": {
+    "executiveUpn": "manuel@highvaluecapitalgroup.com",
+    "operationsManagerUpn": "manuel@highvaluecapitalgroup.com",
+    "serviceAccountUpn": "",
+    "notificationMailbox": "manuel@highvaluecapitalgroup.com",
+    "siteOwnerUpn": "manuel@highvaluecapitalgroup.com"
+  },
+  "groups": {
+    "prefix": "HVCG-DEV-",
+    "roleGroups": [
+      "HVCG-DEV-Role-Owner",
+      "HVCG-DEV-Role-Administrator",
+      "HVCG-DEV-Role-OperationsManager",
+      "HVCG-DEV-Role-ProjectManager",
+      "HVCG-DEV-Role-CapitalAdvisor",
+      "HVCG-DEV-Role-FinancialAnalyst",
+      "HVCG-DEV-Role-OperationsAssistant",
+      "HVCG-DEV-Role-Contractor",
+      "HVCG-DEV-Role-ExternalProfessional",
+      "HVCG-DEV-Role-ReadOnlyReviewer"
+    ],
+    "addDeployingUserToRoles": [
+      "HVCG-DEV-Role-Owner",
+      "HVCG-DEV-Role-Administrator",
+      "HVCG-DEV-Role-OperationsManager"
+    ]
+  },
+  "security": {
+    "externalSharingOnDevSites": "Disabled",
+    "allowAnonymousLinks": false,
+    "grantClientOrExternalAccessInDev": false,
+    "breakInheritanceOnClientLibraries": true
+  },
+  "deployment": {
+    "seedSampleData": true,
+    "uploadProjectTemplates": true,
+    "createSampleClientWorkspace": true,
+    "sampleClientCode": "SRM01",
+    "provisionPowerPlatformSolution": true,
+    "failOnNonCriticalErrors": false
+  },
+  "requiredFields": [
+    "tenant.domain",
+    "tenant.sharePointRoot",
+    "identities.executiveUpn",
+    "identities.siteOwnerUpn",
+    "identities.notificationMailbox"
+  ],
+  "configSchemaVersion": "1.0.0",
+  "productVersion": "1.1.0"
+}

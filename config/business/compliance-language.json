@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001",
+  "requirementIds": ["HVCG-V2-COMP-001", "HVCG-V2-PROP-005"],
+  "language": {
+    "generalAdvisory": "High Value Capital Group provides advisory, documentation, preparation, coordination, and strategic support services. HVCG is not a law firm, CPA firm, insurance agency, mortgage broker, real estate brokerage, investment bank, securities broker-dealer, or licensed lender unless separately stated in writing.",
+    "financing": "Financing outcomes are determined by third-party lenders and capital providers. HVCG does not guarantee approval, terms, or funding.",
+    "legalSensitive": "HVCG may organize documentation and coordinate with licensed counsel. HVCG does not provide legal advice or act as an attorney.",
+    "taxMatters": "HVCG may prepare documentation and coordinate with CPAs or tax counsel. HVCG does not provide tax opinions or act as a CPA unless separately stated in writing.",
+    "insuranceReview": "HVCG may help organize policies and loss documentation. HVCG does not sell, bind, or conclusively determine insurance coverage.",
+    "mortgageRealEstate": "HVCG may organize owner documentation for mortgage or real-estate readiness. HVCG is not a mortgage broker or real-estate brokerage unless separately stated in writing.",
+    "estateTrust": "HVCG may organize documents and coordinate professionals for estate/trust matters. HVCG does not provide estate planning legal advice.",
+    "hrTermination": "HVCG may support documentation and process organization. Employment decisions require authorized human review and, where appropriate, employment counsel. HVCG does not make protected-class employment decisions.",
+    "claimsRecovery": "HVCG may support claims documentation and recovery coordination. Outcomes are not guaranteed. Licensed professionals may be required.",
+    "aiSystems": "AI-generated information is provided for workflow and decision-support purposes. Authorized human review is required for legal, financial, tax, HR, insurance, lending, investor, government, contractual, or other consequential decisions."
+  },
+  "outOfScopeStructured": "Services not specifically listed in this scope are excluded and may be quoted separately as a special project or billed at the applicable premium advisory rate.",
+  "outOfScopeRetainer": "Legal, tax, insurance, HR, lending, disputes, claims, and executive concierge work outside the defined retainer may require a separate project, premium hourly billing, or a replenishing retainer."
+}

@@ -1,0 +1,8 @@
+{
+  "type": "BLOCKER",
+  "priority": "HIGH",
+  "subject": "Blocker: ...",
+  "body": "Blocked because ...",
+  "requestedAction": "Unblock or decide",
+  "requiresAcknowledgement": true
+}

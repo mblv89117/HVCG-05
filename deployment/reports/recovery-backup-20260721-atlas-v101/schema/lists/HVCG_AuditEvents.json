@@ -1,0 +1,55 @@
+{
+  "title": "HVCG_AuditEvents",
+  "description": "Significant business audit events",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EventType",
+      "displayName": "EventType",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ActorEmail",
+      "displayName": "ActorEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Details",
+      "displayName": "Details",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EventDate",
+      "displayName": "EventDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

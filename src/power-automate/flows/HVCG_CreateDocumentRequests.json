@@ -1,23 +1,24 @@
 {
   "flowName": "HVCG_CreateDocumentRequests",
   "displayName": "HVCG_CreateDocumentRequests",
-  "description": "Creates document request items from template requiredDocuments.",
+  "description": "Creates HVCG_DocumentRequests records (records only, NO emails). Uses provided DocumentTitles or a standard set of 3. Skips any title that already has an open request for the client.",
   "trigger": {
     "type": "ManualOrChild",
     "inputs": [
-      "ClientListItemId",
       "ClientCode",
-      "TemplateKey",
-      "ProjectId"
+      "ClientListItemId",
+      "ProjectId",
+      "DocumentTitles"
     ]
   },
   "connections": [
-    "SharePoint",
-    "Outlook"
+    "SharePoint"
   ],
   "idempotency": {
     "column": "HVCG_IdempotencyKey",
-    "onDuplicate": "SkippedDuplicate"
+    "keyPattern": "docreq|{ClientCode}|{Title}",
+    "openDuplicateCheck": "ClientCode + Title where RequestStatus not in (Received, Waived, Cancelled)",
+    "onDuplicate": "Skip (counted)"
   },
   "logging": {
     "list": "HVCG_AutomationLogs",
@@ -26,25 +27,58 @@
     "onFailure": true
   },
   "humanApproval": [],
+  "emailPolicy": "NONE - records only regardless of hvcg_EnableClientEmails",
   "steps": [
     {
       "id": 1,
-      "action": "LoadTemplateDocs"
+      "action": "LogStarted"
     },
     {
       "id": 2,
-      "action": "ForeachCreateDocumentRequest"
+      "action": "ResolveClientId",
+      "params": {
+        "list": "HVCG_Clients",
+        "byId": "ClientListItemId",
+        "elseFilter": "ClientCode eq '{ClientCode}'"
+      }
     },
     {
       "id": 3,
-      "action": "OptionalSendChecklistEmail",
+      "action": "BuildDocList",
       "params": {
-        "featureFlag": "HVCG_ENABLE_CLIENT_EMAILS"
+        "default": [
+          "Corporate formation and governance documents (Corporate)",
+          "Trailing twelve months financial statements (Current Financials)",
+          "Most recent business tax return (Tax Returns)"
+        ],
+        "override": "DocumentTitles -> Category=Other"
       }
     },
     {
       "id": 4,
-      "action": "LogSuccess"
+      "action": "ForeachDoc",
+      "params": {
+        "checkOpenDuplicate": true,
+        "list": "HVCG_DocumentRequests",
+        "fields": {
+          "AtlasClientRefId": "{ClientId}",
+          "ProjectIdId": "{ProjectId?}",
+          "ClientCode": "{ClientCode}",
+          "DocumentCategory": "{Category}",
+          "RequestDate": "now",
+          "DueDate": "now+7d",
+          "RequestStatus": "Requested",
+          "InternalOwnerEmail": "hvcg_OpsEmail",
+          "HVCG_IdempotencyKey": "docreq|{ClientCode}|{Title}"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "action": "LogSuccess",
+      "params": {
+        "message": "created + skipped counts"
+      }
     }
   ],
   "errorHandling": {
@@ -53,10 +87,10 @@
     "retryDelaySeconds": 60
   },
   "environmentVariables": [
-    "HVCG_SITE_URL",
-    "HVCG_CLIENTS_HUB_URL",
-    "HVCG_OPS_EMAIL",
-    "HVCG_EXECUTIVE_EMAIL",
-    "HVCG_ENABLE_CLIENT_EMAILS"
+    "hvcg_CommandCenterSiteUrl",
+    "hvcg_ClientsSiteUrl",
+    "hvcg_OpsEmail",
+    "hvcg_ExecutiveEmail",
+    "hvcg_EnableClientEmails"
   ]
 }

@@ -1,0 +1,95 @@
+{
+  "title": "HVCG_Subscriptions",
+  "description": "Ops \u2014 Subscriptions",
+  "template": "genericList",
+  "domain": "Ops",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SoftwareId",
+      "displayName": "SoftwareId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_SoftwareInventory"
+    },
+    {
+      "internalName": "VendorId",
+      "displayName": "VendorId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Vendors"
+    },
+    {
+      "internalName": "BillingCadence",
+      "displayName": "BillingCadence",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Monthly",
+        "Annual",
+        "Usage",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Amount",
+      "displayName": "Amount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "NextBillDate",
+      "displayName": "NextBillDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AutoRenew",
+      "displayName": "AutoRenew",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Active",
+        "Cancelled",
+        "Past Due"
+      ],
+      "default": "Active"
+    }
+  ]
+}

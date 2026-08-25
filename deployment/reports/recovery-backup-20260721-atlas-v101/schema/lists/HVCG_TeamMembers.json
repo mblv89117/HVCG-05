@@ -1,0 +1,111 @@
+{
+  "title": "HVCG_TeamMembers",
+  "description": "Internal team directory for role mapping",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Display name"
+    },
+    {
+      "internalName": "Email",
+      "displayName": "Email",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PrimaryRole",
+      "displayName": "PrimaryRole",
+      "type": "Choice",
+      "required": true,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Owner",
+        "Administrator",
+        "OperationsManager",
+        "ProjectManager",
+        "CapitalAdvisor",
+        "FinancialAnalyst",
+        "OperationsAssistant",
+        "Contractor",
+        "ExternalProfessional",
+        "ClientContact"
+      ]
+    },
+    {
+      "internalName": "IsActive",
+      "displayName": "IsActive",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "CapacityHoursPerWeek",
+      "displayName": "CapacityHoursPerWeek",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 40
+    },
+    {
+      "internalName": "Skills",
+      "displayName": "Skills",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "BillableTargetPct",
+      "displayName": "BillableTargetPct",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 70
+    },
+    {
+      "internalName": "CurrentUtilizationPct",
+      "displayName": "CurrentUtilizationPct",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AvailableHoursThisWeek",
+      "displayName": "AvailableHoursThisWeek",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AssignedProjectCount",
+      "displayName": "AssignedProjectCount",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IsBillable",
+      "displayName": "IsBillable",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    }
+  ]
+}

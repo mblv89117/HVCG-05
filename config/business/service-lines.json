@@ -1,0 +1,66 @@
+{
+  "$schema": "./schemas/service-lines.schema.json",
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001",
+  "serviceLines": [
+    {
+      "code": "SL-CAPITAL",
+      "name": "Capital Advisory & Lender Readiness",
+      "public": true,
+      "active": true,
+      "restricted": false,
+      "description": "Capital readiness, financing support, lender packages, data rooms, and closing coordination."
+    },
+    {
+      "code": "SL-FCFO",
+      "name": "Fractional CFO & Strategic Finance",
+      "public": true,
+      "active": true,
+      "restricted": false,
+      "description": "Monthly reporting, cash flow, forecasting, lender-ready financial packages, and finance operating cadence."
+    },
+    {
+      "code": "SL-PROCUREMENT",
+      "name": "Contract Procurement & Government Readiness",
+      "public": true,
+      "active": true,
+      "restricted": false,
+      "description": "SAM.gov, vendor registrations, capability statements, bid support, and post-award administration."
+    },
+    {
+      "code": "SL-RISK",
+      "name": "Risk, Claims & Liability Reduction",
+      "public": true,
+      "active": true,
+      "restricted": false,
+      "elevatedAccess": true,
+      "description": "Tax/agency matters, unemployment, insurance organization, claims documentation, and recovery coordination."
+    },
+    {
+      "code": "SL-GROWTH",
+      "name": "Growth & Operating Systems",
+      "public": true,
+      "active": true,
+      "restricted": false,
+      "description": "90-day plans, KPI scorecards, CRM/sales process, SOPs, accountability systems, and owner decision support."
+    },
+    {
+      "code": "SL-AI",
+      "name": "Agentic AI & Second Brain Systems",
+      "public": true,
+      "active": true,
+      "restricted": false,
+      "description": "AI Second Brain, knowledge base, agent systems, Microsoft 365 automation, and AI governance/adoption."
+    },
+    {
+      "code": "SL-OWNER",
+      "name": "Executive Owner Support",
+      "public": false,
+      "active": true,
+      "restricted": true,
+      "elevatedAccess": true,
+      "description": "Restricted owner financial, mortgage, estate/trust, and sensitive special-project support."
+    }
+  ]
+}

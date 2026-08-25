@@ -1,0 +1,510 @@
+{
+  "generatedAt": "2026-07-21T05:29:19.688Z",
+  "siteUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev",
+  "siteId": "highvaluecapitalgroup.sharepoint.com,78a75bfc-6444-49d8-8991-9344c618d2d1,a6684928-a95f-4ae5-b6b0-e91003415484",
+  "lists": [
+    {
+      "list": "HVCG_Clients",
+      "schemaFields": 51,
+      "liveFields": 75,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Contacts",
+      "schemaFields": 11,
+      "liveFields": 35,
+      "missing": []
+    },
+    {
+      "list": "HVCG_ReferralPartners",
+      "schemaFields": 12,
+      "liveFields": 36,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Leads",
+      "schemaFields": 21,
+      "liveFields": 59,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Referrals",
+      "schemaFields": 12,
+      "liveFields": 36,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "schemaFields": 34,
+      "liveFields": 58,
+      "missing": []
+    },
+    {
+      "list": "HVCG_OpportunityActivities",
+      "schemaFields": 12,
+      "liveFields": 36,
+      "missing": []
+    },
+    {
+      "list": "HVCG_DiscoveryCalls",
+      "schemaFields": 12,
+      "liveFields": 36,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Proposals",
+      "schemaFields": 15,
+      "liveFields": 39,
+      "missing": []
+    },
+    {
+      "list": "HVCG_WinLossAnalyses",
+      "schemaFields": 10,
+      "liveFields": 34,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Engagements",
+      "schemaFields": 26,
+      "liveFields": 50,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Projects",
+      "schemaFields": 22,
+      "liveFields": 46,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Workstreams",
+      "schemaFields": 6,
+      "liveFields": 30,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Milestones",
+      "schemaFields": 7,
+      "liveFields": 31,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Tasks",
+      "schemaFields": 32,
+      "liveFields": 56,
+      "missing": []
+    },
+    {
+      "list": "HVCG_DocumentRequests",
+      "schemaFields": 31,
+      "liveFields": 55,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Deliverables",
+      "schemaFields": 23,
+      "liveFields": 47,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Meetings",
+      "schemaFields": 25,
+      "liveFields": 49,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Communications",
+      "schemaFields": 12,
+      "liveFields": 36,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Decisions",
+      "schemaFields": 19,
+      "liveFields": 43,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Risks",
+      "schemaFields": 11,
+      "liveFields": 35,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Issues",
+      "schemaFields": 11,
+      "liveFields": 35,
+      "missing": []
+    },
+    {
+      "list": "HVCG_ChangeRequests",
+      "schemaFields": 13,
+      "liveFields": 37,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Assumptions",
+      "schemaFields": 7,
+      "liveFields": 31,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Dependencies",
+      "schemaFields": 7,
+      "liveFields": 31,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Approvals",
+      "schemaFields": 9,
+      "liveFields": 33,
+      "missing": []
+    },
+    {
+      "list": "HVCG_CapitalSources",
+      "schemaFields": 12,
+      "liveFields": 36,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Lenders",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Investors",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_CapitalOpportunities",
+      "schemaFields": 19,
+      "liveFields": 43,
+      "missing": []
+    },
+    {
+      "list": "HVCG_FundingMilestones",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_InvestorOutreach",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_LenderOutreach",
+      "schemaFields": 7,
+      "liveFields": 31,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Invoices",
+      "schemaFields": 14,
+      "liveFields": 38,
+      "missing": []
+    },
+    {
+      "list": "HVCG_FinancialMilestones",
+      "schemaFields": 22,
+      "liveFields": 46,
+      "missing": []
+    },
+    {
+      "list": "HVCG_CollectionsActivities",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Budgets",
+      "schemaFields": 9,
+      "liveFields": 33,
+      "missing": []
+    },
+    {
+      "list": "HVCG_ExpenseApprovals",
+      "schemaFields": 13,
+      "liveFields": 37,
+      "missing": []
+    },
+    {
+      "list": "HVCG_RevenueForecastLines",
+      "schemaFields": 10,
+      "liveFields": 34,
+      "missing": []
+    },
+    {
+      "list": "HVCG_TeamMembers",
+      "schemaFields": 10,
+      "liveFields": 34,
+      "missing": []
+    },
+    {
+      "list": "HVCG_TimeEntries",
+      "schemaFields": 7,
+      "liveFields": 31,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Templates",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_SOPs",
+      "schemaFields": 10,
+      "liveFields": 34,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Policies",
+      "schemaFields": 7,
+      "liveFields": 31,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Vendors",
+      "schemaFields": 9,
+      "liveFields": 33,
+      "missing": []
+    },
+    {
+      "list": "HVCG_SoftwareInventory",
+      "schemaFields": 9,
+      "liveFields": 33,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Subscriptions",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_RecurringExpenses",
+      "schemaFields": 7,
+      "liveFields": 31,
+      "missing": []
+    },
+    {
+      "list": "HVCG_InternalProjects",
+      "schemaFields": 6,
+      "liveFields": 30,
+      "missing": []
+    },
+    {
+      "list": "HVCG_MeetingPlaybooks",
+      "schemaFields": 6,
+      "liveFields": 30,
+      "missing": []
+    },
+    {
+      "list": "HVCG_SalesScripts",
+      "schemaFields": 6,
+      "liveFields": 30,
+      "missing": []
+    },
+    {
+      "list": "HVCG_TrainingCatalog",
+      "schemaFields": 6,
+      "liveFields": 30,
+      "missing": []
+    },
+    {
+      "list": "HVCG_PortalAccess",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_PortalMessages",
+      "schemaFields": 9,
+      "liveFields": 33,
+      "missing": []
+    },
+    {
+      "list": "HVCG_PortalDeliverableLinks",
+      "schemaFields": 5,
+      "liveFields": 29,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AI_Tasks",
+      "schemaFields": 18,
+      "liveFields": 42,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AI_Reviews",
+      "schemaFields": 21,
+      "liveFields": 45,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AI_GeneratedDocuments",
+      "schemaFields": 18,
+      "liveFields": 42,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AI_SuggestedActions",
+      "schemaFields": 18,
+      "liveFields": 42,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AI_DraftEmails",
+      "schemaFields": 18,
+      "liveFields": 42,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AI_MeetingSummaries",
+      "schemaFields": 18,
+      "liveFields": 42,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AI_SOPDrafts",
+      "schemaFields": 18,
+      "liveFields": 42,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AI_QualityReviews",
+      "schemaFields": 18,
+      "liveFields": 42,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AI_Escalations",
+      "schemaFields": 21,
+      "liveFields": 45,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AI_KnowledgeExtraction",
+      "schemaFields": 18,
+      "liveFields": 42,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Relationships",
+      "schemaFields": 24,
+      "liveFields": 48,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AIWorkers",
+      "schemaFields": 9,
+      "liveFields": 33,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AIPrompts",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AIToolRegistry",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AIContext",
+      "schemaFields": 12,
+      "liveFields": 36,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AIJobs",
+      "schemaFields": 33,
+      "liveFields": 57,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AIJobSteps",
+      "schemaFields": 10,
+      "liveFields": 34,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AIOutputs",
+      "schemaFields": 9,
+      "liveFields": 33,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AIApprovals",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AIFeedback",
+      "schemaFields": 6,
+      "liveFields": 30,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AIAuditLog",
+      "schemaFields": 7,
+      "liveFields": 31,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AICostTracking",
+      "schemaFields": 10,
+      "liveFields": 34,
+      "missing": []
+    },
+    {
+      "list": "HVCG_OperationalAlerts",
+      "schemaFields": 11,
+      "liveFields": 35,
+      "missing": []
+    },
+    {
+      "list": "HVCG_SystemInfo",
+      "schemaFields": 8,
+      "liveFields": 32,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AutomationLogs",
+      "schemaFields": 9,
+      "liveFields": 33,
+      "missing": []
+    },
+    {
+      "list": "HVCG_Notifications",
+      "schemaFields": 7,
+      "liveFields": 31,
+      "missing": []
+    },
+    {
+      "list": "HVCG_AuditEvents",
+      "schemaFields": 5,
+      "liveFields": 29,
+      "missing": []
+    }
+  ],
+  "missingLists": [],
+  "missingFields": [],
+  "okLists": 82,
+  "summary": {
+    "indexedLists": 82,
+    "liveLists": 92,
+    "missingListCount": 0,
+    "listsFullyCompliant": 82,
+    "missingFieldCount": 0,
+    "isCompliant": true
+  }
+}
