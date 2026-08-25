@@ -30,6 +30,7 @@ import {
   type OnboardingDocumentReview,
   type OnboardingIdentityReview,
   type OnboardingWorkspaceReview,
+  type OnboardingProjectReview,
   type OnboardingRunRecord,
   resolveOnboardingStateDir,
   upsertOnboardingRun,
@@ -665,6 +666,84 @@ export function composeOnboardingWorkspaceReview(record: {
   };
 }
 
+export function composeOnboardingProjectReview(record: {
+  identityResolutionRequired?: boolean;
+  clientCode?: string;
+  clientName?: string;
+  projectId?: string;
+  projectName?: string;
+  reusedExisting?: boolean;
+  blockers?: string[];
+  communicationPolicy?: OnboardingProjectReview['communicationPolicy'];
+}): OnboardingProjectReview {
+  const identityResolutionRequired = Boolean(record.identityResolutionRequired);
+  const projectId = record.projectId?.trim();
+  const projectReconciled = Boolean(projectId);
+  const reusedExisting = Boolean(record.reusedExisting && projectReconciled);
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const blockers = record.blockers ?? [];
+  const items: string[] = [];
+  if (identityResolutionRequired || !clientCode) {
+    items.push('Client scope missing — assign an entitled ClientCode before project reconciliation');
+  } else if (!projectReconciled) {
+    items.push('Existing entitled project is not confirmed — Atlas will not invent or duplicate a project');
+  }
+  const nextOwnerAction =
+    identityResolutionRequired || !clientCode
+      ? 'Assign entitled client scope before project reconciliation'
+      : !projectReconciled
+        ? 'Confirm the existing entitled onboarding project; do not create a duplicate'
+        : reusedExisting
+          ? 'Existing entitled onboarding project reused — no duplicate project created'
+          : 'Governed onboarding project is reconciled — no duplicate project created';
+  const flags = {
+    projectReconciled,
+    reusedExisting,
+    itemCount: items.length,
+    items,
+    communicationPolicy,
+    nextOwnerAction,
+    send: false as const,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (identityResolutionRequired || !clientCode) {
+    return {
+      status: 'OPEN',
+      ready: false,
+      ...(clientCode ? { clientCode } : {}),
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...(projectId ? { projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...flags,
+      provenance: 'CONFIRMED',
+    };
+  }
+  if (!projectReconciled) {
+    const status = blockers.length ? 'BLOCKED' : 'OPEN';
+    return {
+      status,
+      ready: false,
+      clientCode,
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...flags,
+      provenance: 'PROPOSED',
+    };
+  }
+  return {
+    status: 'CLEAR',
+    ready: true,
+    clientCode,
+    ...(record.clientName ? { clientName: record.clientName } : {}),
+    projectId,
+    ...(record.projectName ? { projectName: record.projectName } : {}),
+    ...flags,
+    provenance: 'CONFIRMED',
+  };
+}
+
 type CompletionGate = { label: string; status: string; ready: boolean };
 
 export function composeOnboardingCompletion(record: {
@@ -847,6 +926,11 @@ export async function runClientOnboardingAutomation(opts: {
         blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
         communicationPolicy: 'DRAFT_ONLY',
       }),
+      projectReview: composeOnboardingProjectReview({
+        identityResolutionRequired: true,
+        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'onboarding_automation',
     };
     upsertOnboardingRun(dir, record);
@@ -871,6 +955,7 @@ export async function runClientOnboardingAutomation(opts: {
   let workspaceReconciled = false;
   let projectId: string | undefined;
   let projectName: string | undefined;
+  let reusedExistingProject = false;
   const taskIds: string[] = [];
   const milestoneIds: string[] = [];
   const blockers: string[] = [];
@@ -897,6 +982,7 @@ export async function runClientOnboardingAutomation(opts: {
       (p) => p.clientCode === clientCode && ONBOARDING_PROJECT_TITLE.test(p.name || ''),
     );
     if (existingProject) {
+      reusedExistingProject = true;
       projectId = existingProject.id;
       projectName = existingProject.name;
       milestones.find((m) => m.id === 'agreement_scope_verified')!.status = 'in_progress';
@@ -1084,6 +1170,16 @@ export async function runClientOnboardingAutomation(opts: {
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });
+  const projectReview = composeOnboardingProjectReview({
+    identityResolutionRequired: false,
+    clientCode,
+    clientName,
+    projectId,
+    projectName,
+    reusedExisting: reusedExistingProject,
+    blockers,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
   if (operationsHandoff.status !== 'NOT_READY') events.push('OPERATIONS_HANDOFF');
   if (kickoff.status !== 'NOT_READY') events.push('KICKOFF');
   if (blockerReview.status !== 'NOT_READY') events.push('BLOCKER_REVIEW');
@@ -1093,6 +1189,7 @@ export async function runClientOnboardingAutomation(opts: {
   if (documentReview.status !== 'NOT_READY') events.push('DOCUMENT_REVIEW');
   if (identityReview.status !== 'NOT_READY') events.push('IDENTITY_REVIEW');
   if (workspaceReview.status !== 'NOT_READY') events.push('WORKSPACE_REVIEW');
+  if (projectReview.status !== 'NOT_READY') events.push('PROJECT_REVIEW');
 
   const record: OnboardingRunRecord = {
     workflowId: opts.workflow.workflowId,
@@ -1133,6 +1230,7 @@ export async function runClientOnboardingAutomation(opts: {
     documentReview,
     identityReview,
     workspaceReview,
+    projectReview,
     provenance: 'onboarding_automation',
   };
 
@@ -1256,6 +1354,8 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'client code',
   'workspace',
   'workspace review',
+  'project review',
+  'project setup',
   'reconcile',
   'start',
   'run',
@@ -1378,6 +1478,35 @@ export function answerOnboardingContext(
       pack.workspaceReconciled ? 'Existing entitled workspace: reused' : 'Existing entitled workspace: not confirmed',
       pack.reusedExisting ? 'No duplicate workspace created.' : 'Atlas did not invent or duplicate a workspace.',
       pack.items.length ? `Open: ${pack.items.join('; ')}` : 'Existing entitled workspace is reconciled.',
+      `Communication policy: ${pack.communicationPolicy}`,
+      `Next owner action: ${pack.nextOwnerAction}`,
+      'Atlas did not invent a ClientCode, send mail, launch GTM, or submit capital.',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }
+  if (q.includes('project review') || q.includes('project setup')) {
+    const pack = record.projectReview ?? composeOnboardingProjectReview({
+      identityResolutionRequired: record.identityResolutionRequired,
+      clientCode: record.clientCode,
+      clientName: record.clientName,
+      projectId: record.projectId,
+      projectName: record.projectName,
+      reusedExisting: Boolean(record.projectReview?.reusedExisting),
+      blockers: record.blockers,
+      communicationPolicy: record.communicationPolicy,
+    });
+    return [
+      `Project review for ${record.clientCode ?? 'unscoped client'}: ${pack.status}`,
+      pack.clientCode ? `ClientCode: ${pack.clientCode}` : 'ClientCode: not assigned',
+      pack.projectName ? `Project: ${pack.projectName}` : '',
+      pack.projectReconciled
+        ? pack.reusedExisting
+          ? 'Existing entitled project: reused'
+          : 'Governed onboarding project: reconciled'
+        : 'Existing entitled project: not confirmed',
+      pack.reusedExisting ? 'No duplicate project created.' : 'Atlas did not invent or duplicate a project.',
+      pack.items.length ? `Open: ${pack.items.join('; ')}` : 'Existing entitled onboarding project is reconciled.',
       `Communication policy: ${pack.communicationPolicy}`,
       `Next owner action: ${pack.nextOwnerAction}`,
       'Atlas did not invent a ClientCode, send mail, launch GTM, or submit capital.',

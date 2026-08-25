@@ -17,6 +17,7 @@ import {
   composeOnboardingDocumentReview,
   composeOnboardingIdentityReview,
   composeOnboardingWorkspaceReview,
+  composeOnboardingProjectReview,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
   isOnboardingProjectTitle,
@@ -1514,6 +1515,96 @@ describe('client onboarding automation', () => {
     assert.match(answer, /Workspace review for ACCG01: OPEN/);
     assert.match(answer, /did not invent or duplicate a workspace|did not invent a ClientCode/);
     assert.equal(/ACCG99|submitted|AUTO_RESPOND|duplicate workspace created/i.test(answer), false);
+  });
+
+  it('prepares onboarding project review from entitled project and answers Ask Atlas', () => {
+    const clear = composeOnboardingProjectReview({
+      identityResolutionRequired: false,
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      reusedExisting: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(clear.status, 'CLEAR');
+    assert.equal(clear.ready, true);
+    assert.equal(clear.send, false);
+    assert.equal(clear.outbound, false);
+    assert.equal(clear.liveGtmOutbound, false);
+    assert.equal(clear.capitalSubmit, false);
+    assert.equal(clear.projectReconciled, true);
+    assert.equal(clear.reusedExisting, true);
+    assert.equal(clear.clientCode, 'ACCG01');
+    assert.equal(clear.projectId, 'proj-1');
+
+    const open = composeOnboardingProjectReview({
+      identityResolutionRequired: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(open.status, 'OPEN');
+    assert.equal(open.ready, false);
+    assert.equal(open.reusedExisting, false);
+    assert.match(open.nextOwnerAction, /Assign entitled client scope before project/);
+
+    const missingProject = composeOnboardingProjectReview({
+      identityResolutionRequired: false,
+      clientCode: 'ACCG01',
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(missingProject.status, 'OPEN');
+    assert.equal(missingProject.ready, false);
+    assert.match(missingProject.nextOwnerAction, /do not create a duplicate/i);
+
+    const now = new Date().toISOString();
+    const record = {
+      workflowId: 'wf-1',
+      workflowDefinitionId: 'def',
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      status: 'IDENTITY_RECONCILIATION' as const,
+      currentStep: 'Resolve authoritative ClientCode',
+      nextStep: 'Provide client scope before onboarding execution',
+      blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+      ownerAttention: ['Assign client scope to onboarding workflow'],
+      taskIds: [],
+      milestoneIds: [],
+      assignedAgents: ['atlas-onboarding-agent'],
+      documentGaps: [],
+      communicationPolicy: 'DRAFT_ONLY' as const,
+      capitalScope: false,
+      identityResolutionRequired: true,
+      workspaceReconciled: false,
+      dryRun: false,
+      createdAt: now,
+      updatedAt: now,
+      milestones: [],
+      operationsHandoff: composeOperationsHandoff({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      kickoff: composeKickoff({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      blockerReview: composeBlockerReview({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      ownerAttentionPackage: composeOwnerAttention({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      projectReview: open,
+      provenance: 'test',
+    };
+    assert.equal(mapsToOnboardingContextIntent('What is the onboarding project review for ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('Review onboarding project setup for ACCG'), 'status');
+    assert.equal(mapsToOnboardingExecuteIntent('What is the onboarding project review for ACCG?'), false);
+    const answer = answerOnboardingContext('What is the onboarding project review for ACCG?', record);
+    assert.match(answer, /Project review for ACCG01: OPEN/);
+    assert.match(answer, /did not invent or duplicate a project|did not invent a ClientCode/);
+    assert.equal(/ACCG99|submitted|AUTO_RESPOND|duplicate project created/i.test(answer), false);
   });
 
   it('restore env', () => {
