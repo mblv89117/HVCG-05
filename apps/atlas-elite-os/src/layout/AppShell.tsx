@@ -33,6 +33,7 @@ import { useAtlasRole } from '../security/RoleProvider';
 import { microsoftConfig } from '../microsoft/config';
 import { workspaceCatalog } from '../data/workspaces';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
+import { isCanonicalClientCode } from '../security/clientCode';
 import { fetchOperatorDesk, fetchOperatorRuntime, postWorkflowDraftAction, searchPm } from '../integrations/hub/pmApi';
 import {
   routeAskAtlasPrompt,
@@ -268,6 +269,11 @@ export function AppShell() {
   const hubAuth = useHubAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const activeClientCode = useMemo(() => {
+    const match = location.pathname.match(/^\/clients\/([^/]+)/);
+    const id = match?.[1];
+    return id && isCanonicalClientCode(id) ? id : undefined;
+  }, [location.pathname]);
   const [scheme, setScheme] = useState<AtlasColorScheme>(readScheme);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
@@ -662,7 +668,9 @@ export function AppShell() {
             return summarizeAskAtlasPrompt(prompt, askAtlasItems, askAtlasError || 'Microsoft sign-in required');
           }
           try {
-            const res = await fetchOperatorRuntime(hubAuth, prompt);
+            const res = await fetchOperatorRuntime(hubAuth, prompt, {
+              clientCode: activeClientCode,
+            });
             const draft = res.workflowDraft;
             if (draft) {
               const actionLabels: Record<string, string> = {
@@ -682,6 +690,10 @@ export function AppShell() {
             if (res.workflowAnswer) return res.workflowAnswer;
             if (route === 'hub_runtime_onboarding') {
               return 'No entitled onboarding context was returned for that question. Atlas does not invent onboarding status or search SharePoint for it.';
+            }
+            const runtimeItems = (res.operatorDesk?.askAtlas?.items || []) as AskAtlasDrawerItem[];
+            if (res.operatorDesk?.askAtlas) {
+              return summarizeAskAtlasPrompt(prompt, runtimeItems, null);
             }
             return summarizeAskAtlasPrompt(prompt, askAtlasItems, null);
           } catch (err) {
