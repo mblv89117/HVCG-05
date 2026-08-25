@@ -236,6 +236,46 @@ describe('get_client_context project operating records', () => {
     assert.deepEqual(viaLoad.clientContext.projects, search.authorizedSearch.projects);
   });
 
+  it('copies entitled same-scope relatedCapital onto client-context projects', async () => {
+    const found = await searchSharePointPm(projectService(), staff, 'SYN01');
+    const capitalHit = {
+      kind: 'capital_opportunity' as const,
+      id: 'cap-syn-1',
+      title: 'SYN01 entitled capital opportunity',
+      href: '/capital?opportunity=cap-syn-1',
+      source: 'HVCG_CapitalOpportunities',
+      clientCode: 'SYN01',
+      provenance: 'CONFIRMED' as const,
+    };
+    const hits = [...found.results, capitalHit];
+    const search = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: reconstructionPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({ query, results: hits }),
+    });
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: reconstructionPicture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: hits,
+    });
+    const current = viaIndex.clientContext.projects.items.find((row) => row.id === 'proj-syn-1');
+    const searchCurrent = search.authorizedSearch.projects.items.find((row) => row.id === 'proj-syn-1');
+    assert.ok(current);
+    assert.ok(searchCurrent);
+    assert.equal(current.relatedCapital?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.deepEqual(current.relatedCapital, searchCurrent.relatedCapital);
+    assert.deepEqual(viaIndex.clientContext.projects, search.authorizedSearch.projects);
+    assert.equal(current.relatedCapital?.every((row) => row.policyClass === 'PREPARE_ONLY'), true);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assert.equal(viaIndex.clientContext.capitalSubmissions.send, false);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.externalSubmit, false);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.ownerGated, true);
+    assert.equal(/TargetAmount|downloadUrl|Hub-MI|5000000/i.test(JSON.stringify(current.relatedCapital)), false);
+    noInvent(viaIndex.clientContext.projects);
+  });
+
   it('does not invent ClientCodes, leak foreign rows, or promote recovered LIKELY', async () => {
     const found = await searchSharePointPm(projectService(), staff, 'SYN01');
     const result = getClientContext({
@@ -345,7 +385,8 @@ describe('get_client_context project operating records', () => {
       const unsignedCtx = await fetch(`http://127.0.0.1:${port}/operator/client-context.json?client=SYN01`);
       const ctxText = await unsignedCtx.text();
       const ctxTap =
-        unsignedCtx.status === 401 && !/PDG01|HFD01|CCB01|clientContext|authorizedSearch|operatorDesk/i.test(ctxText);
+        unsignedCtx.status === 401 &&
+        !/PDG01|HFD01|CCB01|clientContext|authorizedSearch|operatorDesk|relatedCapital/i.test(ctxText);
       assert.equal(unsignedCtx.status, 401, 'not ok 1 - unsigned /operator/client-context.json 401');
       const ctxBody = JSON.parse(ctxText) as { error?: string; clientContext?: AtlasClientContext };
       assert.equal(ctxBody.error, 'unauthorized');
