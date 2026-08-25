@@ -130,6 +130,22 @@
  * externalSubmit=false / ownerGated=true / financingStatus UNKNOWN
  * stay as composed. Not a second communications or capital product.
  * Not external submit. Not send.
+ * + ATLAS-CAPITAL-PREPARE-RELATED-CAPITAL-001
+ * Optional relatedCapital on CapitalSubmissionPrepareRecord copies
+ * already-entitled same-scope *other* capital-prepare refs (peer
+ * rows, never self; same RelatedDocumentCapitalRef / relatedCapital
+ * path as research-intel / onboarding / client-support). Fail-closed
+ * when ClientCode is missing / non-canonical. Unscoped never receives
+ * scoped capital. Unscoped lender catalog titles never attach scoped
+ * capital. Client A never receives Client B. Self never appears.
+ * PREPARE_ONLY / send=false / externalSubmit=false / ownerGated=true
+ * / financingStatus UNKNOWN stay as composed on the host row and the
+ * relatedCapital refs. Never invent TargetAmount, lender criteria,
+ * fit, financing status, titles, ids, counts, ClientCodes, or Hub-MI.
+ * No downloadUrl. No contentBytes. relatedThreads / relatedProjects /
+ * relatedAttachments / relatedMeetings / relatedDocuments /
+ * researchRelationship stay as composed. Not a second capital
+ * product. Not external submit. Not send.
  * + ATLAS-DOCUMENT-RESEARCH-RELATIONSHIP-001
  * Inverse researchRelationship on DocumentOperatingRecord copies the
  * same already-authorized same-scope researchIntelligence items
@@ -5033,7 +5049,7 @@ describe('ATLAS-CLIENT-SUPPORT-RELATED-DOCUMENTS-001 entitled same-scope inverse
   });
 });
 
-function syn01CapitalHit() {
+function syn01CapitalHit(overrides: Record<string, unknown> = {}) {
   return {
     kind: 'capital_opportunity' as const,
     id: 'cap-syn-1',
@@ -5042,7 +5058,17 @@ function syn01CapitalHit() {
     source: 'HVCG_CapitalOpportunities',
     clientCode: 'SYN01',
     provenance: 'CONFIRMED' as const,
+    ...overrides,
   };
+}
+
+function syn01PeerCapitalHit(overrides: Record<string, unknown> = {}) {
+  return syn01CapitalHit({
+    id: 'cap-syn-2',
+    title: 'SYN01 peer capital opportunity',
+    href: '/capital?opportunity=cap-syn-2',
+    ...overrides,
+  });
 }
 
 function syn01CapitalRecord(overrides: Partial<CapitalSubmissionPrepareRecord> = {}): CapitalSubmissionPrepareRecord {
@@ -5072,6 +5098,25 @@ function syn01CapitalRecord(overrides: Partial<CapitalSubmissionPrepareRecord> =
       'Owner review of this PREPARE-only package. External lender/investor submission remains owner-gated.',
     ...overrides,
   };
+}
+
+function syn01PeerCapitalRecord(
+  overrides: Partial<CapitalSubmissionPrepareRecord> = {},
+): CapitalSubmissionPrepareRecord {
+  return syn01CapitalRecord({
+    id: 'cap-syn-2',
+    title: 'SYN01 peer capital opportunity',
+    evidence: [
+      {
+        kind: 'capital_opportunity',
+        id: 'cap-syn-2',
+        title: 'SYN01 peer capital opportunity',
+        source: 'HVCG_CapitalOpportunities',
+        classification: 'CONFIRMED',
+      },
+    ],
+    ...overrides,
+  });
 }
 
 describe('ATLAS-CAPITAL-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse', () => {
@@ -7441,6 +7486,586 @@ describe('ATLAS-CAPITAL-PREPARE-RELATED-THREADS-001 entitled same-scope inverse'
     assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
     assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
     assertCapitalRelatedThreadsHonesty(capital);
+  });
+});
+
+function assertCapitalRelatedCapitalHonesty(item: CapitalSubmissionPrepareRecord): void {
+  assertCapitalRelatedThreadsHonesty(item);
+  const capitalBlob = JSON.stringify(item.relatedCapital || []);
+  assert.equal(
+    /downloadUrl|contentBytes|transcript|attendee|TargetAmount|suggestedDraft/i.test(capitalBlob),
+    false,
+  );
+  assert.equal(/Hub-MI/i.test(capitalBlob), false);
+  assert.equal(/previewGetUrl|previewPostUrl/i.test(capitalBlob), false);
+  for (const row of item.relatedCapital || []) {
+    assert.notEqual(row.id, item.id);
+    assert.equal(row.policyClass, CAPITAL_SUBMISSION_POLICY_CLASS);
+    assert.equal(row.financingStatus, CAPITAL_SUBMISSION_FINANCING_STATUS);
+    assert.equal(row.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(row.lenderCriteriaInvented, false);
+    assert.equal(row.invented, false);
+    assert.equal('TargetAmount' in row, false);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('contentBytes' in row, false);
+    assert.equal('hubMiRow' in row, false);
+    assert.equal('transcript' in row, false);
+  }
+}
+
+describe('ATLAS-CAPITAL-PREPARE-RELATED-CAPITAL-001 entitled same-scope peer inverse', () => {
+  function searchWithCapitalPeers(
+    capitalItems: CapitalSubmissionPrepareRecord[] = [syn01CapitalRecord(), syn01PeerCapitalRecord()],
+    threads: MailThreadOperatingRecord[] = [syn01ThreadRecord()],
+    projects: ProjectOperatingRecord[] = [syn01ProjectRecord()],
+    documents: DocumentOperatingRecord[] = [syn01DocumentRecord(), syn01AttachmentRecord()],
+    hits: AtlasAuthorizedSearchHit[] = [syn01DocumentHit(), syn01AttachmentHit()],
+    research: ResearchIntelligenceRecord[] = [syn01ClientResearchRecord()],
+  ): AtlasAuthorizedSearch {
+    return {
+      ...searchWithResearch(research),
+      documents: {
+        kind: 'document_operating_record_v1',
+        policyClass: 'READ_AUTO',
+        binariesInAtlas: false,
+        items: documents,
+      },
+      projects: {
+        kind: 'project_operating_record_v1',
+        policyClass: 'READ_AUTO',
+        invented: false,
+        currentClientsFirst: true,
+        items: projects,
+      },
+      threads: syn01ThreadsSlice(threads),
+      capitalSubmissions: syn01CapitalSlice(capitalItems),
+      hits,
+    };
+  }
+
+  it('attaches same-scope relatedCapital peers on entitled capital and get_client_context', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01MeetingHit(),
+          syn01CapitalHit(),
+          syn01PeerCapitalHit(),
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01ProjectHit(),
+          syn01ThreadHit(),
+        ],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    const peer = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-2');
+    assert.ok(capital);
+    assert.ok(peer);
+    const related = capital.relatedCapital?.find((row) => row.id === 'cap-syn-2');
+    assert.ok(related);
+    assert.equal(related.title, 'SYN01 peer capital opportunity');
+    assert.equal(related.clientCode, 'SYN01');
+    assert.equal(related.policyClass, CAPITAL_SUBMISSION_POLICY_CLASS);
+    assert.equal(related.financingStatus, CAPITAL_SUBMISSION_FINANCING_STATUS);
+    assert.equal(related.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(related.lenderCriteriaInvented, false);
+    assert.equal(related.invented, false);
+    assert.equal('TargetAmount' in related, false);
+    assert.equal(capital.relatedCapital?.some((row) => row.id === 'cap-syn-1'), false);
+    assert.equal(peer.relatedCapital?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.equal(peer.relatedCapital?.some((row) => row.id === 'cap-syn-2'), false);
+    assert.ok((capital.relatedCapital?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal(capital.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(capital.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(capital.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(capital.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(capital.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(
+      capital.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(
+      /downloadUrl|contentBytes|transcript|attendee|TargetAmount|suggestedDraft/i.test(
+        JSON.stringify(capital.relatedCapital),
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(capital.relatedCapital).includes('PDG01'), false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assert.equal(capital.financingStatus, 'UNKNOWN');
+    assert.equal(capital.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(capital.lenderCriteriaInvented, false);
+    assert.equal(capital.invented, false);
+    assertCapitalRelatedCapitalHonesty(capital);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: [
+        syn01ClientHit(),
+        syn01MeetingHit(),
+        syn01CapitalHit(),
+        syn01PeerCapitalHit(),
+        syn01DocumentHit(),
+        syn01AttachmentHit(),
+        syn01ProjectHit(),
+        syn01ThreadHit(),
+      ],
+    });
+    const ctxCapital = viaIndex.clientContext.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(ctxCapital);
+    assert.equal(ctxCapital.relatedCapital?.some((row) => row.id === 'cap-syn-2'), true);
+    assert.equal(ctxCapital.relatedCapital?.some((row) => row.id === 'cap-syn-1'), false);
+    assert.deepEqual(ctxCapital.relatedCapital, capital.relatedCapital);
+    assert.deepEqual(ctxCapital.relatedThreads, capital.relatedThreads);
+    assert.deepEqual(ctxCapital.relatedProjects, capital.relatedProjects);
+    assert.deepEqual(ctxCapital.relatedAttachments, capital.relatedAttachments);
+    assert.deepEqual(ctxCapital.relatedDocuments, capital.relatedDocuments);
+    assert.deepEqual(ctxCapital.relatedMeetings, capital.relatedMeetings);
+    assert.deepEqual(ctxCapital.researchRelationship, capital.researchRelationship);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.send, false);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.externalSubmit, false);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.ownerGated, true);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+  });
+
+  it('honestly omits relatedCapital when no other entitled capital rows exist', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01MeetingHit(),
+          syn01CapitalHit(),
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01ProjectHit(),
+          syn01ThreadHit(),
+        ],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(capital);
+    assert.equal(capital.relatedCapital, undefined);
+    assert.equal('relatedCapital' in capital, false);
+    assert.equal(capital.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(capital.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(capital.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(capital.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(capital.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(
+      capital.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assertCapitalRelatedCapitalHonesty(capital);
+  });
+
+  it('never attaches Client B / PDG01 capital to a Client A capital row', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01MeetingHit(),
+          syn01CapitalHit(),
+          syn01PeerCapitalHit(),
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01ProjectHit(),
+          syn01ThreadHit(),
+          {
+            kind: 'capital_opportunity' as const,
+            id: 'cap-pdg',
+            title: 'PDG01 leak capital',
+            href: '/capital?opportunity=cap-pdg',
+            source: 'HVCG_CapitalOpportunities',
+            clientCode: 'PDG01',
+            provenance: 'CONFIRMED' as const,
+          },
+        ],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(capital);
+    assert.equal(capital.relatedCapital?.some((row) => row.id === 'cap-syn-2'), true);
+    assert.equal(capital.relatedCapital?.some((row) => row.id === 'cap-syn-1'), false);
+    assert.equal(
+      (capital.relatedCapital || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)),
+      false,
+    );
+    const blob = JSON.stringify(result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1'));
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(blob.includes('cap-pdg'), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assertCapitalRelatedCapitalHonesty(capital);
+  });
+
+  it('mixed entitled + PDG01 + unscoped lender catalog attaches only entitled same-scope peers', () => {
+    const mixed = attachRelatedContextToCapitalSubmission(
+      staff,
+      syn01CapitalRecord(),
+      searchWithCapitalPeers([
+        syn01CapitalRecord(),
+        syn01PeerCapitalRecord(),
+        syn01CapitalRecord({
+          id: 'cap-pdg',
+          title: 'PDG01 leak capital',
+          clientCode: 'PDG01',
+        }),
+        syn01CapitalRecord({
+          id: 'cap-lender-catalog',
+          title: 'Live Oak Bank catalog',
+          clientCode: undefined,
+        }),
+      ]),
+    );
+    assert.equal(mixed.relatedCapital?.some((row) => row.id === 'cap-syn-2'), true);
+    assert.equal(mixed.relatedCapital?.some((row) => row.id === 'cap-syn-1'), false);
+    assert.equal(
+      (mixed.relatedCapital || []).some((row) => /pdg|live oak/i.test(row.id) || /pdg|live oak/i.test(row.title)),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.relatedCapital).includes('PDG01'), false);
+    assert.equal(JSON.stringify(mixed.relatedCapital).includes('cap-pdg'), false);
+    assert.equal(JSON.stringify(mixed.relatedCapital).includes('cap-lender-catalog'), false);
+    assert.equal(/live oak/i.test(JSON.stringify(mixed.relatedCapital)), false);
+    assert.equal(mixed.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(mixed.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(mixed.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(mixed.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(mixed.invented, false);
+    assert.equal(mixed.lenderCriteriaInvented, false);
+    assert.equal(mixed.financingStatus, 'UNKNOWN');
+    assertCapitalRelatedCapitalHonesty(mixed);
+  });
+
+  it('omits relatedCapital when capital ClientCode is missing rather than guessing', () => {
+    const omitted = attachRelatedContextToCapitalSubmission(
+      manny,
+      syn01CapitalRecord({
+        id: 'cap-unscoped',
+        clientCode: undefined,
+      }),
+      searchWithCapitalPeers(),
+    );
+    assert.equal(omitted.relatedCapital, undefined);
+    assert.equal('relatedCapital' in omitted, false);
+    assert.equal(omitted.relatedThreads, undefined);
+    assert.equal(omitted.relatedProjects, undefined);
+    assert.equal(omitted.relatedAttachments, undefined);
+    assert.equal(omitted.relatedDocuments, undefined);
+    assert.equal(omitted.researchRelationship, undefined);
+    assert.equal(omitted.invented, false);
+    assert.equal(omitted.lenderCriteriaInvented, false);
+    assert.equal(omitted.financingStatus, 'UNKNOWN');
+  });
+
+  it('omits relatedCapital when capital ClientCode is non-canonical rather than guessing', () => {
+    const omitted = attachRelatedContextToCapitalSubmission(
+      manny,
+      syn01CapitalRecord({
+        id: 'cap-noncanonical',
+        clientCode: 'syn01',
+      }),
+      searchWithCapitalPeers(),
+    );
+    assert.equal(omitted.relatedCapital, undefined);
+    assert.equal('relatedCapital' in omitted, false);
+    assert.equal(omitted.relatedThreads, undefined);
+    assert.equal(omitted.relatedProjects, undefined);
+    assert.equal(omitted.relatedAttachments, undefined);
+    assert.equal(omitted.relatedDocuments, undefined);
+    assert.equal(omitted.researchRelationship, undefined);
+    assert.equal(omitted.invented, false);
+    assert.equal(omitted.lenderCriteriaInvented, false);
+    assert.equal(omitted.financingStatus, 'UNKNOWN');
+  });
+
+  it('unscoped lender catalog capital never receives scoped relatedCapital', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: manny,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'lender',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'lender' as const,
+            id: 'ln-liveoak',
+            title: 'Live Oak Bank',
+            href: '/capital?lender=ln-liveoak',
+            source: 'HVCG_Lenders',
+            provenance: 'CONFIRMED' as const,
+          },
+          syn01PeerCapitalHit(),
+        ],
+      }),
+    });
+    assert.equal(
+      result.authorizedSearch.capitalSubmissions.catalogCopies.some((row) => 'relatedCapital' in row),
+      false,
+    );
+    const catalogBlob = JSON.stringify(result.authorizedSearch.capitalSubmissions.catalogCopies);
+    assert.equal(/relatedCapital/i.test(catalogBlob), false);
+    const scoped = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-2');
+    if (scoped) {
+      assert.equal(scoped.relatedCapital, undefined);
+      assert.equal('relatedCapital' in scoped, false);
+    }
+    assert.equal(/TargetAmount/i.test(JSON.stringify(result.authorizedSearch.capitalSubmissions)), false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+  });
+
+  it('omits extras for unauthorized or other-client principals', async () => {
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01CapitalHit(), syn01PeerCapitalHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.entitled, false);
+    assert.equal(unknown.authorizedSearch.capitalSubmissions.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.capitalSubmissions.items.some((row) => row.relatedCapital),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.capitalSubmissions);
+    assert.equal(unknownBlob.includes('cap-syn-1'), false);
+    assert.equal(unknownBlob.includes('cap-syn-2'), false);
+    assert.equal(unknown.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(unknown.authorizedSearch.capitalSubmissions.externalSubmit, false);
+
+    const denied = attachRelatedContextToCapitalSubmission(
+      otherStaff,
+      syn01CapitalRecord(),
+      searchWithCapitalPeers(),
+    );
+    assert.equal(denied.relatedCapital, undefined);
+    assert.equal('relatedCapital' in denied, false);
+    assert.equal(denied.relatedThreads, undefined);
+    assert.equal(denied.relatedProjects, undefined);
+    assert.equal(denied.relatedAttachments, undefined);
+    assert.equal(denied.relatedDocuments, undefined);
+    assert.equal(denied.researchRelationship, undefined);
+    assert.equal(denied.invented, false);
+    assert.equal(denied.lenderCriteriaInvented, false);
+    assert.equal(denied.financingStatus, 'UNKNOWN');
+  });
+
+  it('leaves the empty capital payload unchanged', () => {
+    const empty = emptyCapitalSubmissionPayload();
+    assert.deepEqual(empty.items, []);
+    assert.equal('relatedCapital' in empty, false);
+    assert.equal(empty.send, false);
+    assert.equal(empty.externalSubmit, false);
+    assert.equal(empty.ownerGated, true);
+    assert.equal(empty.policyClass, 'PREPARE_ONLY');
+    const attachedEmpty = attachRelatedContextToCapitalSubmissions(
+      staff,
+      empty,
+      searchWithCapitalPeers(),
+    );
+    assert.equal(attachedEmpty, empty);
+    assert.deepEqual(attachedEmpty, empty);
+    assert.equal(attachedEmpty.items.length, 0);
+    assert.equal(attachedEmpty.send, false);
+    assert.equal(attachedEmpty.externalSubmit, false);
+  });
+
+  it('omits relatedCapital when search.capitalSubmissions is absent', () => {
+    const { capitalSubmissions: _caps, ...withoutCapital } = searchWithResearch([syn01ClientResearchRecord()]);
+    const absent = attachRelatedContextToCapitalSubmission(
+      staff,
+      syn01CapitalRecord(),
+      {
+        ...withoutCapital,
+        documents: {
+          kind: 'document_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          binariesInAtlas: false,
+          items: [syn01DocumentRecord(), syn01AttachmentRecord()],
+        },
+        projects: {
+          kind: 'project_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          currentClientsFirst: true,
+          items: [syn01ProjectRecord()],
+        },
+        threads: syn01ThreadsSlice(),
+        hits: [syn01DocumentHit(), syn01AttachmentHit()],
+      } as unknown as AtlasAuthorizedSearch,
+    );
+    assert.equal(absent.relatedCapital, undefined);
+    assert.equal('relatedCapital' in absent, false);
+    assert.equal(absent.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(absent.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(absent.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(absent.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(absent.invented, false);
+    assert.equal(absent.lenderCriteriaInvented, false);
+    assert.equal(absent.financingStatus, 'UNKNOWN');
+  });
+
+  it('never invents downloadUrl, contentBytes, TargetAmount, or Hub-MI', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          {
+            ...syn01CapitalHit(),
+            downloadUrl: 'https://evil.example/download',
+            contentBytes: 'Invented binary',
+            TargetAmount: 5000000,
+            hubMiRow: true,
+          },
+          {
+            ...syn01PeerCapitalHit(),
+            downloadUrl: 'https://evil.example/download-peer',
+            contentBytes: 'Invented peer binary',
+            TargetAmount: 7500000,
+            hubMiRow: true,
+          },
+        ],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(capital);
+    const blob = JSON.stringify(result.authorizedSearch.capitalSubmissions);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/contentBytes/i.test(blob), false);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(/Hub-MI/i.test(blob), false);
+    assert.equal(blob.includes('5000000'), false);
+    assert.equal(blob.includes('7500000'), false);
+    const attached = capital.relatedCapital?.find((row) => row.id === 'cap-syn-2');
+    assert.ok(attached);
+    assert.equal(attached.title, 'SYN01 peer capital opportunity');
+    assert.equal('downloadUrl' in attached, false);
+    assert.equal('contentBytes' in attached, false);
+    assert.equal('TargetAmount' in attached, false);
+    assert.equal('hubMiRow' in attached, false);
+    assert.equal(capital.relatedCapital?.some((row) => row.id === 'cap-syn-1'), false);
+    assert.equal(capital.invented, false);
+    assert.equal(capital.lenderCriteriaInvented, false);
+    assert.equal(capital.financingStatus, 'UNKNOWN');
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assertCapitalRelatedCapitalHonesty(capital);
+  });
+
+  it('send=false / externalSubmit=false / policyClass PREPARE_ONLY stay as composed on host and refs', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01CapitalHit(), syn01PeerCapitalHit()],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(capital);
+    const related = capital.relatedCapital?.find((row) => row.id === 'cap-syn-2');
+    assert.ok(related);
+    assert.equal(related.policyClass, 'PREPARE_ONLY');
+    assert.equal(related.financingStatus, 'UNKNOWN');
+    assert.equal(related.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(related.lenderCriteriaInvented, false);
+    assert.equal(related.invented, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assert.equal(capital.financingStatus, 'UNKNOWN');
+    assert.equal(capital.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(capital.lenderCriteriaInvented, false);
+    assert.equal(capital.invented, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.invented, false);
+    assertCapitalRelatedCapitalHonesty(capital);
+  });
+
+  it('still attaches relatedThreads, relatedProjects, relatedAttachments, relatedMeetings, relatedDocuments, and researchRelationship next to relatedCapital', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01CapitalHit(),
+          syn01PeerCapitalHit(),
+          syn01MeetingHit(),
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01ProjectHit(),
+          syn01ThreadHit(),
+        ],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(capital);
+    assert.equal(capital.relatedCapital?.some((row) => row.id === 'cap-syn-2'), true);
+    assert.equal(capital.relatedCapital?.some((row) => row.id === 'cap-syn-1'), false);
+    assert.equal(capital.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(capital.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(capital.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(capital.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(capital.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(
+      capital.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(JSON.stringify(capital.relatedCapital).includes('PDG01'), false);
+    assert.equal(JSON.stringify(capital.relatedThreads).includes('PDG01'), false);
+    assert.equal(JSON.stringify(capital.relatedProjects).includes('PDG01'), false);
+    assert.equal(JSON.stringify(capital.relatedAttachments).includes('PDG01'), false);
+    assert.equal(JSON.stringify(capital.relatedDocuments).includes('PDG01'), false);
+    assert.equal(
+      /downloadUrl|contentBytes|transcript|TargetAmount|suggestedDraft/i.test(JSON.stringify(capital.relatedCapital)),
+      false,
+    );
+    assert.equal(capital.relatedAttachments?.every((row) => row.binariesInAtlas === false), true);
+    assert.equal(capital.invented, false);
+    assert.equal(capital.lenderCriteriaInvented, false);
+    assert.equal(capital.financingStatus, 'UNKNOWN');
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assertCapitalRelatedCapitalHonesty(capital);
   });
 });
 
