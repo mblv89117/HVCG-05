@@ -28,6 +28,7 @@ import {
   type OnboardingMilestoneReview,
   type OnboardingCompletion,
   type OnboardingDocumentReview,
+  type OnboardingIdentityReview,
   type OnboardingRunRecord,
   resolveOnboardingStateDir,
   upsertOnboardingRun,
@@ -524,6 +525,75 @@ export function composeOnboardingDocumentReview(record: {
   };
 }
 
+export function composeOnboardingIdentityReview(record: {
+  identityResolutionRequired?: boolean;
+  clientCode?: string;
+  clientName?: string;
+  entitled?: boolean;
+  blockers?: string[];
+  communicationPolicy?: OnboardingIdentityReview['communicationPolicy'];
+}): OnboardingIdentityReview {
+  const identityResolutionRequired = Boolean(record.identityResolutionRequired);
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const entitled = Boolean(record.entitled && clientCode);
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const blockers = record.blockers ?? [];
+  const items: string[] = [];
+  if (identityResolutionRequired || !clientCode) {
+    items.push('Client scope missing — assign an entitled ClientCode before onboarding execution');
+  } else if (!entitled) {
+    items.push('ClientCode is not on the entitled roster — Atlas does not invent ClientCodes');
+  }
+  const nextOwnerAction =
+    identityResolutionRequired || !clientCode
+      ? 'Assign entitled client scope to the onboarding workflow'
+      : !entitled
+        ? 'Do not invent a ClientCode; use an entitled roster code'
+        : blockers.includes('IDENTITY_RESOLUTION_REQUIRED')
+          ? 'Assign entitled client scope to the onboarding workflow'
+          : 'Client identity is reconciled against the entitled roster';
+  const flags = {
+    entitled,
+    identityResolutionRequired,
+    itemCount: items.length,
+    items,
+    communicationPolicy,
+    nextOwnerAction,
+    send: false as const,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (identityResolutionRequired || !clientCode) {
+    return {
+      status: 'OPEN',
+      ready: false,
+      ...(clientCode ? { clientCode } : {}),
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...flags,
+      provenance: 'CONFIRMED',
+    };
+  }
+  if (!entitled) {
+    return {
+      status: 'BLOCKED',
+      ready: false,
+      clientCode,
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...flags,
+      provenance: 'CONFIRMED',
+    };
+  }
+  return {
+    status: 'CLEAR',
+    ready: true,
+    clientCode,
+    ...(record.clientName ? { clientName: record.clientName } : {}),
+    ...flags,
+    provenance: 'CONFIRMED',
+  };
+}
+
 type CompletionGate = { label: string; status: string; ready: boolean };
 
 export function composeOnboardingCompletion(record: {
@@ -692,6 +762,11 @@ export async function runClientOnboardingAutomation(opts: {
       documentReview: composeOnboardingDocumentReview({
         identityResolutionRequired: true,
         workspaceReconciled: false,
+        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      identityReview: composeOnboardingIdentityReview({
+        identityResolutionRequired: true,
         blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
         communicationPolicy: 'DRAFT_ONLY',
       }),
@@ -915,6 +990,14 @@ export async function runClientOnboardingAutomation(opts: {
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });
+  const identityReview = composeOnboardingIdentityReview({
+    identityResolutionRequired: false,
+    clientCode,
+    clientName,
+    entitled: true,
+    blockers,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
   if (operationsHandoff.status !== 'NOT_READY') events.push('OPERATIONS_HANDOFF');
   if (kickoff.status !== 'NOT_READY') events.push('KICKOFF');
   if (blockerReview.status !== 'NOT_READY') events.push('BLOCKER_REVIEW');
@@ -922,6 +1005,7 @@ export async function runClientOnboardingAutomation(opts: {
   if (milestoneReview.status !== 'NOT_READY') events.push('MILESTONE_REVIEW');
   if (completion.status !== 'NOT_READY') events.push('COMPLETION');
   if (documentReview.status !== 'NOT_READY') events.push('DOCUMENT_REVIEW');
+  if (identityReview.status !== 'NOT_READY') events.push('IDENTITY_REVIEW');
 
   const record: OnboardingRunRecord = {
     workflowId: opts.workflow.workflowId,
@@ -960,6 +1044,7 @@ export async function runClientOnboardingAutomation(opts: {
     milestoneReview,
     completion,
     documentReview,
+    identityReview,
     provenance: 'onboarding_automation',
   };
 
@@ -1077,6 +1162,10 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'document',
   'document review',
   'document collection',
+  'identity',
+  'identity review',
+  'client scope',
+  'client code',
   'reconcile',
   'start',
   'run',
@@ -1161,6 +1250,27 @@ export function answerOnboardingContext(
       return answerFromExistingOnboarding(extras.match ?? { kind: 'none', candidates: [] }, extras);
     }
     return 'No onboarding run found for the requested client. Activate a Client Onboarding workflow or provide a client code.';
+  }
+  if (q.includes('identity') || q.includes('client scope') || q.includes('client code')) {
+    const pack = record.identityReview ?? composeOnboardingIdentityReview({
+      identityResolutionRequired: record.identityResolutionRequired,
+      clientCode: record.clientCode,
+      clientName: record.clientName,
+      entitled: Boolean(record.clientCode && !record.identityResolutionRequired),
+      blockers: record.blockers,
+      communicationPolicy: record.communicationPolicy,
+    });
+    return [
+      `Identity review for ${record.clientCode ?? 'unscoped client'}: ${pack.status}`,
+      pack.clientCode ? `ClientCode: ${pack.clientCode}` : 'ClientCode: not assigned',
+      pack.entitled ? 'Entitled roster: yes' : 'Entitled roster: no',
+      pack.items.length ? `Open: ${pack.items.join('; ')}` : 'Client identity is reconciled against the entitled roster.',
+      `Communication policy: ${pack.communicationPolicy}`,
+      `Next owner action: ${pack.nextOwnerAction}`,
+      'Atlas did not invent a ClientCode, send mail, launch GTM, or submit capital.',
+    ]
+      .filter(Boolean)
+      .join('\n');
   }
   if (q.includes('completion') || q.includes('finished') || (q.includes('complete') && !q.includes('document') && !q.includes('milestone'))) {
     const pack = record.completion ?? composeOnboardingCompletion({

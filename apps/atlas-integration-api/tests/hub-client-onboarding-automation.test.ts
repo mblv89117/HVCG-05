@@ -15,6 +15,7 @@ import {
   composeMilestoneReview,
   composeOnboardingCompletion,
   composeOnboardingDocumentReview,
+  composeOnboardingIdentityReview,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
   isOnboardingProjectTitle,
@@ -115,6 +116,12 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.documentReview.ready, false);
     assert.equal(result.record.documentReview.send, false);
     assert.equal(result.record.documentReview.outbound, false);
+    assert.equal(result.record.identityReview.status, 'OPEN');
+    assert.equal(result.record.identityReview.ready, false);
+    assert.equal(result.record.identityReview.send, false);
+    assert.equal(result.record.identityReview.outbound, false);
+    assert.equal(result.record.identityReview.capitalSubmit, false);
+    assert.equal(result.record.identityReview.entitled, false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -462,6 +469,12 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.documentReview.capitalSubmit, false);
     assert.equal(first.record?.documentReview.status, 'OPEN');
     assert.equal(first.record?.documentReview.ready, false);
+    assert.equal(first.record?.identityReview.send, false);
+    assert.equal(first.record?.identityReview.outbound, false);
+    assert.equal(first.record?.identityReview.capitalSubmit, false);
+    assert.equal(first.record?.identityReview.status, 'CLEAR');
+    assert.equal(first.record?.identityReview.ready, true);
+    assert.equal(first.record?.identityReview.clientCode, 'ACCG01');
     assert.equal(first.record?.dryRun, false);
     assert.equal(createProjectCalls, 1);
     const firstWorkflowId = first.workflow?.workflowId;
@@ -1307,6 +1320,94 @@ describe('client onboarding automation', () => {
     assert.match(answer, /Tax ID \/ W-9 where applicable/);
     assert.match(answer, /did not invent document receipt/);
     assert.equal(/ACCG99|invented receipt|submitted|AUTO_RESPOND/i.test(answer), false);
+  });
+
+  it('prepares onboarding identity review from entitled scope and answers Ask Atlas', () => {
+    const clear = composeOnboardingIdentityReview({
+      identityResolutionRequired: false,
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      entitled: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(clear.status, 'CLEAR');
+    assert.equal(clear.ready, true);
+    assert.equal(clear.send, false);
+    assert.equal(clear.outbound, false);
+    assert.equal(clear.liveGtmOutbound, false);
+    assert.equal(clear.capitalSubmit, false);
+    assert.equal(clear.entitled, true);
+    assert.equal(clear.clientCode, 'ACCG01');
+
+    const open = composeOnboardingIdentityReview({
+      identityResolutionRequired: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(open.status, 'OPEN');
+    assert.equal(open.ready, false);
+    assert.equal(open.entitled, false);
+    assert.match(open.nextOwnerAction, /Assign entitled client scope/);
+
+    const blocked = composeOnboardingIdentityReview({
+      identityResolutionRequired: false,
+      clientCode: 'ACCG99',
+      entitled: false,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(blocked.status, 'BLOCKED');
+    assert.equal(blocked.ready, false);
+    assert.equal(blocked.clientCode, 'ACCG99');
+    assert.match(blocked.nextOwnerAction, /Do not invent a ClientCode/);
+
+    const now = new Date().toISOString();
+    const record = {
+      workflowId: 'wf-1',
+      workflowDefinitionId: 'def',
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      status: 'IDENTITY_RECONCILIATION' as const,
+      currentStep: 'Resolve authoritative ClientCode',
+      nextStep: 'Provide client scope before onboarding execution',
+      blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+      ownerAttention: ['Assign client scope to onboarding workflow'],
+      taskIds: [],
+      milestoneIds: [],
+      assignedAgents: ['atlas-onboarding-agent'],
+      documentGaps: [],
+      communicationPolicy: 'DRAFT_ONLY' as const,
+      capitalScope: false,
+      identityResolutionRequired: true,
+      workspaceReconciled: false,
+      dryRun: false,
+      createdAt: now,
+      updatedAt: now,
+      milestones: [],
+      operationsHandoff: composeOperationsHandoff({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      kickoff: composeKickoff({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      blockerReview: composeBlockerReview({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      ownerAttentionPackage: composeOwnerAttention({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      identityReview: open,
+      provenance: 'test',
+    };
+    assert.equal(mapsToOnboardingContextIntent('What is the onboarding identity review for ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('Review onboarding identity for ACCG'), 'status');
+    assert.equal(mapsToOnboardingExecuteIntent('What is the onboarding identity review for ACCG?'), false);
+    const answer = answerOnboardingContext('What is the onboarding identity review for ACCG?', record);
+    assert.match(answer, /Identity review for ACCG01: OPEN/);
+    assert.match(answer, /did not invent a ClientCode/);
+    assert.equal(/ACCG99|submitted|AUTO_RESPOND/i.test(answer), false);
   });
 
   it('restore env', () => {
