@@ -304,11 +304,16 @@ export interface AtlasClientContext {
    * Optional relatedAttachments copies already-indexed same-scope
    * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef
    * / relatedAttachments path as documents / meetings / onboarding /
-   * client-support). Missing / non-canonical ClientCode omits
-   * researchRelationship / relatedDocuments / relatedAttachments
-   * (fail-closed; never guess). Unscoped lender catalog titles never
-   * attach scoped documents or attachments. No downloadUrl. No
-   * contentBytes. binariesInAtlas stays false. No TargetAmount.
+   * client-support). Optional relatedProjects copies already-entitled
+   * same-scope project operating-record refs (same
+   * RelatedDocumentProjectRef / relatedProjects path as research-intel
+   * / onboarding / client-support). Missing / non-canonical ClientCode
+   * omits researchRelationship / relatedDocuments / relatedAttachments
+   * / relatedProjects (fail-closed; never guess). Unscoped lender
+   * catalog titles never attach scoped documents, attachments, or
+   * projects. No downloadUrl. No contentBytes. binariesInAtlas stays
+   * false. No TargetAmount. historicalHvs / hubMiRow copy from the
+   * entitled source project only — never invent hubMiRow=true.
    * PREPARE_ONLY / send=false / externalSubmit=false /
    * ownerGated=true / financingStatus UNKNOWN stay as composed.
    */
@@ -1000,6 +1005,25 @@ export interface CapitalSubmissionPrepareRecord {
    * Not send.
    */
   relatedAttachments?: RelatedDocumentAttachmentRef[];
+  /**
+   * Already-entitled same-scope project operating-record refs. Reuses
+   * RelatedDocumentProjectRef / relatedProjects() — the same
+   * entitled same-scope inverse already live on research-intel /
+   * onboarding / client support. Copied after authorization.
+   * Omitted when none are entitled or when ClientCode is missing /
+   * non-canonical (fail-closed; never guess). Unscoped never receives
+   * scoped projects. Unscoped lender catalog titles never attach
+   * scoped projects. Client A never receives Client B.
+   * historicalHvs / hubMiRow copy from the entitled source project
+   * only — never invent hubMiRow=true. Never downloadUrl, contentBytes,
+   * transcript, attendees, invented titles / ids / counts, ClientCodes,
+   * Hub-MI, TargetAmount, lender criteria, fit, or financing status.
+   * PREPARE_ONLY / send=false / externalSubmit=false /
+   * ownerGated=true / financingStatus UNKNOWN stay as composed.
+   * Not a second project or capital product. Not external submit.
+   * Not send.
+   */
+  relatedProjects?: RelatedDocumentProjectRef[];
 }
 
 export interface CapitalSubmissionPreparePayload {
@@ -1528,11 +1552,16 @@ export interface AtlasAuthorizedSearch {
    * Optional relatedAttachments copies already-indexed same-scope
    * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef
    * / relatedAttachments path as documents / meetings / onboarding /
-   * client-support). Missing / non-canonical ClientCode omits
-   * researchRelationship / relatedDocuments / relatedAttachments
-   * (fail-closed; never guess). Unscoped lender catalog titles never
-   * attach scoped documents or attachments. No downloadUrl. No
-   * contentBytes. binariesInAtlas stays false. No TargetAmount.
+   * client-support). Optional relatedProjects copies already-entitled
+   * same-scope project operating-record refs (same
+   * RelatedDocumentProjectRef / relatedProjects path as research-intel
+   * / onboarding / client-support). Missing / non-canonical ClientCode
+   * omits researchRelationship / relatedDocuments / relatedAttachments
+   * / relatedProjects (fail-closed; never guess). Unscoped lender
+   * catalog titles never attach scoped documents, attachments, or
+   * projects. No downloadUrl. No contentBytes. binariesInAtlas stays
+   * false. No TargetAmount. historicalHvs / hubMiRow copy from the
+   * entitled source project only — never invent hubMiRow=true.
    * PREPARE_ONLY / send=false / externalSubmit=false /
    * ownerGated=true / financingStatus UNKNOWN stay as composed.
    */

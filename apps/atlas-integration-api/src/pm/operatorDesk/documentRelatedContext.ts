@@ -10,7 +10,8 @@
  * mail-thread suggestedDraft.escalation links on
  * MailThreadOperatingRecord items, the
  * inverse capital-prepare → meetings, capital-prepare → documents,
- * capital-prepare → attachments, and capital-prepare → research links
+ * capital-prepare → attachments, capital-prepare → projects, and
+ * capital-prepare → research links
  * on CapitalSubmissionPrepareRecord items, the inverse
  * client-support → meetings,
  * client-support → documents,
@@ -831,17 +832,21 @@ export function attachRelatedContextToMailThreads(
  * same-scope already-indexed outlook-mail-attachment metadata already on
  * authorizedSearch.documents.items / hits kind=document (reuses
  * relatedAttachments / RelatedDocumentAttachmentRef — no new Graph /
- * search / attachment query, no contentBytes), and entitled
- * same-scope research already on authorizedSearch.researchIntelligence.items
- * (no new research query).
+ * search / attachment query, no contentBytes), entitled
+ * same-scope projects already on authorizedSearch.projects.items
+ * (reuses relatedProjects / RelatedDocumentProjectRef — no new project
+ * query), and entitled same-scope research already on
+ * authorizedSearch.researchIntelligence.items (no new research query).
  * Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
  * non-canonical — omit researchRelationship / relatedDocuments /
- * relatedAttachments rather than guess. Unscoped never receives
- * scoped relations. Unscoped lender catalog titles never attach scoped
- * documents or attachments. Client A never receives Client B. SAS /
- * anonymous webUrl dropped. No downloadUrl. No contentBytes.
- * binariesInAtlas stays false. No transcript text. PREPARE_ONLY /
+ * relatedAttachments / relatedProjects rather than guess. Unscoped
+ * never receives scoped relations. Unscoped lender catalog titles
+ * never attach scoped documents, attachments, or projects. Client A
+ * never receives Client B. SAS / anonymous webUrl dropped. No
+ * downloadUrl. No contentBytes. binariesInAtlas stays false. No
+ * transcript text. historicalHvs / hubMiRow copy from the entitled
+ * source project only — never invent hubMiRow=true. PREPARE_ONLY /
  * send=false / externalSubmit=false / ownerGated=true /
  * financingStatus UNKNOWN / HONEST_EMPTY stay as composed.
  * TargetAmount is never invented. No invented lender criteria, fit,
@@ -861,12 +866,16 @@ export function attachRelatedContextToCapitalSubmission(
   const relatedAttachmentsList = canonicalClientCode(item.clientCode)
     ? relatedAttachments(item, search)
     : [];
+  const relatedProjectsList = canonicalClientCode(item.clientCode)
+    ? relatedProjects(item, search)
+    : [];
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(researchRelationship.length ? { researchRelationship } : {}),
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
     ...(relatedAttachmentsList.length ? { relatedAttachments: relatedAttachmentsList } : {}),
+    ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
   };
 }
 
