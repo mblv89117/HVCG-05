@@ -29,6 +29,7 @@ import {
 import { DocumentsOperatingPage } from './pages/DocumentsOperatingPage';
 import { AgentActivityPage } from './pages/AgentActivityPage';
 import { WorkflowsPage } from './pages/WorkflowsPage';
+import { ApprovalsPage } from './pages/ApprovalsPage';
 import { ExecutiveOwnerSupportWorkbench } from './pages/ExecutiveOwnerSupportWorkbench';
 import { ClientsPage } from './pages/LiveClientsPage';
 import { ClientIntakeWorkbench } from './pages/ClientIntakeWorkbench';
@@ -307,6 +308,14 @@ export function App() {
                 element={
                   <PrivateRoute>
                     <DocumentsOperatingPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="approvals"
+                element={
+                  <PrivateRoute>
+                    <ApprovalsPage />
                   </PrivateRoute>
                 }
               />

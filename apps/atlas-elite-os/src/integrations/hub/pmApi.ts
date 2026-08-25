@@ -1264,3 +1264,74 @@ export async function searchPm(auth: AtlasHubAuthHeaders, query: string) {
     `/api/pm/search?q=${encodeURIComponent(q)}`,
   );
 }
+
+export type ApprovalListItem = {
+  approvalId: string;
+  title: string;
+  approvalType: string;
+  category: string;
+  status: string;
+  clientCode?: string;
+  clientName?: string;
+  projectScope?: string;
+  workflowId?: string;
+  workflowName?: string;
+  requestedAction: string;
+  requestedBy: string;
+  originatingSystem: string;
+  policyClass?: string;
+  policyReason: string;
+  evidenceStatus: string;
+  requestedAt: string;
+  ageHours?: number;
+  dueDate?: string;
+  executionState: string;
+  materialSummary?: string;
+  actions: Array<'approve' | 'reject' | 'defer' | 'cancel' | 'open_context'>;
+  href?: string;
+  source: string;
+};
+
+export type ApprovalDetail = ApprovalListItem & {
+  whatIsRequested: string;
+  whyRequiresApproval: string;
+  expectedEffectIfApproved: string;
+  expectedEffectIfRejected: string;
+  evidence: string[];
+  provenance: string;
+  confirmationSummary?: string;
+  parameterFingerprint: string;
+  stale: boolean;
+  superseded: boolean;
+  ownerGatedActions?: string[];
+};
+
+export async function fetchApprovalCenter(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{
+    approvalCenter: {
+      contractVersion: string;
+      missionKey: string;
+      generatedAt: string;
+      counts: { pending: number; deferred: number; approved: number; rejected: number; total: number };
+      categories: string[];
+      items: ApprovalListItem[];
+    };
+  }>(auth, '/operator/approvals.json');
+}
+
+export async function fetchApprovalDetail(auth: AtlasHubAuthHeaders, approvalId: string) {
+  return hubFetchJson<{ approvalCenter: { detail: ApprovalDetail } }>(
+    auth,
+    `/operator/approvals.json?approvalId=${encodeURIComponent(approvalId)}`,
+  );
+}
+
+export async function postApprovalAction(
+  auth: AtlasHubAuthHeaders,
+  body: { approvalId: string; action: 'approve' | 'reject' | 'defer' | 'cancel'; reason?: string; deferredUntil?: string },
+) {
+  return hubFetchJson<{ approvalCenter: { detail: ApprovalDetail } }>(auth, '/operator/approvals.json', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
