@@ -1335,3 +1335,54 @@ export async function postApprovalAction(
     body: JSON.stringify(body),
   });
 }
+
+export type CommunicationPolicyScopeKind = 'org' | 'client' | 'domain' | 'contact';
+export type CommunicationPolicyMode = 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+
+export type CommunicationPolicyRecord = {
+  policyId: string;
+  scopeKind: CommunicationPolicyScopeKind;
+  mode: CommunicationPolicyMode;
+  clientCode?: string;
+  domain?: string;
+  contact?: string;
+  recordedAt: string;
+  recordedBy: string;
+  autoSend: false;
+};
+
+export type CommunicationPolicyCenter = {
+  contractVersion: string;
+  missionKey: string;
+  generatedAt: string;
+  globalAutoRespond: false;
+  orgDefault: { scopeKind: 'org'; mode: 'DRAFT_ONLY'; policyClass: 'DRAFT_ONLY'; recorded: boolean };
+  items: CommunicationPolicyRecord[];
+  approvalPath: 'Approval Center';
+};
+
+export async function fetchCommunicationPolicies(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{ communicationPolicies: CommunicationPolicyCenter }>(
+    auth,
+    '/operator/communication-policies.json',
+  );
+}
+
+export async function postCommunicationPolicy(
+  auth: AtlasHubAuthHeaders,
+  body: {
+    scopeKind: CommunicationPolicyScopeKind;
+    mode: CommunicationPolicyMode;
+    clientCode?: string;
+    domain?: string;
+    contact?: string;
+  },
+) {
+  return hubFetchJson<{
+    communicationPolicies: CommunicationPolicyCenter;
+    recorded: CommunicationPolicyRecord;
+  }>(auth, '/operator/communication-policies.json', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}

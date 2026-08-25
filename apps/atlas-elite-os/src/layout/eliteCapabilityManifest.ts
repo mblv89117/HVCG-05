@@ -10,6 +10,8 @@ export const ELITE_CAPABILITY_MANIFEST = [
   'Workflow Center',
   'Onboarding',
   'WorkflowTemplates',
+  'Approvals',
+  'CommunicationPolicies',
 ] as const;
 
 export function eliteCapabilityManifestJoined(): string {
