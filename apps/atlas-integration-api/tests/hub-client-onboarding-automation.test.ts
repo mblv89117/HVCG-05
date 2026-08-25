@@ -14,6 +14,7 @@ import {
   composeOwnerAttention,
   composeMilestoneReview,
   composeOnboardingCompletion,
+  composeOnboardingDocumentReview,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
   isOnboardingProjectTitle,
@@ -110,6 +111,10 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.completion.ready, false);
     assert.equal(result.record.completion.send, false);
     assert.equal(result.record.completion.outbound, false);
+    assert.equal(result.record.documentReview.status, 'NOT_READY');
+    assert.equal(result.record.documentReview.ready, false);
+    assert.equal(result.record.documentReview.send, false);
+    assert.equal(result.record.documentReview.outbound, false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -452,6 +457,11 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.completion.capitalSubmit, false);
     assert.equal(first.record?.completion.status, 'OPEN');
     assert.equal(first.record?.completion.ready, false);
+    assert.equal(first.record?.documentReview.send, false);
+    assert.equal(first.record?.documentReview.outbound, false);
+    assert.equal(first.record?.documentReview.capitalSubmit, false);
+    assert.equal(first.record?.documentReview.status, 'OPEN');
+    assert.equal(first.record?.documentReview.ready, false);
     assert.equal(first.record?.dryRun, false);
     assert.equal(createProjectCalls, 1);
     const firstWorkflowId = first.workflow?.workflowId;
@@ -1173,6 +1183,130 @@ describe('client onboarding automation', () => {
     assert.match(answer, /owner attention/);
     assert.match(answer, /did not send mail/);
     assert.equal(/ACCG99|invented|submitted|AUTO_RESPOND/i.test(answer), false);
+  });
+
+  it('prepares onboarding document review from entitled documentGaps and answers Ask Atlas', () => {
+    const clear = composeOnboardingDocumentReview({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      documentGaps: [
+        { label: 'Operating agreement or formation documents', status: 'CONFIRMED', source: 'HVCG_DocumentRequests' },
+        { label: 'Engagement letter / SOW', status: 'CONFIRMED', source: 'HVCG_DocumentRequests' },
+      ],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(clear.status, 'CLEAR');
+    assert.equal(clear.ready, true);
+    assert.equal(clear.send, false);
+    assert.equal(clear.outbound, false);
+    assert.equal(clear.liveGtmOutbound, false);
+    assert.equal(clear.capitalSubmit, false);
+    assert.equal(clear.confirmedCount, 2);
+    assert.equal(clear.requirementCount, 2);
+    assert.equal(clear.missingCount, 0);
+
+    const open = composeOnboardingDocumentReview({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      documentGaps: [
+        { label: 'Operating agreement or formation documents', status: 'CONFIRMED' },
+        { label: 'Tax ID / W-9 where applicable', status: 'MISSING' },
+      ],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(open.status, 'OPEN');
+    assert.equal(open.ready, false);
+    assert.equal(open.missingCount, 1);
+    assert.equal(open.nextDocument, 'Tax ID / W-9 where applicable');
+
+    const uncertain = composeOnboardingDocumentReview({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      documentGaps: [{ label: 'Primary contact confirmation', status: 'STALE_OR_UNCERTAIN' }],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(uncertain.status, 'OPEN');
+    assert.equal(uncertain.ready, false);
+    assert.equal(uncertain.uncertainCount, 1);
+
+    const blocked = composeOnboardingDocumentReview({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      documentGaps: [{ label: 'Engagement letter / SOW', status: 'MISSING' }],
+      blockers: ['SharePoint PM backend unavailable — onboarding execution deferred'],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(blocked.status, 'BLOCKED');
+    assert.equal(blocked.ready, false);
+
+    const identity = composeOnboardingDocumentReview({
+      identityResolutionRequired: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(identity.status, 'NOT_READY');
+    assert.equal(identity.ready, false);
+
+    const now = new Date().toISOString();
+    const record = {
+      workflowId: 'wf-1',
+      workflowDefinitionId: 'def',
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      status: 'DOCUMENT_COLLECTION' as const,
+      currentStep: 'Collect missing onboarding documents',
+      nextStep: 'Reconcile or request missing documents (draft only)',
+      blockers: [],
+      ownerAttention: [],
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      taskIds: ['t1'],
+      milestoneIds: ['m1'],
+      assignedAgents: ['atlas-onboarding-agent'],
+      documentGaps: [
+        { label: 'Operating agreement or formation documents', status: 'CONFIRMED' as const },
+        { label: 'Tax ID / W-9 where applicable', status: 'MISSING' as const },
+      ],
+      communicationPolicy: 'DRAFT_ONLY' as const,
+      capitalScope: false,
+      identityResolutionRequired: false,
+      workspaceReconciled: true,
+      dryRun: false,
+      createdAt: now,
+      updatedAt: now,
+      milestones: [],
+      operationsHandoff: composeOperationsHandoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        documentGaps: [{ label: 'Tax ID / W-9 where applicable', status: 'MISSING' }],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      kickoff: composeKickoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      blockerReview: composeBlockerReview({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      ownerAttentionPackage: composeOwnerAttention({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      documentReview: open,
+      provenance: 'test',
+    };
+    assert.equal(mapsToOnboardingContextIntent('What onboarding documents are missing for ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('Review onboarding documents for ACCG'), 'status');
+    assert.equal(mapsToOnboardingExecuteIntent('What onboarding documents are missing for ACCG?'), false);
+    const answer = answerOnboardingContext('What onboarding documents are missing for ACCG?', record);
+    assert.match(answer, /Document review for ACCG01: OPEN/);
+    assert.match(answer, /Tax ID \/ W-9 where applicable/);
+    assert.match(answer, /did not invent document receipt/);
+    assert.equal(/ACCG99|invented receipt|submitted|AUTO_RESPOND/i.test(answer), false);
   });
 
   it('restore env', () => {

@@ -27,6 +27,7 @@ import {
   type OnboardingOwnerAttention,
   type OnboardingMilestoneReview,
   type OnboardingCompletion,
+  type OnboardingDocumentReview,
   type OnboardingRunRecord,
   resolveOnboardingStateDir,
   upsertOnboardingRun,
@@ -454,6 +455,75 @@ export function composeMilestoneReview(record: {
   };
 }
 
+export function composeOnboardingDocumentReview(record: {
+  identityResolutionRequired?: boolean;
+  workspaceReconciled?: boolean;
+  projectId?: string;
+  projectName?: string;
+  documentGaps?: OnboardingDocumentGap[];
+  blockers?: string[];
+  communicationPolicy?: OnboardingDocumentReview['communicationPolicy'];
+}): OnboardingDocumentReview {
+  const gaps = record.documentGaps ?? [];
+  const confirmedCount = gaps.filter((d) => d.status === 'CONFIRMED').length;
+  const missingCount = gaps.filter((d) => d.status === 'MISSING').length;
+  const uncertainCount = gaps.filter((d) =>
+    d.status === 'STALE_OR_UNCERTAIN' || d.status === 'LIKELY' || d.status === 'PROPOSED',
+  ).length;
+  const items = gaps
+    .filter((d) => d.status !== 'CONFIRMED')
+    .map((d) => `${d.label} (${d.status})`);
+  const nextDocument =
+    gaps.find((d) => d.status === 'MISSING')?.label
+    ?? gaps.find((d) => d.status === 'STALE_OR_UNCERTAIN')?.label
+    ?? gaps.find((d) => d.status === 'LIKELY' || d.status === 'PROPOSED')?.label;
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const blockers = record.blockers ?? [];
+  const nextOwnerAction =
+    record.identityResolutionRequired
+      ? 'Assign client scope before document review'
+      : blockers.length
+        ? blockers[0]
+        : missingCount
+          ? `Reconcile or request missing documents (draft only): ${nextDocument ?? 'missing'}`
+          : uncertainCount
+            ? `Review uncertain documents (do not invent receipt): ${nextDocument ?? 'uncertain'}`
+            : 'No open onboarding document items';
+  const counts = {
+    requirementCount: gaps.length,
+    confirmedCount,
+    missingCount,
+    uncertainCount,
+    items,
+    ...(nextDocument ? { nextDocument } : {}),
+    communicationPolicy,
+    nextOwnerAction,
+    send: false as const,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (record.identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
+    return {
+      status: record.identityResolutionRequired ? 'NOT_READY' : blockers.length ? 'BLOCKED' : 'NOT_READY',
+      ready: false,
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...counts,
+      provenance: record.identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
+    };
+  }
+  const status = blockers.length ? 'BLOCKED' : items.length ? 'OPEN' : 'CLEAR';
+  return {
+    status,
+    ready: status === 'CLEAR',
+    projectId: record.projectId,
+    ...(record.projectName ? { projectName: record.projectName } : {}),
+    ...counts,
+    provenance: missingCount || uncertainCount ? 'PROPOSED' : 'CONFIRMED',
+  };
+}
+
 type CompletionGate = { label: string; status: string; ready: boolean };
 
 export function composeOnboardingCompletion(record: {
@@ -617,6 +687,12 @@ export async function runClientOnboardingAutomation(opts: {
         blockerReview: { status: 'NOT_READY', ready: false },
         ownerAttentionPackage: { status: 'NOT_READY', ready: false },
         milestoneReview: { status: 'NOT_READY', ready: false },
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      documentReview: composeOnboardingDocumentReview({
+        identityResolutionRequired: true,
+        workspaceReconciled: false,
+        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
         communicationPolicy: 'DRAFT_ONLY',
       }),
       provenance: 'onboarding_automation',
@@ -830,12 +906,22 @@ export async function runClientOnboardingAutomation(opts: {
     milestoneReview,
     communicationPolicy: 'DRAFT_ONLY',
   });
+  const documentReview = composeOnboardingDocumentReview({
+    identityResolutionRequired: false,
+    workspaceReconciled,
+    projectId,
+    projectName,
+    documentGaps,
+    blockers,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
   if (operationsHandoff.status !== 'NOT_READY') events.push('OPERATIONS_HANDOFF');
   if (kickoff.status !== 'NOT_READY') events.push('KICKOFF');
   if (blockerReview.status !== 'NOT_READY') events.push('BLOCKER_REVIEW');
   if (ownerAttentionPackage.status !== 'NOT_READY') events.push('OWNER_ATTENTION');
   if (milestoneReview.status !== 'NOT_READY') events.push('MILESTONE_REVIEW');
   if (completion.status !== 'NOT_READY') events.push('COMPLETION');
+  if (documentReview.status !== 'NOT_READY') events.push('DOCUMENT_REVIEW');
 
   const record: OnboardingRunRecord = {
     workflowId: opts.workflow.workflowId,
@@ -873,6 +959,7 @@ export async function runClientOnboardingAutomation(opts: {
     ownerAttentionPackage,
     milestoneReview,
     completion,
+    documentReview,
     provenance: 'onboarding_automation',
   };
 
@@ -988,6 +1075,9 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'kick off',
   'approve',
   'document',
+  'document review',
+  'document collection',
+  'reconcile',
   'start',
   'run',
   'execute',
@@ -1133,11 +1223,28 @@ export function answerOnboardingContext(
       .filter(Boolean)
       .join('\n');
   }
-  if (q.includes('missing') || q.includes('document')) {
-    const missing = record.documentGaps.filter((d) => d.status === 'MISSING');
-    return missing.length
-      ? `Missing for ${record.clientCode ?? 'client'}: ${missing.map((d) => d.label).join('; ')}`
-      : `No confirmed missing documents for ${record.clientCode ?? 'client'}.`;
+  if (q.includes('missing') || q.includes('document') || q.includes('reconcile')) {
+    const pack = record.documentReview ?? composeOnboardingDocumentReview({
+      identityResolutionRequired: record.identityResolutionRequired,
+      workspaceReconciled: record.workspaceReconciled,
+      projectId: record.projectId,
+      projectName: record.projectName,
+      documentGaps: record.documentGaps,
+      blockers: record.blockers,
+      communicationPolicy: record.communicationPolicy,
+    });
+    return [
+      `Document review for ${record.clientCode ?? 'client'}: ${pack.status}`,
+      pack.projectName ? `Project: ${pack.projectName}` : '',
+      `Confirmed: ${pack.confirmedCount}/${pack.requirementCount}`,
+      pack.items.length ? `Open: ${pack.items.join('; ')}` : 'No open onboarding document items.',
+      pack.nextDocument ? `Next: ${pack.nextDocument}` : '',
+      `Communication policy: ${pack.communicationPolicy}`,
+      `Next owner action: ${pack.nextOwnerAction}`,
+      'Atlas did not invent document receipt, send mail, launch GTM, or submit capital.',
+    ]
+      .filter(Boolean)
+      .join('\n');
   }
   if (q.includes('blocked') || q.includes('waiting') || q.includes('blocker')) {
     const review = record.blockerReview;

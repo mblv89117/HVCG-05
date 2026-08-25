@@ -132,6 +132,27 @@ export type OnboardingMilestoneReview = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Canonical DOCUMENT REVIEW package. Surfaces already-known documentGaps. No invented receipt. */
+export type OnboardingDocumentReview = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
+  ready: boolean;
+  projectId?: string;
+  projectName?: string;
+  requirementCount: number;
+  confirmedCount: number;
+  missingCount: number;
+  uncertainCount: number;
+  items: string[];
+  nextDocument?: string;
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 /** Canonical COMPLETION package. Rollup of already-known package statuses. No send. */
 export type OnboardingCompletion = {
   status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
@@ -182,6 +203,7 @@ export type OnboardingRunRecord = {
   ownerAttentionPackage: OnboardingOwnerAttention;
   milestoneReview?: OnboardingMilestoneReview;
   completion?: OnboardingCompletion;
+  documentReview?: OnboardingDocumentReview;
   provenance: string;
 };
 
