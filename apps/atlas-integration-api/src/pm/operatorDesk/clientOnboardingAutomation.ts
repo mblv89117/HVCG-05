@@ -1399,7 +1399,7 @@ export async function runClientOnboardingAutomation(opts: {
 
   const client = entitledMatches[0];
   clientName = client.displayName || clientName;
-  const workspaceReconciled = true;
+  let workspaceReconciled = false;
   let projectId: string | undefined;
   let projectName: string | undefined;
   let reusedExistingProject = false;
@@ -1418,26 +1418,31 @@ export async function runClientOnboardingAutomation(opts: {
   const existingProject = projects.find(
     (p) => p.clientCode === clientCode && ONBOARDING_PROJECT_TITLE.test(p.name || ''),
   );
-  if (existingProject) {
+  if (existingProject?.id) {
     reusedExistingProject = true;
     projectId = existingProject.id;
     projectName = existingProject.name;
+    workspaceReconciled = true;
     milestones.find((m) => m.id === 'agreement_scope_verified')!.status = 'in_progress';
     milestones.find((m) => m.id === 'agreement_scope_verified')!.provenance = 'CONFIRMED';
   } else if (!opts.dryRun) {
-    const created = await sp.createProject(opts.principal, {
-      name: `Client Onboarding — ${clientName}`,
-      clientCode,
-      objective: 'Governed client onboarding established by Atlas automation.',
-      status: 'active',
-      nextAction: 'Complete onboarding checklist',
-    }, `atlas-onboarding-project-${clientCode}`);
-    projectId = created.id;
-    projectName = created.name;
-    events.push('PROJECT_CREATED');
-  } else {
-    projectName = `Client Onboarding — ${clientName} (dry-run proposed)`;
-    events.push('PROJECT_CREATED');
+    try {
+      const created = await sp.createProject(opts.principal, {
+        name: `Client Onboarding — ${clientName}`,
+        clientCode,
+        objective: 'Governed client onboarding established by Atlas automation.',
+        status: 'active',
+        nextAction: 'Complete onboarding checklist',
+      }, `atlas-onboarding-project-${clientCode}`);
+      if (created?.id) {
+        projectId = created.id;
+        projectName = created.name;
+        workspaceReconciled = true;
+        events.push('PROJECT_CREATED');
+      }
+    } catch {
+      /* create failed — do not invent a workspace or claim reconciliation */
+    }
   }
 
   const existingTasks = await sp.listAuthorizedTasks(opts.principal, projectId);

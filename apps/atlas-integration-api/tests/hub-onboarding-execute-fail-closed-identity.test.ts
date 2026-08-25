@@ -197,6 +197,7 @@ describe('onboarding execute fail-closed identity', () => {
     if (!result.ok) return;
     assert.equal(result.record.identityResolutionRequired, false);
     assert.equal(result.record.workspaceReconciled, true);
+    assert.equal(result.record.workspaceReview.workspaceReconciled, true);
     assert.equal(result.record.clientName, 'ACCG');
     assert.equal(result.record.projectId, 'existing-accg-onboarding');
     assert.equal(result.record.projectName, 'ACCG01 - Onboarding');
@@ -224,6 +225,7 @@ describe('onboarding execute fail-closed identity', () => {
     if (!created.ok) return;
     assert.equal(created.record.identityResolutionRequired, false);
     assert.equal(created.record.workspaceReconciled, true);
+    assert.equal(created.record.workspaceReview.workspaceReconciled, true);
     assert.equal(created.record.projectId, 'proj-1');
     assert.equal(live.counts.createProject, 1);
     assert.ok(live.counts.createTask > 0);
@@ -241,11 +243,68 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(proposed.ok, true);
     if (!proposed.ok) return;
     assert.equal(proposed.record.identityResolutionRequired, false);
-    assert.equal(proposed.record.workspaceReconciled, true);
+    assert.equal(proposed.record.workspaceReconciled, false);
+    assert.equal(proposed.record.workspaceReview.workspaceReconciled, false);
     assert.equal(proposed.record.projectId, undefined);
     assert.equal(dry.counts.createProject, 0);
     assert.equal(dry.counts.createTask, 0);
     assert.equal(dry.counts.createMilestone, 0);
+    assert.equal(proposed.events.includes('PROJECT_CREATED'), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('does not claim workspaceReconciled when entitled create fails or returns no id', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const thrown = mockSharePoint({ clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }] });
+    thrown.sharepoint.createProject = async () => {
+      thrown.counts.createProject += 1;
+      throw new Error('sharepoint create failed');
+    };
+    const failed = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: thrown.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+    });
+    assert.equal(failed.ok, true);
+    if (!failed.ok) return;
+    assert.equal(failed.record.identityResolutionRequired, false);
+    assert.equal(failed.record.workspaceReconciled, false);
+    assert.equal(failed.record.workspaceReview.workspaceReconciled, false);
+    assert.equal(failed.record.workspaceReview.ready, false);
+    assert.equal(failed.record.projectId, undefined);
+    assert.deepEqual(failed.record.taskIds, []);
+    assert.deepEqual(failed.record.milestoneIds, []);
+    assert.equal(thrown.counts.createProject, 1);
+    assert.equal(thrown.counts.createTask, 0);
+    assert.equal(thrown.counts.createMilestone, 0);
+    assert.equal(failed.events.includes('PROJECT_CREATED'), false);
+
+    const noId = mockSharePoint({ clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }] });
+    noId.sharepoint.createProject = (async () => {
+      noId.counts.createProject += 1;
+      return { name: 'Client Onboarding — ACCG', clientCode: 'ACCG01' };
+    }) as SharePointPmService['createProject'];
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: noId.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.equal(absent.record.identityResolutionRequired, false);
+    assert.equal(absent.record.workspaceReconciled, false);
+    assert.equal(absent.record.workspaceReview.workspaceReconciled, false);
+    assert.equal(absent.record.projectId, undefined);
+    assert.deepEqual(absent.record.taskIds, []);
+    assert.deepEqual(absent.record.milestoneIds, []);
+    assert.equal(noId.counts.createProject, 1);
+    assert.equal(noId.counts.createTask, 0);
+    assert.equal(noId.counts.createMilestone, 0);
     rmSync(dir, { recursive: true, force: true });
   });
 
