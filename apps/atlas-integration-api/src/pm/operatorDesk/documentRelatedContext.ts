@@ -115,6 +115,49 @@ export function listRelatedEmailsForClient(
   ).filter((row) => Boolean(row.id?.trim()));
 }
 
+export type OnboardingCapitalSearchRow = {
+  id?: string;
+  title?: string;
+  clientCode?: string;
+};
+
+/**
+ * Entitled same-scope PREPARE_ONLY capital refs for onboarding capital-context
+ * reconcile. Reuses relatedCapital() — no second capital product.
+ * Drops rows without an id. Client A never receives Client B. Fail-closed
+ * when ClientCode is missing / non-canonical or the principal is not entitled.
+ * Never copies TargetAmount, lender names, criteria, approval, or funding state.
+ */
+export function listRelatedCapitalForClient(
+  principal: AtlasPrincipal,
+  clientCode: string | undefined,
+  rows: OnboardingCapitalSearchRow[],
+): RelatedDocumentCapitalRef[] {
+  const code = canonicalClientCode(clientCode);
+  if (!code) return [];
+  if (!mayReceiveRelatedContext(principal, code)) return [];
+  const items = rows.flatMap((row) => {
+    const id = (row.id || '').trim();
+    if (!id) return [];
+    const title = (row.title || '').trim() || id;
+    const scoped = canonicalClientCode(row.clientCode);
+    return [{
+      id,
+      title,
+      ...(scoped ? { clientCode: scoped } : {}),
+      policyClass: CAPITAL_SUBMISSION_POLICY_CLASS,
+      financingStatus: CAPITAL_SUBMISSION_FINANCING_STATUS,
+      financingStatusClassification: 'HONEST_EMPTY' as const,
+      lenderCriteriaInvented: false as const,
+      invented: false as const,
+    }];
+  });
+  return relatedCapital(
+    { id: `onboarding-capital:${code}`, clientCode: code },
+    { capitalSubmissions: { items } } as AtlasAuthorizedSearch,
+  ).filter((row) => Boolean(row.id?.trim()));
+}
+
 function relatedEmails(
   item: RelatedScopeItem & { parentMessageId?: string },
   search: AtlasAuthorizedSearch,
