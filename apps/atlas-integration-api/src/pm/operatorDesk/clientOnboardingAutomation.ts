@@ -53,6 +53,7 @@ import {
   type OnboardingRelatedKickoffRef,
   type OnboardingRelatedBlockerRef,
   type OnboardingRelatedOwnerAttentionRef,
+  type OnboardingRelatedHandoffRef,
   type OnboardingRealtimeDocumentsHonesty,
   type RealtimeDocumentsFabricSnapshot,
   type OnboardingRunRecord,
@@ -123,12 +124,20 @@ export type OnboardingOwnerAttentionSearchRow = {
   kind?: OnboardingRelatedOwnerAttentionRef['kind'];
 };
 
+export type OnboardingHandoffSearchRow = {
+  id?: string;
+  title?: string;
+  clientCode?: string;
+  kind?: OnboardingRelatedHandoffRef['kind'];
+};
+
 export type OnboardingCommsSearchRow = OnboardingCommsThreadInput;
 export type { OnboardingCapitalSearchRow };
 
 const KICKOFF_ITEM_TITLE = /^(prepare kickoff materials|kickoff ready|kickoff complete)$/i;
 const BLOCKER_ITEM_TITLE = /^(review onboarding blockers|clear onboarding blockers|onboarding blocker|owner attention)$/i;
 const OWNER_ATTENTION_ITEM_TITLE = /^(review owner attention|owner attention|owner action|owner-action|attention required)$/i;
+const HANDOFF_ITEM_TITLE = /^(prepare operations handoff|review operations handoff|operations handoff|handoff)$/i;
 
 function kickoffRefsWithIds(rows?: OnboardingRelatedKickoffRef[]): OnboardingRelatedKickoffRef[] {
   const seen = new Set<string>();
@@ -372,6 +381,87 @@ export async function defaultOnboardingOwnerAttentionCreate(
   return created?.id ? { id: created.id, title: created.title ?? body.title, kind: 'owner-attention' } : {};
 }
 
+function handoffRefsWithIds(rows?: OnboardingRelatedHandoffRef[]): OnboardingRelatedHandoffRef[] {
+  const seen = new Set<string>();
+  const out: OnboardingRelatedHandoffRef[] = [];
+  for (const row of rows ?? []) {
+    const id = row.id?.trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+      ...(row.kind ? { kind: row.kind } : {}),
+    });
+  }
+  return out;
+}
+
+/** Entitled same-scope handoff / operations-handoff refs. Drops rows without an id. Client A never receives Client B. */
+export function listRelatedHandoffForClient(
+  principal: AtlasPrincipal,
+  clientCode: string | undefined,
+  rows: OnboardingHandoffSearchRow[],
+): OnboardingRelatedHandoffRef[] {
+  const code = clientCode?.trim().toUpperCase();
+  if (!code || !isCanonicalClientCode(code)) return [];
+  if (!entitledClientCodes(principal).includes(code)) return [];
+  const out: OnboardingRelatedHandoffRef[] = [];
+  const seen = new Set<string>();
+  for (const row of rows ?? []) {
+    const id = row.id?.trim();
+    if (!id || seen.has(id)) continue;
+    const scoped = row.clientCode?.trim().toUpperCase();
+    if (scoped && scoped !== code) continue;
+    if (scoped && !isCanonicalClientCode(scoped)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+      ...(row.kind ? { kind: row.kind } : {}),
+    });
+  }
+  return out;
+}
+
+/** List entitled same-scope handoff / operations-handoff rows. Never invent ids. */
+export async function defaultOnboardingHandoffList(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  clientCode: string,
+  projectId: string,
+): Promise<OnboardingHandoffSearchRow[]> {
+  if (!sharepoint || !projectId.trim() || !clientCode.trim()) return [];
+  const out: OnboardingHandoffSearchRow[] = [];
+  try {
+    const tasks = await sharepoint.listAuthorizedTasks(principal, projectId);
+    for (const task of tasks ?? []) {
+      const id = task?.id?.trim();
+      if (!id || !HANDOFF_ITEM_TITLE.test(task.title || '')) continue;
+      out.push({ id, title: task.title, clientCode, kind: 'operations-handoff' });
+    }
+  } catch {
+    /* list failed — do not invent a handoff task id */
+  }
+  return out;
+}
+
+/** Create a handoff row only when entitled project context exists. Never invent an id. */
+export async function defaultOnboardingHandoffCreate(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  body: { title: string; projectId: string; clientCode: string },
+): Promise<{ id?: string; title?: string; kind?: OnboardingRelatedHandoffRef['kind'] }> {
+  if (!sharepoint || !body.projectId.trim() || !body.title.trim() || !body.clientCode.trim()) return {};
+  const created = await sharepoint.createTask(principal, {
+    title: body.title,
+    description: 'Onboarding operations handoff',
+    projectId: body.projectId,
+    status: 'ready',
+  }, `atlas-onboarding-handoff-${body.clientCode}`);
+  return created?.id ? { id: created.id, title: created.title ?? body.title, kind: 'operations-handoff' } : {};
+}
+
 /** Create a kickoff record only when entitled project context exists. Never invent an id. */
 export async function defaultOnboardingKickoffCreate(
   sharepoint: SharePointPmService | null,
@@ -499,6 +589,7 @@ async function appendOnboardingActivity(opts: {
 export function composeOperationsHandoff(record: {
   identityResolutionRequired?: boolean;
   workspaceReconciled?: boolean;
+  clientCode?: string;
   projectId?: string;
   projectName?: string;
   taskIds?: string[];
@@ -509,6 +600,8 @@ export function composeOperationsHandoff(record: {
   communicationPolicy?: OnboardingOperationsHandoff['communicationPolicy'];
   relatedThreadCount?: number;
   capitalScope?: boolean;
+  relatedHandoff?: OnboardingRelatedHandoffRef[];
+  reusedExisting?: boolean;
 }): OnboardingOperationsHandoff {
   const blockers = record.blockers ?? [];
   const ownerAttention = record.ownerAttention ?? [];
@@ -516,17 +609,45 @@ export function composeOperationsHandoff(record: {
   const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
   const relatedThreadCount = Math.max(0, record.relatedThreadCount ?? 0);
   const capitalScope = Boolean(record.capitalScope);
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const identityResolutionRequired = Boolean(record.identityResolutionRequired);
+  const relatedHandoff = identityResolutionRequired || !clientCode || !isCanonicalClientCode(clientCode)
+    ? []
+    : handoffRefsWithIds(record.relatedHandoff);
+  const operationsHandoffReconciled = relatedHandoff.length > 0;
+  const reusedExisting = Boolean(record.reusedExisting && operationsHandoffReconciled);
   const nextOwnerAction =
     ownerAttention[0]
-    ?? (record.identityResolutionRequired
+    ?? (identityResolutionRequired
       ? 'Assign client scope to onboarding workflow'
-      : blockers[0]
-        ? blockers[0]
-        : missingDocumentCount
-          ? 'Reconcile or request missing documents (draft only)'
-          : 'Review operations handoff and continue the entitled onboarding checklist');
-  if (record.identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
-    const status = record.identityResolutionRequired
+      : !operationsHandoffReconciled
+        ? 'Confirm existing entitled same-scope handoff/operations-handoff rows; do not invent ids or send'
+        : blockers[0]
+          ? blockers[0]
+          : missingDocumentCount
+            ? 'Reconcile or request missing documents (draft only)'
+            : reusedExisting
+              ? 'Existing entitled operations handoff reused — no duplicate handoff created'
+              : 'Review operations handoff and continue the entitled onboarding checklist');
+  const flags = {
+    taskCount: record.taskIds?.length ?? 0,
+    milestoneCount: record.milestoneIds?.length ?? 0,
+    missingDocumentCount,
+    blockers,
+    ownerAttention,
+    communicationPolicy,
+    relatedThreadCount,
+    capitalScope,
+    operationsHandoffReconciled,
+    reusedExisting,
+    relatedHandoff,
+    nextOwnerAction,
+    send: false as const,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+  };
+  if (identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
+    const status = identityResolutionRequired
       ? 'NOT_READY'
       : blockers.length
         ? 'BLOCKED'
@@ -536,19 +657,11 @@ export function composeOperationsHandoff(record: {
       ready: false,
       ...(record.projectId ? { projectId: record.projectId } : {}),
       ...(record.projectName ? { projectName: record.projectName } : {}),
-      taskCount: record.taskIds?.length ?? 0,
-      milestoneCount: record.milestoneIds?.length ?? 0,
-      missingDocumentCount,
-      blockers,
-      ownerAttention,
-      communicationPolicy,
-      relatedThreadCount,
-      capitalScope,
-      nextOwnerAction,
-      send: false,
-      liveGtmOutbound: false,
-      capitalSubmit: false,
-      provenance: record.identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
+      ...flags,
+      operationsHandoffReconciled: false,
+      reusedExisting: false,
+      relatedHandoff: [],
+      provenance: identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
     };
   }
   return {
@@ -556,19 +669,8 @@ export function composeOperationsHandoff(record: {
     ready: blockers.length === 0,
     projectId: record.projectId,
     ...(record.projectName ? { projectName: record.projectName } : {}),
-    taskCount: record.taskIds?.length ?? 0,
-    milestoneCount: record.milestoneIds?.length ?? 0,
-    missingDocumentCount,
-    blockers,
-    ownerAttention,
-    communicationPolicy,
-    relatedThreadCount,
-    capitalScope,
-    nextOwnerAction,
-    send: false,
-    liveGtmOutbound: false,
-    capitalSubmit: false,
-    provenance: 'CONFIRMED',
+    ...flags,
+    provenance: operationsHandoffReconciled ? 'CONFIRMED' : 'PROPOSED',
   };
 }
 
@@ -1825,6 +1927,7 @@ function buildIdentityReconciliationRecord(opts: {
   const operationsHandoff = composeOperationsHandoff({
     identityResolutionRequired,
     workspaceReconciled,
+    ...(opts.clientCode ? { clientCode: opts.clientCode } : {}),
     blockers: opts.blockers,
     ownerAttention: opts.ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
@@ -1885,6 +1988,7 @@ function buildIdentityReconciliationRecord(opts: {
     kickoffReconciled: false,
     blockerReconciled: false,
     ownerAttentionReconciled: false,
+    operationsHandoffReconciled: false,
     dryRun: Boolean(opts.dryRun),
     createdAt: opts.now,
     updatedAt: opts.now,
@@ -2050,6 +2154,16 @@ export async function runClientOnboardingAutomation(opts: {
     body: { title: string; projectId: string; clientCode: string },
   ) => { id?: string; title?: string; kind?: OnboardingRelatedOwnerAttentionRef['kind'] }
     | Promise<{ id?: string; title?: string; kind?: OnboardingRelatedOwnerAttentionRef['kind'] }>;
+  handoffList?: (
+    principal: AtlasPrincipal,
+    clientCode: string,
+    projectId: string,
+  ) => OnboardingHandoffSearchRow[] | Promise<OnboardingHandoffSearchRow[]>;
+  handoffCreate?: (
+    principal: AtlasPrincipal,
+    body: { title: string; projectId: string; clientCode: string },
+  ) => { id?: string; title?: string; kind?: OnboardingRelatedHandoffRef['kind'] }
+    | Promise<{ id?: string; title?: string; kind?: OnboardingRelatedHandoffRef['kind'] }>;
 }): Promise<OnboardingAutomationResult> {
   if (!isOnboardingWorkflow(opts.workflow)) {
     return { ok: false, error: 'not_onboarding_workflow' };
@@ -2118,6 +2232,8 @@ export async function runClientOnboardingAutomation(opts: {
   let discoveredBlockersFromReuse = false;
   const discoveredOwnerAttention: OnboardingOwnerAttentionSearchRow[] = [];
   let discoveredOwnerAttentionFromReuse = false;
+  const discoveredHandoff: OnboardingHandoffSearchRow[] = [];
+  let discoveredHandoffFromReuse = false;
   const blockers: string[] = [];
   const ownerAttention: string[] = [];
   const documentGaps: OnboardingDocumentGap[] = [];
@@ -2177,6 +2293,10 @@ export async function runClientOnboardingAutomation(opts: {
           discoveredOwnerAttention.push({ id: found.id, title: taskDef.title, clientCode, kind: 'attention' });
           discoveredOwnerAttentionFromReuse = true;
         }
+        if (HANDOFF_ITEM_TITLE.test(taskDef.title)) {
+          discoveredHandoff.push({ id: found.id, title: taskDef.title, clientCode, kind: 'operations-handoff' });
+          discoveredHandoffFromReuse = true;
+        }
       } else {
         missingTasks.push(taskDef);
       }
@@ -2202,6 +2322,9 @@ export async function runClientOnboardingAutomation(opts: {
             }
             if (OWNER_ATTENTION_ITEM_TITLE.test(taskDef.title)) {
               discoveredOwnerAttention.push({ id: task.id, title: taskDef.title, clientCode, kind: 'attention' });
+            }
+            if (HANDOFF_ITEM_TITLE.test(taskDef.title)) {
+              discoveredHandoff.push({ id: task.id, title: taskDef.title, clientCode, kind: 'operations-handoff' });
             }
           }
         }
@@ -2519,6 +2642,51 @@ export async function runClientOnboardingAutomation(opts: {
     }
   }
 
+  const relatedHandoff: OnboardingRelatedHandoffRef[] = [];
+  let reusedExistingHandoff = false;
+  let operationsHandoffReconciled = false;
+  if (projectId) {
+    try {
+      const rows = opts.handoffList
+        ? await opts.handoffList(opts.principal, clientCode, projectId)
+        : discoveredHandoff.length
+          ? discoveredHandoff
+          : await defaultOnboardingHandoffList(sp, opts.principal, clientCode, projectId);
+      const attached = listRelatedHandoffForClient(opts.principal, clientCode, rows ?? []);
+      relatedHandoff.push(...attached);
+      if (relatedHandoff.length > 0) {
+        operationsHandoffReconciled = true;
+        reusedExistingHandoff = opts.handoffList
+          ? true
+          : discoveredHandoffFromReuse;
+        events.push('OPERATIONS_HANDOFF_RECONCILED');
+      }
+    } catch {
+      /* list failed — do not invent handoff ids, ClientCodes, deadlines, amounts, or funding */
+    }
+    if (!operationsHandoffReconciled && !opts.dryRun && opts.handoffCreate) {
+      try {
+        const created = await opts.handoffCreate(opts.principal, {
+          title: 'Prepare operations handoff',
+          projectId,
+          clientCode,
+        });
+        const id = created?.id?.trim();
+        if (id) {
+          relatedHandoff.push({
+            id,
+            ...(created.title?.trim() ? { title: created.title.trim() } : { title: 'Prepare operations handoff' }),
+            ...(created.kind ? { kind: created.kind } : { kind: 'operations-handoff' }),
+          });
+          operationsHandoffReconciled = true;
+          events.push('OPERATIONS_HANDOFF_CREATED', 'OPERATIONS_HANDOFF_RECONCILED');
+        }
+      } catch {
+        /* create failed — do not invent a handoff id or send outbound mail */
+      }
+    }
+  }
+
   const capitalScope = Boolean(opts.workflow.scope.capitalMatter);
   if (capitalScope) {
     ownerAttention.push('Capital scope detected — external lender submission remains owner-gated');
@@ -2536,6 +2704,7 @@ export async function runClientOnboardingAutomation(opts: {
     kickoffReconciled,
     blockerReconciled,
     ownerAttentionReconciled,
+    operationsHandoffReconciled,
     projectId,
     documentGaps,
     milestones,
@@ -2546,6 +2715,7 @@ export async function runClientOnboardingAutomation(opts: {
   const operationsHandoff = composeOperationsHandoff({
     identityResolutionRequired: false,
     workspaceReconciled,
+    clientCode,
     projectId,
     projectName,
     taskIds,
@@ -2556,6 +2726,8 @@ export async function runClientOnboardingAutomation(opts: {
     communicationPolicy: 'DRAFT_ONLY',
     relatedThreadCount,
     capitalScope,
+    relatedHandoff,
+    reusedExisting: reusedExistingHandoff,
   });
   const kickoff = composeKickoff({
     identityResolutionRequired: false,
@@ -2755,6 +2927,7 @@ export async function runClientOnboardingAutomation(opts: {
     kickoffReconciled,
     blockerReconciled,
     ownerAttentionReconciled,
+    operationsHandoffReconciled,
     dryRun: Boolean(opts.dryRun),
     createdAt: now,
     updatedAt: now,
@@ -3395,13 +3568,36 @@ export function answerOnboardingContext(
       .join('\n');
   }
   if (q.includes('handoff')) {
-    const handoff = record.operationsHandoff;
+    const handoff = composeOperationsHandoff({
+      identityResolutionRequired: record.identityResolutionRequired,
+      workspaceReconciled: record.workspaceReconciled,
+      clientCode: record.clientCode,
+      projectId: record.projectId,
+      projectName: record.projectName,
+      taskIds: record.taskIds,
+      milestoneIds: record.milestoneIds,
+      documentGaps: record.documentGaps,
+      blockers: record.blockers,
+      ownerAttention: record.ownerAttention,
+      communicationPolicy: record.communicationPolicy,
+      relatedThreadCount: record.operationsHandoff?.relatedThreadCount,
+      capitalScope: record.capitalScope,
+      relatedHandoff: record.operationsHandoff?.relatedHandoff,
+      reusedExisting: Boolean(record.operationsHandoff?.reusedExisting),
+    });
     return [
       `Operations handoff for ${record.clientCode ?? 'client'}: ${handoff.status}`,
       handoff.projectName ? `Project: ${handoff.projectName}` : '',
       `Tasks: ${handoff.taskCount}`,
       `Milestones: ${handoff.milestoneCount}`,
       `Documents missing: ${handoff.missingDocumentCount}`,
+      `Related entitled operations handoff: ${handoff.relatedHandoff.length} (from entitled ids)`,
+      handoff.operationsHandoffReconciled
+        ? handoff.reusedExisting
+          ? 'Existing entitled operations handoff: reused'
+          : 'Governed onboarding operations handoff: reconciled'
+        : 'Existing entitled operations handoff: not confirmed',
+      handoff.reusedExisting ? 'No duplicate handoff created.' : 'Atlas did not invent handoff ids, ClientCodes, deadlines, amounts, or funding.',
       `Communication policy: ${handoff.communicationPolicy}`,
       `Related entitled threads: ${handoff.relatedThreadCount} (DRAFT_ONLY, no send)`,
       handoff.relatedThreadCount > 0
@@ -3488,6 +3684,11 @@ export function answerOnboardingContext(
         ? 'Existing entitled owner attention: reused'
         : 'Governed onboarding owner attention: reconciled'
       : 'Existing entitled owner attention: not confirmed',
+    record.operationsHandoffReconciled
+      ? record.operationsHandoff.reusedExisting
+        ? 'Existing entitled operations handoff: reused'
+        : 'Governed onboarding operations handoff: reconciled'
+      : 'Existing entitled operations handoff: not confirmed',
   ]
     .filter(Boolean)
     .join('\n');
