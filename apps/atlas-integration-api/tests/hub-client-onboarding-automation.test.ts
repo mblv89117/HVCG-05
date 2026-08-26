@@ -107,6 +107,11 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.operationsHandoff.status, 'NOT_READY');
     assert.equal(result.record.operationsHandoff.ready, false);
     assert.equal(result.record.operationsHandoff.send, false);
+    assert.equal(result.record.operationsHandoffReconciled, false);
+    assert.equal(result.record.operationsHandoff.operationsHandoffReconciled, false);
+    assert.equal(result.record.operationsHandoff.reusedExisting, false);
+    assert.deepEqual(result.record.operationsHandoff.relatedHandoff, []);
+    assert.equal(result.record.operationsHandoff.capitalSubmit, false);
     assert.equal(result.record.kickoff.status, 'NOT_READY');
     assert.equal(result.record.kickoff.ready, false);
     assert.equal(result.record.kickoff.kickoffReconciled, false);
@@ -250,6 +255,10 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.ownerAttentionPackage.ownerAttentionReconciled, false);
     assert.deepEqual(result.record.ownerAttentionPackage.relatedOwnerAttention, []);
     assert.equal(result.events.includes('OWNER_ATTENTION_CREATED'), false);
+    assert.equal(result.record.operationsHandoffReconciled, false);
+    assert.equal(result.record.operationsHandoff.operationsHandoffReconciled, false);
+    assert.deepEqual(result.record.operationsHandoff.relatedHandoff, []);
+    assert.equal(result.events.includes('OPERATIONS_HANDOFF_CREATED'), false);
     assert.equal(result.record.communicationContextReconciled, false);
     assert.equal(result.record.communicationContextReview.relatedThreadCount, 0);
     assert.deepEqual(result.record.communicationContextReview.relatedEmails, []);
@@ -572,6 +581,9 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.ownerAttentionPackage.ownerAttentionReconciled, false);
     assert.equal(first.record?.ownerAttentionReconciled, false);
     assert.deepEqual(first.record?.ownerAttentionPackage.relatedOwnerAttention, []);
+    assert.equal(first.record?.operationsHandoff.operationsHandoffReconciled, false);
+    assert.equal(first.record?.operationsHandoffReconciled, false);
+    assert.deepEqual(first.record?.operationsHandoff.relatedHandoff, []);
     assert.equal(first.record?.milestoneReview.send, false);
     assert.equal(first.record?.milestoneReview.outbound, false);
     assert.equal(first.record?.milestoneReview.capitalSubmit, false);
@@ -667,6 +679,9 @@ describe('client onboarding automation', () => {
     });
     assert.equal(prepared.status, 'PREPARED');
     assert.equal(prepared.ready, true);
+    assert.equal(prepared.operationsHandoffReconciled, false);
+    assert.equal(prepared.reusedExisting, false);
+    assert.deepEqual(prepared.relatedHandoff, []);
     assert.equal(prepared.send, false);
     assert.equal(prepared.liveGtmOutbound, false);
     assert.equal(prepared.capitalSubmit, false);
@@ -674,6 +689,20 @@ describe('client onboarding automation', () => {
     assert.equal(prepared.capitalScope, true);
     assert.equal(prepared.relatedThreadCount, 0);
     assert.equal(prepared.communicationPolicy, 'DRAFT_ONLY');
+
+    const reconciled = composeOperationsHandoff({
+      workspaceReconciled: true,
+      clientCode: 'ACCG01',
+      projectId: 'proj-1',
+      relatedHandoff: [{ id: 'handoff-accg-1', title: 'Prepare operations handoff', kind: 'operations-handoff' }],
+      reusedExisting: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(reconciled.status, 'PREPARED');
+    assert.equal(reconciled.ready, true);
+    assert.equal(reconciled.operationsHandoffReconciled, true);
+    assert.equal(reconciled.reusedExisting, true);
+    assert.deepEqual(reconciled.relatedHandoff.map((row) => row.id), ['handoff-accg-1']);
 
     const blocked = composeOperationsHandoff({
       workspaceReconciled: true,
@@ -683,14 +712,19 @@ describe('client onboarding automation', () => {
     });
     assert.equal(blocked.status, 'BLOCKED');
     assert.equal(blocked.ready, false);
+    assert.equal(blocked.operationsHandoffReconciled, false);
 
     const identity = composeOperationsHandoff({
       identityResolutionRequired: true,
+      clientCode: 'ACCG01',
       blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+      relatedHandoff: [{ id: 'handoff-should-drop', title: 'must drop', kind: 'handoff' }],
       communicationPolicy: 'DRAFT_ONLY',
     });
     assert.equal(identity.status, 'NOT_READY');
     assert.equal(identity.ready, false);
+    assert.equal(identity.operationsHandoffReconciled, false);
+    assert.deepEqual(identity.relatedHandoff, []);
 
     const now = new Date().toISOString();
     const record = {
@@ -747,9 +781,20 @@ describe('client onboarding automation', () => {
     assert.match(answer, /Operations handoff for ACCG01: PREPARED/);
     assert.match(answer, /Client Onboarding — ACCG/);
     assert.match(answer, /PREPARE_ONLY/);
+    assert.match(answer, /Existing entitled operations handoff: not confirmed/);
+    assert.match(answer, /Related entitled operations handoff: 0/);
     assert.match(answer, /Related entitled threads: 0/);
     assert.match(answer, /did not send mail/);
-    assert.equal(/ACCG99|invented|submitted|AUTO_RESPOND/i.test(answer), false);
+    assert.equal(/ACCG99|submitted|AUTO_RESPOND/i.test(answer), false);
+
+    const reusedAnswer = answerOnboardingContext('What is the onboarding handoff for ACCG?', {
+      ...record,
+      operationsHandoffReconciled: true,
+      operationsHandoff: reconciled,
+    });
+    assert.match(reusedAnswer, /Existing entitled operations handoff: reused/);
+    assert.match(reusedAnswer, /Related entitled operations handoff: 1/);
+    assert.equal(/handoff-pdg|PDG01|AUTO_RESPOND|submitted/i.test(reusedAnswer), false);
 
     const withThreads = composeOperationsHandoff({
       workspaceReconciled: true,
@@ -3458,6 +3503,266 @@ describe('client onboarding automation', () => {
       created.record,
     );
     assert.match(createdAnswer, /Governed onboarding owner attention: reconciled/);
+    assert.equal(/AUTO_RESPOND|submitted/i.test(createdAnswer), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('reconciles entitled same-scope operations handoff by id and does not invent ids', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'onboarding-handoff-'));
+    process.env.INTEGRATION_DATA_DIR = dir;
+    process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
+    const cfg = loadConfig();
+    const sharepoint = {
+      listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      listAuthorizedProjects: async () => [
+        { id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' },
+      ],
+      listAuthorizedTasks: async () => [],
+      createTask: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
+        id: `task-${body.title}`,
+        title: String(body.title),
+      }),
+    } as unknown as SharePointPmService;
+
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [],
+      handoffList: async () => [
+        { id: 'handoff-accg-1', title: 'Prepare operations handoff', clientCode: 'ACCG01', kind: 'operations-handoff' },
+        { id: 'handoff-pdg', title: 'PDG01 operations handoff', clientCode: 'PDG01', kind: 'handoff' },
+        { title: 'missing-id-must-drop', clientCode: 'ACCG01', kind: 'operations-handoff' },
+      ],
+      handoffCreate: async () => {
+        throw new Error('reuse-only must not create operations handoff');
+      },
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.equal(reused.record.operationsHandoffReconciled, true);
+    assert.equal(reused.record.operationsHandoff.operationsHandoffReconciled, true);
+    assert.equal(reused.record.operationsHandoff.reusedExisting, true);
+    assert.deepEqual(reused.record.operationsHandoff.relatedHandoff.map((row) => row.id), ['handoff-accg-1']);
+    assert.equal(reused.record.operationsHandoff.send, false);
+    assert.equal(reused.record.operationsHandoff.capitalSubmit, false);
+    assert.equal(reused.record.communicationPolicy, 'DRAFT_ONLY');
+    assert.equal(reused.record.kickoffReconciled, false);
+    assert.equal(reused.record.blockerReconciled, false);
+    assert.equal(reused.record.ownerAttentionReconciled, false);
+    assert.equal(reused.record.capitalContextReconciled, false);
+    assert.equal(reused.record.communicationContextReconciled, false);
+    assert.equal(reused.record.milestoneReconciled, false);
+    assert.ok(reused.events.includes('OPERATIONS_HANDOFF_RECONCILED'));
+    assert.equal(reused.events.includes('OPERATIONS_HANDOFF_CREATED'), false);
+    assert.equal(JSON.stringify(reused.record.operationsHandoff).includes('PDG01'), false);
+    assert.equal(JSON.stringify(reused.record.operationsHandoff).includes('handoff-pdg'), false);
+    assert.equal(COMMUNICATIONS_SEND, false);
+    assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
+
+    let createdCalls = 0;
+    const created = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [],
+      handoffList: async () => [],
+      handoffCreate: async (_principal, body) => {
+        createdCalls += 1;
+        return { id: 'handoff-created-1', title: body.title, kind: 'operations-handoff' };
+      },
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+    assert.equal(created.record.operationsHandoffReconciled, true);
+    assert.equal(created.record.operationsHandoff.operationsHandoffReconciled, true);
+    assert.equal(created.record.operationsHandoff.reusedExisting, false);
+    assert.deepEqual(created.record.operationsHandoff.relatedHandoff.map((row) => row.id), ['handoff-created-1']);
+    assert.ok(created.events.includes('OPERATIONS_HANDOFF_CREATED'));
+    assert.ok(created.events.includes('OPERATIONS_HANDOFF_RECONCILED'));
+    assert.equal(createdCalls, 1);
+    assert.equal(created.record.operationsHandoff.send, false);
+    assert.equal(created.record.operationsHandoff.capitalSubmit, false);
+    assert.equal(created.record.kickoffReconciled, false);
+    assert.equal(created.record.blockerReconciled, false);
+    assert.equal(created.record.ownerAttentionReconciled, false);
+
+    let dryCreates = 0;
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [],
+      handoffList: async () => [],
+      handoffCreate: async () => {
+        dryCreates += 1;
+        throw new Error('dry-run must not create operations handoff');
+      },
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.equal(dry.record.operationsHandoffReconciled, false);
+    assert.equal(dry.record.operationsHandoff.operationsHandoffReconciled, false);
+    assert.deepEqual(dry.record.operationsHandoff.relatedHandoff, []);
+    assert.equal(dryCreates, 0);
+    assert.equal(dry.events.includes('OPERATIONS_HANDOFF_CREATED'), false);
+    assert.equal(dry.events.includes('OPERATIONS_HANDOFF_RECONCILED'), false);
+
+    const empty = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [],
+      handoffList: async () => [],
+    });
+    assert.equal(empty.ok, true);
+    if (!empty.ok) return;
+    assert.equal(empty.record.operationsHandoffReconciled, false);
+    assert.equal(empty.record.operationsHandoff.operationsHandoffReconciled, false);
+    assert.deepEqual(empty.record.operationsHandoff.relatedHandoff, []);
+    assert.equal(empty.events.includes('OPERATIONS_HANDOFF_CREATED'), false);
+    assert.equal(empty.events.includes('OPERATIONS_HANDOFF_RECONCILED'), false);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [],
+      handoffList: async () => [],
+      handoffCreate: async () => {
+        throw new Error('sharepoint operations handoff create failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.equal(thrown.record.operationsHandoffReconciled, false);
+    assert.equal(thrown.record.operationsHandoff.operationsHandoffReconciled, false);
+    assert.deepEqual(thrown.record.operationsHandoff.relatedHandoff, []);
+    assert.equal(thrown.events.includes('OPERATIONS_HANDOFF_CREATED'), false);
+    assert.equal(thrown.events.includes('OPERATIONS_HANDOFF_RECONCILED'), false);
+
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [],
+      handoffList: async () => [],
+      handoffCreate: async (_principal, body) => ({ title: body.title }),
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.equal(absent.record.operationsHandoffReconciled, false);
+    assert.equal(absent.record.operationsHandoff.operationsHandoffReconciled, false);
+    assert.deepEqual(absent.record.operationsHandoff.relatedHandoff, []);
+    assert.equal(absent.events.includes('OPERATIONS_HANDOFF_CREATED'), false);
+
+    const wrongClient = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [],
+      handoffList: async () => [
+        { id: 'handoff-pdg', title: 'PDG01 operations handoff', clientCode: 'PDG01', kind: 'handoff' },
+        { id: 'handoff-hfd', title: 'HFD01 handoff', clientCode: 'HFD01', kind: 'operations-handoff' },
+      ],
+      handoffCreate: async () => {
+        throw new Error('wrong-client must not create operations handoff');
+      },
+    });
+    assert.equal(wrongClient.ok, true);
+    if (!wrongClient.ok) return;
+    assert.equal(wrongClient.record.operationsHandoffReconciled, false);
+    assert.deepEqual(wrongClient.record.operationsHandoff.relatedHandoff, []);
+    assert.equal(JSON.stringify(wrongClient.record.operationsHandoff).includes('PDG01'), false);
+    assert.equal(JSON.stringify(wrongClient.record.operationsHandoff).includes('HFD01'), false);
+    assert.equal(wrongClient.record.operationsHandoff.send, false);
+    assert.equal(wrongClient.record.operationsHandoff.capitalSubmit, false);
+    assert.equal(wrongClient.record.kickoffReconciled, false);
+    assert.equal(wrongClient.record.blockerReconciled, false);
+    assert.equal(wrongClient.record.ownerAttentionReconciled, false);
+
+    const missingIdentity = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: null,
+      workflow: (() => {
+        const workflow = onboardingWorkflow('ACCG01');
+        workflow.scope = { organizationId: 'org-hvcg' };
+        return workflow;
+      })(),
+      handoffList: async () => [
+        { id: 'handoff-should-not-attach', title: 'ACCG operations handoff', clientCode: 'ACCG01' },
+      ],
+      handoffCreate: async () => {
+        throw new Error('identity must not create operations handoff');
+      },
+    });
+    assert.equal(missingIdentity.ok, true);
+    if (!missingIdentity.ok) return;
+    assert.equal(missingIdentity.record.identityResolutionRequired, true);
+    assert.equal(missingIdentity.record.operationsHandoffReconciled, false);
+    assert.equal(missingIdentity.record.operationsHandoff.operationsHandoffReconciled, false);
+    assert.deepEqual(missingIdentity.record.operationsHandoff.relatedHandoff, []);
+    assert.equal(missingIdentity.events.includes('OPERATIONS_HANDOFF_RECONCILED'), false);
+    assert.equal(missingIdentity.events.includes('OPERATIONS_HANDOFF_CREATED'), false);
+    assert.equal(missingIdentity.record.kickoffReconciled, false);
+    assert.equal(missingIdentity.record.blockerReconciled, false);
+    assert.equal(missingIdentity.record.ownerAttentionReconciled, false);
+    assert.equal(missingIdentity.record.capitalContextReconciled, false);
+    assert.equal(missingIdentity.record.communicationContextReconciled, false);
+
+    const reusedAnswer = answerOnboardingContext(
+      'What is the onboarding handoff for ACCG?',
+      reused.record,
+    );
+    assert.match(reusedAnswer, /Operations handoff for ACCG01: OPEN|Operations handoff for ACCG01: PREPARED/);
+    assert.match(reusedAnswer, /Existing entitled operations handoff: reused/);
+    assert.match(reusedAnswer, /Related entitled operations handoff: 1/);
+    assert.equal(/handoff-pdg|PDG01|AUTO_RESPOND/i.test(reusedAnswer), false);
+    const emptyAnswer = answerOnboardingContext(
+      'What is the onboarding handoff for ACCG?',
+      empty.record,
+    );
+    assert.match(emptyAnswer, /Existing entitled operations handoff: not confirmed/);
+    assert.match(emptyAnswer, /Related entitled operations handoff: 0/);
+    assert.equal(/AUTO_RESPOND|submitted/i.test(emptyAnswer), false);
+    const createdAnswer = answerOnboardingContext(
+      'What is the onboarding handoff for ACCG?',
+      created.record,
+    );
+    assert.match(createdAnswer, /Governed onboarding operations handoff: reconciled/);
     assert.equal(/AUTO_RESPOND|submitted/i.test(createdAnswer), false);
     rmSync(dir, { recursive: true, force: true });
   });
