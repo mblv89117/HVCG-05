@@ -34,6 +34,13 @@ export type OnboardingDocumentGap = {
   source?: string;
 };
 
+/** Already-known entitled handoff / operations-handoff refs. Id required. Never invented. */
+export type OnboardingRelatedHandoffRef = {
+  id: string;
+  title?: string;
+  kind?: 'handoff' | 'operations-handoff';
+};
+
 /** Canonical OPERATIONS HANDOFF package. Composed from already-known run facts. */
 export type OnboardingOperationsHandoff = {
   status: 'NOT_READY' | 'PREPARED' | 'BLOCKED';
@@ -48,6 +55,10 @@ export type OnboardingOperationsHandoff = {
   communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
   relatedThreadCount: number;
   capitalScope: boolean;
+  /** True only after entitled reuse of same-scope handoff/operations-handoff rows with a real id, or a create that returned an id. */
+  operationsHandoffReconciled: boolean;
+  reusedExisting: boolean;
+  relatedHandoff: OnboardingRelatedHandoffRef[];
   nextOwnerAction: string;
   send: false;
   liveGtmOutbound: false;
@@ -482,6 +493,8 @@ export type OnboardingRunRecord = {
   blockerReconciled?: boolean;
   /** True only after entitled reuse of same-scope owner-attention/attention/owner-action rows with a real id, or a create that returned an id. */
   ownerAttentionReconciled?: boolean;
+  /** True only after entitled reuse of same-scope handoff/operations-handoff rows with a real id, or a create that returned an id. */
+  operationsHandoffReconciled?: boolean;
   dryRun: boolean;
   createdAt: string;
   updatedAt: string;
