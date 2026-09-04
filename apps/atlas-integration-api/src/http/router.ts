@@ -34,6 +34,7 @@ import { probeBaHealth } from '../ba/client.ts';
 import type { LocalAiAdapter } from '../local-ai/adapter.ts';
 import { handleLocalAiRoutes } from '../local-ai/http.ts';
 import { handleWebsiteLeadRoutes } from '../website/http.ts';
+import { handleModuleIngestRoutes } from '../modules/ingest/http.ts';
 import { handleOperatorDesk } from '../pm/operatorDesk/handle.ts';
 import { handleClientExperience } from '../clientExperience/http.ts';
 import { resolveHubBuild, resolveHubCommit } from './hubCommit.ts';
@@ -178,7 +179,7 @@ export async function handleRequest(
       'access-control-allow-origin': origin || '',
       'access-control-allow-methods': 'GET,POST,PATCH,OPTIONS',
       'access-control-allow-headers':
-        'content-type,authorization,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles,x-hub-signature-256,x-website-intake-key',
+        'content-type,authorization,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles,x-hub-signature-256,x-website-intake-key,x-atlas-module-key,x-atlas-module-key-id,x-atlas-module-timestamp,x-atlas-module-signature',
       'access-control-max-age': '86400',
     });
     res.end();
@@ -251,6 +252,22 @@ export async function handleRequest(
         res,
         method,
         path,
+        origin,
+      });
+      if (handled) return;
+    }
+
+
+    if (path === '/api/modules/ingest' || path.startsWith('/api/modules/')) {
+      const handled = await handleModuleIngestRoutes({
+        req,
+        res,
+        method,
+        path,
+        rawBody,
+        dataDir: cfg.dataDir,
+        moduleIngestKey: cfg.moduleIngestKey || '',
+        moduleIngestKeyId: cfg.moduleIngestKeyId,
         origin,
       });
       if (handled) return;

@@ -13,7 +13,8 @@
     "@hvcg/atlas-capital-core": "*",
     "@hvcg/atlas-integration-core": "*",
     "jose": "^5.10.0",
-    "@hvcg/atlas-identity-map": "*"
+    "@hvcg/atlas-identity-map": "*",
+    "@hvcg/atlas-integration-contracts": "*"
   },
   "devDependencies": {
     "@types/node": "^22.15.21",
