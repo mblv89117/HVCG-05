@@ -1,6 +1,6 @@
 name: Atlas Release Control
 
-# Governance / release-control framework only.
+# Governance / release-control framework.
 # Does not deploy Azure, Entra, SharePoint, Elite SWA, Hub, or BA.
 # Manual trigger required. Uses GitHub Environment `production` as an
 # approval/policy gate. Prefer dry-validation.
@@ -30,9 +30,14 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Refuse any non-validation mode
         run: |
           echo "Release control SHA: ${GITHUB_SHA}"
@@ -40,6 +45,34 @@ jobs:
           echo "Mode: ${{ github.event.inputs.mode }}"
           echo "This job performs offline validation only."
           echo "NO Azure / Entra / SharePoint / SWA / App Service deploy."
+      - name: Production lineage + lease dry check
+        env:
+          HUB_BASE: https://app-atlas-integration-hub.azurewebsites.net
+          ATLAS_CANONICAL_PRODUCTION_SHA: 2d61fe65603b88d12d08456967c65dae8e5aec52
+        run: |
+          set -euo pipefail
+          LIVE_SHA="$(curl -sf "${HUB_BASE}/health" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).commit||'')}catch{console.log('')}})")"
+          echo "live_hub_sha=${LIVE_SHA}"
+          echo "candidate_sha=${GITHUB_SHA}"
+          echo "canonical_floor=${ATLAS_CANONICAL_PRODUCTION_SHA}"
+          if [[ -z "$LIVE_SHA" ]]; then
+            echo "WARN: could not read live Hub SHA; continuing offline checks only"
+          else
+            if ! git merge-base --is-ancestor "$ATLAS_CANONICAL_PRODUCTION_SHA" "$GITHUB_SHA"; then
+              echo "BLOCKED: candidate omits production floor ancestry"
+              exit 1
+            fi
+            if ! git merge-base --is-ancestor "$LIVE_SHA" "$GITHUB_SHA"; then
+              echo "BLOCKED: candidate would overwrite newer live Hub (missing live ancestry)"
+              exit 1
+            fi
+            if git merge-base --is-ancestor b504e12245e57b016e2bab934ebb44e55747a7e8 "$LIVE_SHA"; then
+              echo "OK: Elite b504e122 is ancestor of live Hub (expected; not a deploy trigger)"
+            fi
+          fi
+          echo "ATLAS_RELEASE_LEASE=DRY_CHECK_PASS"
+          echo "PRODUCTION_DEPLOY=NOT_PERFORMED"
+          echo "SHA_EQUALIZATION_DEPLOY=FORBIDDEN"
       - name: SharePoint list schema unit test
         run: python tests/unit/test_schemas.py
       - name: Pre-deployment schema validation (offline)

@@ -1,5 +1,10 @@
 name: HVCG OS Release
 
+# Wave 0 note: this workflow is the legacy SharePoint OS release checklist.
+# It must NOT zip-deploy Atlas Hub/Elite and must NOT overwrite newer production.
+# Atlas Hub production deploys use scripts/deploy-hub-guarded.sh (lease + ancestry).
+# Atlas release dry-validation uses .github/workflows/atlas-release-control.yml.
+
 on:
   push:
     branches: [main, release/*]
@@ -31,6 +36,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Refuse Atlas Hub/Elite overwrite via this workflow
+        run: |
+          echo "HVCG_OS_RELEASE=LEGACY_SHAREPOINT_CHECKLIST"
+          echo "ATLAS_HUB_ELITE_DEPLOY=FORBIDDEN_FROM_THIS_WORKFLOW"
+          echo "Use scripts/deploy-hub-guarded.sh for Hub (lease + ancestry)."
+          echo "Do not deploy to equalize Hub/Elite SHAs."
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
