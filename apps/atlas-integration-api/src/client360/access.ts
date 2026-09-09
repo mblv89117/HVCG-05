@@ -1,17 +1,15 @@
 /**
  * Client 360 authorization.
  *
- * Client 360 entities are keyed by ingest-time random UUIDs and matched by
- * email/domain/display-name heuristics. There is no deterministic,
- * server-owned mapping from a Client 360 UUID to HVCG_Clients.ClientCode.
+ * Client 360 entities are keyed by ingest-time random UUIDs. ClientCode is
+ * resolved only via the trusted identity registry mapping — never from
+ * display name, email, or domain heuristics.
  *
- * Do not compare the UUID to the Entra ClientCode allow-list.
- * Do not infer ClientCode from display name, email, or domain.
- * Until an architecture/data remediation provides a trusted mapping,
- * every client-specific Client 360 route fails closed.
+ * Unmapped Client 360 IDs fail closed.
  */
 
 import { isCanonicalClientCode } from '../entitlements/clientCode.ts';
+import { resolveClient360IdToClientCode } from '../identity/registry.ts';
 
 export const CLIENT360_UNMAPPED_CODE = 'client_identifier_unmapped';
 
@@ -37,11 +35,11 @@ export function trustedClientCodeOrNull(raw: unknown): string | null {
 }
 
 /**
- * Resolve a Client 360 entity id to a canonical ClientCode.
- * Always null: no trusted mapping exists in canonical architecture.
+ * Resolve a Client 360 entity id to a canonical ClientCode via trusted map.
+ * Returns null when no verified mapping exists (fail closed).
  */
-export function resolveClient360ClientCode(_client360Id: string): string | null {
-  return null;
+export function resolveClient360ClientCode(client360Id: string): string | null {
+  return trustedClientCodeOrNull(resolveClient360IdToClientCode(client360Id));
 }
 
 export function assertClient360Mapped(client360Id: string): string {
