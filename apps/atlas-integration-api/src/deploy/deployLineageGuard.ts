@@ -3,14 +3,15 @@
  */
 
 /**
- * Floor SHA for Hub production lineage checks.
- * Updated to `production/atlas-core` tip `0e95388d` (Waves 0–10 + HMAC key-id hardening).
- * Prior live Hub `2d61fe65` remains an ancestor — forward deploy only.
- * Do not force Hub/Elite SHA equalization.
+ * Wave 0 historical floor — ancestry evidence only, not the deploy target.
+ * Prior live Hub `2d61fe65` shipped from this lineage; forward deploys must include it.
  */
-export const CANONICAL_PRODUCTION_SHA = '0e95388dc46eb40884f9d0c461678e66c533db4c' as const;
+export const HISTORICAL_FLOOR_SHA = '2d61fe65603b88d12d08456967c65dae8e5aec52' as const;
 
-/** Known divergent SHAs that must not overwrite canonical workflow capability. */
+/** @deprecated use HISTORICAL_FLOOR_SHA — kept for existing imports/tests */
+export const CANONICAL_PRODUCTION_SHA = HISTORICAL_FLOOR_SHA;
+
+/** Known divergent SHAs that must not overwrite production lineage capability. */
 export const BLOCKED_STALE_DEPLOY_SHAS = [
   '0cdd5f462179efc38a9aaa9444749393e5ffdf20',
 ] as const;
@@ -41,16 +42,30 @@ export function isBlockedStaleSha(candidateSha: string): boolean {
 /**
  * Evaluate whether a deploy candidate may replace live production Hub.
  * Does not perform git operations — caller supplies ancestry booleans from git merge-base.
+ *
+ * Terminology:
+ * - LIVE_PRODUCTION: commit currently serving /health
+ * - CURRENT_CANDIDATE: origin/production/atlas-core tip (or explicit checkout) being deployed
+ * - HISTORICAL_FLOOR: Wave 0 floor SHA — candidate must include this ancestry
  */
 export function evaluateDeployAncestry(opts: {
   candidateSha: string;
   liveSha: string;
+  /** @deprecated alias — means candidate includes HISTORICAL_FLOOR ancestry */
   candidateIncludesCanonicalAncestry: boolean;
   candidateIncludesLiveAncestry: boolean;
+  /** @deprecated alias — means live includes HISTORICAL_FLOOR ancestry */
   liveIncludesCanonicalAncestry: boolean;
+  candidateIncludesHistoricalFloorAncestry?: boolean;
+  liveIncludesHistoricalFloorAncestry?: boolean;
 }): DeployLineageCheckResult {
   const candidate = normalizeSha(opts.candidateSha);
   const live = normalizeSha(opts.liveSha);
+  const candidateIncludesFloor =
+    opts.candidateIncludesHistoricalFloorAncestry ?? opts.candidateIncludesCanonicalAncestry;
+  const liveIncludesFloor =
+    opts.liveIncludesHistoricalFloorAncestry ?? opts.liveIncludesCanonicalAncestry;
+
   if (!candidate || !live) {
     return {
       ok: false,
@@ -64,21 +79,21 @@ export function evaluateDeployAncestry(opts: {
     return { ok: true, liveSha: live, candidateSha: candidate, reason: 'already_live' };
   }
 
-  if (isBlockedStaleSha(candidate) && !opts.candidateIncludesCanonicalAncestry) {
+  if (isBlockedStaleSha(candidate) && !candidateIncludesFloor) {
     return {
       ok: false,
       liveSha: live,
       candidateSha: candidate,
-      reason: 'blocked_stale_sha_without_canonical_capability',
+      reason: 'blocked_stale_sha_without_historical_floor',
     };
   }
 
-  if (!opts.candidateIncludesCanonicalAncestry) {
+  if (!candidateIncludesFloor) {
     return {
       ok: false,
       liveSha: live,
       candidateSha: candidate,
-      reason: 'candidate_omits_canonical_production',
+      reason: 'candidate_omits_historical_floor',
     };
   }
 
@@ -86,12 +101,12 @@ export function evaluateDeployAncestry(opts: {
     return { ok: true, liveSha: live, candidateSha: candidate, reason: 'candidate_includes_live_ancestry' };
   }
 
-  if (!opts.liveIncludesCanonicalAncestry) {
+  if (!liveIncludesFloor) {
     return {
       ok: true,
       liveSha: live,
       candidateSha: candidate,
-      reason: 'live_stale_restoring_canonical_lineage',
+      reason: 'live_stale_restoring_lineage',
     };
   }
 
