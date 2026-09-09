@@ -337,13 +337,11 @@ export function ClientsPage() {
       showPendingBanner={false}
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {microsoftConfig.environment === 'local' || microsoftConfig.environment === 'development' ? (
-            <Link to="/clients/intake">
-              <Button appearance="secondary" icon={<AddRegular />}>
-                Dev prospect intake
-              </Button>
-            </Link>
-          ) : null}
+          <Link to="/clients/intake">
+            <Button appearance="primary" icon={<AddRegular />}>
+              New Prospect
+            </Button>
+          </Link>
           <Button icon={<ArrowSyncRegular />} onClick={() => void refresh()} disabled={busy}>
             Refresh
           </Button>
@@ -412,6 +410,13 @@ export function ClientsPage() {
         <EmptyState
           title="No authorized clients"
           description="Authorized HVCG_Clients for your entitlements. Client 360 records are not shown."
+          actions={
+            <Link to="/clients/intake">
+              <Button appearance="primary" icon={<AddRegular />}>
+                New Prospect
+              </Button>
+            </Link>
+          }
         />
       ) : (
         <AtlasCard title="Authorized clients" variant="quiet">
