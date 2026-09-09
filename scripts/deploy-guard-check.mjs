@@ -6,16 +6,18 @@ import { evaluateDeployAncestry } from '../apps/atlas-integration-api/src/deploy
 
 const candidateSha = process.argv[2];
 const liveSha = process.argv[3];
-const candidateIncludesCanonical = process.argv[4] === 'true';
+const candidateIncludesHistoricalFloor = process.argv[4] === 'true';
 const candidateIncludesLive = process.argv[5] === 'true';
-const liveIncludesCanonical = process.argv[6] === 'true';
+const liveIncludesHistoricalFloor = process.argv[6] === 'true';
 
 const result = evaluateDeployAncestry({
   candidateSha,
   liveSha,
-  candidateIncludesCanonicalAncestry: candidateIncludesCanonical,
+  candidateIncludesHistoricalFloorAncestry: candidateIncludesHistoricalFloor,
   candidateIncludesLiveAncestry: candidateIncludesLive,
-  liveIncludesCanonicalAncestry: liveIncludesCanonical,
+  liveIncludesHistoricalFloorAncestry: liveIncludesHistoricalFloor,
+  candidateIncludesCanonicalAncestry: candidateIncludesHistoricalFloor,
+  liveIncludesCanonicalAncestry: liveIncludesHistoricalFloor,
 });
 
 console.log(JSON.stringify(result));

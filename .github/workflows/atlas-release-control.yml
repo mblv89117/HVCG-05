@@ -48,27 +48,30 @@ jobs:
       - name: Production lineage + lease dry check
         env:
           HUB_BASE: https://app-atlas-integration-hub.azurewebsites.net
-          ATLAS_CANONICAL_PRODUCTION_SHA: 0e95388dc46eb40884f9d0c461678e66c533db4c
+          ATLAS_HISTORICAL_FLOOR_SHA: 2d61fe65603b88d12d08456967c65dae8e5aec52
         run: |
           set -euo pipefail
+          git fetch origin production/atlas-core
+          CURRENT_CANDIDATE="$(git rev-parse origin/production/atlas-core)"
           LIVE_SHA="$(curl -sf "${HUB_BASE}/health" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).commit||'')}catch{console.log('')}})")"
-          echo "live_hub_sha=${LIVE_SHA}"
-          echo "candidate_sha=${GITHUB_SHA}"
-          echo "canonical_floor=${ATLAS_CANONICAL_PRODUCTION_SHA}"
+          echo "live_production=${LIVE_SHA}"
+          echo "current_candidate=${CURRENT_CANDIDATE}"
+          echo "workflow_sha=${GITHUB_SHA}"
+          echo "historical_floor=${ATLAS_HISTORICAL_FLOOR_SHA}"
           if [[ -z "$LIVE_SHA" ]]; then
-            echo "WARN: could not read live Hub SHA; continuing offline checks only"
+            echo "WARN: could not read LIVE_PRODUCTION; continuing offline checks only"
           else
-            if ! git merge-base --is-ancestor "$ATLAS_CANONICAL_PRODUCTION_SHA" "$GITHUB_SHA"; then
-              echo "BLOCKED: candidate omits production floor ancestry"
+            if ! git merge-base --is-ancestor "$ATLAS_HISTORICAL_FLOOR_SHA" "$GITHUB_SHA"; then
+              echo "BLOCKED: candidate omits HISTORICAL_FLOOR ancestry"
               exit 1
             fi
             if ! git merge-base --is-ancestor "$LIVE_SHA" "$GITHUB_SHA"; then
-              echo "BLOCKED: candidate would overwrite newer live Hub (missing live ancestry)"
+              echo "BLOCKED: candidate would overwrite newer LIVE_PRODUCTION (missing live ancestry)"
               exit 1
             fi
-            if git merge-base --is-ancestor b504e12245e57b016e2bab934ebb44e55747a7e8 "$LIVE_SHA"; then
-              echo "OK: Elite b504e122 is ancestor of live Hub (expected; not a deploy trigger)"
-            fi
+          fi
+          if [[ "$GITHUB_SHA" != "$CURRENT_CANDIDATE" ]]; then
+            echo "NOTE: workflow SHA differs from origin/production/atlas-core tip (expected on feature branches)"
           fi
           echo "ATLAS_RELEASE_LEASE=DRY_CHECK_PASS"
           echo "PRODUCTION_DEPLOY=NOT_PERFORMED"
