@@ -259,12 +259,16 @@ export async function handleRequest(
 
 
     if (path === '/api/modules/ingest' || path.startsWith('/api/modules/')) {
+      // HMAC requires the exact raw body bytes — read once before JSON parse.
+      const moduleRawBody = method === 'POST' || method === 'PUT' || method === 'PATCH'
+        ? await readRawBody(req)
+        : '';
       const handled = await handleModuleIngestRoutes({
         req,
         res,
         method,
         path,
-        rawBody,
+        rawBody: moduleRawBody,
         dataDir: cfg.dataDir,
         moduleIngestKey: cfg.moduleIngestKey || '',
         moduleIngestKeyId: cfg.moduleIngestKeyId,
