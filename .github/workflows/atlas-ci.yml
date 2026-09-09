@@ -9,9 +9,11 @@ on:
     branches:
       - main
       - integration/atlas-canonical
+      - production/atlas-core
   push:
     branches:
       - integration/atlas-canonical
+      - production/atlas-core
   workflow_dispatch:
 
 concurrency:

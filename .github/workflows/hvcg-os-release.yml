@@ -7,10 +7,10 @@ name: HVCG OS Release
 
 on:
   push:
-    branches: [main, release/*]
+    branches: [main, production/atlas-core, release/*]
     tags: ['v*']
   pull_request:
-    branches: [main]
+    branches: [main, production/atlas-core]
   workflow_dispatch:
     inputs:
       environment:
