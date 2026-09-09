@@ -8,7 +8,7 @@ export type StoredIngest = {
   envelope: AtlasIntegrationEnvelope;
 };
 
-type StoreFile = { byIdempotencyKey: Record<string, StoredIngest> };
+export type StoreFile = { byIdempotencyKey: Record<string, StoredIngest> };
 
 function storePath(dataDir: string): string {
   return join(dataDir, 'module-ingest', 'events.json');
@@ -30,7 +30,8 @@ export function saveIngestStore(dataDir: string, store: StoreFile): void {
   writeFileSync(storePath(dataDir), JSON.stringify(store, null, 2), 'utf8');
 }
 
-export function upsertIngest(opts: {
+/** Local JSON upsert — development / tests only. */
+export function upsertIngestJson(opts: {
   dataDir: string;
   keyId: string;
   envelope: AtlasIntegrationEnvelope;
@@ -47,4 +48,13 @@ export function upsertIngest(opts: {
   store.byIdempotencyKey[key] = record;
   saveIngestStore(opts.dataDir, store);
   return { replay: false, record };
+}
+
+/** Kept for existing unit tests. */
+export function upsertIngest(opts: {
+  dataDir: string;
+  keyId: string;
+  envelope: AtlasIntegrationEnvelope;
+}): { replay: boolean; record: StoredIngest } {
+  return upsertIngestJson(opts);
 }
