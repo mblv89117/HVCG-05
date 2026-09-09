@@ -48,7 +48,7 @@ jobs:
       - name: Production lineage + lease dry check
         env:
           HUB_BASE: https://app-atlas-integration-hub.azurewebsites.net
-          ATLAS_CANONICAL_PRODUCTION_SHA: 2d61fe65603b88d12d08456967c65dae8e5aec52
+          ATLAS_CANONICAL_PRODUCTION_SHA: 0e95388dc46eb40884f9d0c461678e66c533db4c
         run: |
           set -euo pipefail
           LIVE_SHA="$(curl -sf "${HUB_BASE}/health" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).commit||'')}catch{console.log('')}})")"
