@@ -283,6 +283,7 @@ describe('Graph change-notification subscriptions', () => {
 
   it('renews a stored mail subscription before the 4230-minute cap', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'atlas-graph-renew-'));
+    const now = new Date('2026-08-24T11:00:00.000Z');
     try {
       persistChangeNotificationState(dir, {
         status: 'ready',
@@ -294,12 +295,11 @@ describe('Graph change-notification subscriptions', () => {
           id: MAIL_SUB_ID,
           resource: `users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages`,
           kind: 'mail',
-          expirationDateTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          expirationDateTime: new Date(now.getTime() + 60 * 60 * 1000).toISOString(),
           notificationUrl: 'https://app-atlas-integration-hub.azurewebsites.net/api/graph/change-notifications',
         },
       });
       const patches: Array<{ path: string; body: Record<string, unknown> }> = [];
-      const now = new Date('2026-08-24T11:00:00.000Z');
       assert.equal(needsRenewal(new Date(now.getTime() + 60 * 60 * 1000).toISOString(), now), true);
       assert.equal(MAIL_SUBSCRIPTION_MAX_MINUTES, 4230);
       const exp = subscriptionExpiration(now, 5000);

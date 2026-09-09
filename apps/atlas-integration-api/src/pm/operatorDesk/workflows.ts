@@ -264,6 +264,7 @@ const WORKFLOW_DEFINITIONS: WorkflowDefinition[] = [
     scheduleCadence: 'after_fabric_sweep',
   },
   {
+    workflowId: 'atlas.engineering.loop',
     name: 'Engineering mission loop',
     description:
       'Inspects product improvement signals and persists bounded engineering mission proposals for V4 execution.',
