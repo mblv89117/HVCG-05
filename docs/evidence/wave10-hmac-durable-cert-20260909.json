@@ -1,0 +1,76 @@
+{
+  "certifiedAt": "2026-09-09T23:12:00Z",
+  "microsoftNativeComplete": true,
+  "pr123": "MERGED",
+  "hubLiveSha": "502d5ea6a2d7e258dd275dfae1b2dadb6c9ef5b5",
+  "hubIngestBackend": "azure-table",
+  "hubTable": "AtlasModuleIngestEvents",
+  "storageAccount": "sthvcgwebintake",
+  "hmacKeyId": "gcc",
+  "hmacKeyVaultSecret": "AtlasModuleIngestKeyGcc",
+  "gccRevision": "azapprngzn--0000034",
+  "gccImage": "azcrrngzn.azurecr.io/gcc-web:clientcode-hmac-20260909c",
+  "gccMainMatchesProductionCutover": true,
+  "clientCodeResolver": "azure-postgres:gcc_atlas_client_code_map",
+  "mappings": {
+    "PDG01": {
+      "organizationId": "org-prodigy-games-llc",
+      "status": "VERIFIED",
+      "evidence": "Atlas seed legalName Prodigy Games LLC matches GCC org name/status onboarded"
+    },
+    "SYN01": {
+      "status": "FIXTURE_ONLY",
+      "productionEntitlement": false
+    },
+    "ACCG01": "MISSING_GCC_ORG",
+    "CCB01": "MISSING_GCC_ORG",
+    "CPL01": "MISSING_GCC_ORG",
+    "HFD01": "MISSING_GCC_ORG",
+    "KAVA01": "MISSING_GCC_ORG",
+    "LIEN01": "MISSING_GCC_ORG"
+  },
+  "syntheticCert": {
+    "clientCode": "SYN01",
+    "valid": {
+      "status": 201,
+      "backend": "azure-table"
+    },
+    "replay": {
+      "status": 200,
+      "replay": true
+    },
+    "badSig": 401,
+    "unknownKey": 401,
+    "rawSecretHeader": 401,
+    "expiredTs": 401
+  },
+  "realClientCert": {
+    "clientCode": "PDG01",
+    "authorityClass": "OBSERVE",
+    "autoProvision": false,
+    "financialImpact": 0,
+    "valid": {
+      "status": 201,
+      "backend": "azure-table"
+    },
+    "replay": {
+      "status": 200,
+      "replay": true
+    },
+    "crossClientMismatch": {
+      "status": 403,
+      "error": "GCC_ORG_CLIENTCODE_MISMATCH"
+    },
+    "durableRow": {
+      "PartitionKey": "PDG01",
+      "RowKey": "gcc|PDG01|cert|cert-pdg01-observe-1"
+    }
+  },
+  "crossClientLeakage": 0,
+  "idempotency": "PASS",
+  "provenance": "PASS",
+  "wave10": "PASS",
+  "supabaseDb": "ROLLBACK_ONLY",
+  "supabaseAuth": "ROLLBACK_ONLY",
+  "globalAutoRespond": false
+}
