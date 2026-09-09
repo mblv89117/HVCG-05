@@ -5,7 +5,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { handleModuleEnvelope } from '../src/modules/ingest/handlers.ts';
-import { verifyModuleIngestHmac } from '../src/modules/ingest/hmac.ts';
+import { buildModuleKeyRing, verifyModuleIngestHmac } from '../src/modules/ingest/hmac.ts';
 import { upsertIngest } from '../src/modules/ingest/store.ts';
 import { prepareLeadClientConversion } from '../src/modules/leads/conversionPrepare.ts';
 import { resetIdentityRegistry } from '../src/identity/registry.ts';
@@ -40,22 +40,60 @@ describe('Wave 3 module ingest', () => {
     resetIdentityRegistry();
   });
 
-  it('HMAC verifies signed body', () => {
+  it('HMAC verifies signed body without transmitting secret', () => {
     const rawBody = '{"ok":true}';
     const timestamp = new Date().toISOString();
     const signature = createHmac('sha256', SECRET)
       .update(`${timestamp}.${rawBody}`, 'utf8')
       .digest('hex');
+    const keyRing = buildModuleKeyRing({
+      primaryKey: SECRET,
+      primaryKeyId: 'module',
+      keysJson: JSON.stringify({ gcc: `${SECRET}-gcc` }),
+    });
     const auth = verifyModuleIngestHmac({
-      keyHeader: SECRET,
       keyIdHeader: 'module',
       timestampHeader: timestamp,
       signatureHeader: signature,
       rawBody,
-      expectedKey: SECRET,
-      expectedKeyId: 'module',
+      keyRing,
     });
     assert.equal(auth.ok, true);
+  });
+
+  it('HMAC fail-closes unknown key id', () => {
+    const rawBody = '{}';
+    const timestamp = new Date().toISOString();
+    const signature = createHmac('sha256', SECRET)
+      .update(`${timestamp}.${rawBody}`, 'utf8')
+      .digest('hex');
+    const keyRing = buildModuleKeyRing({ primaryKey: SECRET, primaryKeyId: 'module' });
+    const auth = verifyModuleIngestHmac({
+      keyIdHeader: 'unknown',
+      timestampHeader: timestamp,
+      signatureHeader: signature,
+      rawBody,
+      keyRing,
+    });
+    assert.equal(auth.ok, false);
+    if (!auth.ok) assert.equal(auth.status, 401);
+  });
+
+  it('HMAC fail-closes skewed timestamp', () => {
+    const rawBody = '{}';
+    const timestamp = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const signature = createHmac('sha256', SECRET)
+      .update(`${timestamp}.${rawBody}`, 'utf8')
+      .digest('hex');
+    const keyRing = buildModuleKeyRing({ primaryKey: SECRET, primaryKeyId: 'module' });
+    const auth = verifyModuleIngestHmac({
+      keyIdHeader: 'module',
+      timestampHeader: timestamp,
+      signatureHeader: signature,
+      rawBody,
+      keyRing,
+    });
+    assert.equal(auth.ok, false);
   });
 
   it('fail-closes unknown ClientCode', () => {

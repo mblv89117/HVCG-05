@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { verifyModuleIngestHmac } from './hmac.ts';
+import { buildModuleKeyRing, verifyModuleIngestHmac, type ModuleKeyRing } from './hmac.ts';
 import { handleModuleEnvelope } from './handlers.ts';
 import { upsertIngest } from './store.ts';
 
@@ -24,6 +24,8 @@ export async function handleModuleIngestRoutes(opts: {
   dataDir: string;
   moduleIngestKey: string;
   moduleIngestKeyId?: string;
+  moduleIngestKeysJson?: string;
+  keyRing?: ModuleKeyRing;
   origin?: string | null;
 }): Promise<boolean> {
   if (opts.path !== '/api/modules/ingest' && !opts.path.startsWith('/api/modules/')) {
@@ -38,8 +40,9 @@ export async function handleModuleIngestRoutes(opts: {
     opts.res.writeHead(204, {
       'access-control-allow-origin': opts.origin || '*',
       'access-control-allow-methods': 'POST, OPTIONS',
+      // Raw secret header intentionally omitted.
       'access-control-allow-headers':
-        'content-type,x-atlas-module-key,x-atlas-module-key-id,x-atlas-module-timestamp,x-atlas-module-signature',
+        'content-type,x-atlas-module-key-id,x-atlas-module-timestamp,x-atlas-module-signature',
     });
     opts.res.end();
     return true;
@@ -50,14 +53,20 @@ export async function handleModuleIngestRoutes(opts: {
     return true;
   }
 
+  const keyRing =
+    opts.keyRing ??
+    buildModuleKeyRing({
+      primaryKey: opts.moduleIngestKey,
+      primaryKeyId: opts.moduleIngestKeyId || 'module',
+      keysJson: opts.moduleIngestKeysJson,
+    });
+
   const auth = verifyModuleIngestHmac({
-    keyHeader: opts.req.headers['x-atlas-module-key'],
     keyIdHeader: opts.req.headers['x-atlas-module-key-id'],
     timestampHeader: opts.req.headers['x-atlas-module-timestamp'],
     signatureHeader: opts.req.headers['x-atlas-module-signature'],
     rawBody: opts.rawBody,
-    expectedKey: opts.moduleIngestKey,
-    expectedKeyId: opts.moduleIngestKeyId || 'module',
+    keyRing,
   });
   if (!auth.ok) {
     send(opts.res, auth.status, { error: auth.code, message: auth.message }, opts.origin);

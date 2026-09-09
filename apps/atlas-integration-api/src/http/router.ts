@@ -179,7 +179,7 @@ export async function handleRequest(
       'access-control-allow-origin': origin || '',
       'access-control-allow-methods': 'GET,POST,PATCH,OPTIONS',
       'access-control-allow-headers':
-        'content-type,authorization,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles,x-hub-signature-256,x-website-intake-key,x-atlas-module-key,x-atlas-module-key-id,x-atlas-module-timestamp,x-atlas-module-signature',
+        'content-type,authorization,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles,x-hub-signature-256,x-website-intake-key,x-atlas-module-key-id,x-atlas-module-timestamp,x-atlas-module-signature',
       'access-control-max-age': '86400',
     });
     res.end();
@@ -268,6 +268,7 @@ export async function handleRequest(
         dataDir: cfg.dataDir,
         moduleIngestKey: cfg.moduleIngestKey || '',
         moduleIngestKeyId: cfg.moduleIngestKeyId,
+        moduleIngestKeysJson: cfg.moduleIngestKeysJson,
         origin,
       });
       if (handled) return;
