@@ -2,48 +2,54 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   BLOCKED_STALE_DEPLOY_SHAS,
-  CANONICAL_PRODUCTION_SHA,
+  HISTORICAL_FLOOR_SHA,
   evaluateDeployAncestry,
   isBlockedStaleSha,
 } from '../src/deploy/deployLineageGuard.ts';
 import { leaseRecordExpired, buildLeaseRecord } from '../src/deploy/deployLease.ts';
 
 describe('deploy lineage guard', () => {
-  it('blocks stale capital SHA without canonical ancestry', () => {
+  it('blocks stale capital SHA without historical floor ancestry', () => {
     assert.equal(isBlockedStaleSha(BLOCKED_STALE_DEPLOY_SHAS[0]), true);
     const result = evaluateDeployAncestry({
       candidateSha: BLOCKED_STALE_DEPLOY_SHAS[0],
-      liveSha: CANONICAL_PRODUCTION_SHA,
-      candidateIncludesCanonicalAncestry: false,
+      liveSha: HISTORICAL_FLOOR_SHA,
+      candidateIncludesHistoricalFloorAncestry: false,
       candidateIncludesLiveAncestry: false,
+      liveIncludesHistoricalFloorAncestry: true,
+      candidateIncludesCanonicalAncestry: false,
       liveIncludesCanonicalAncestry: true,
     });
     assert.equal(result.ok, false);
-    assert.equal(result.reason, 'blocked_stale_sha_without_canonical_capability');
+    assert.equal(result.reason, 'blocked_stale_sha_without_historical_floor');
   });
 
-  it('allows candidate that includes canonical when live is stale', () => {
+  it('allows candidate that includes historical floor when live is stale', () => {
     const result = evaluateDeployAncestry({
-      candidateSha: CANONICAL_PRODUCTION_SHA,
+      candidateSha: HISTORICAL_FLOOR_SHA,
       liveSha: BLOCKED_STALE_DEPLOY_SHAS[0],
-      candidateIncludesCanonicalAncestry: true,
+      candidateIncludesHistoricalFloorAncestry: true,
       candidateIncludesLiveAncestry: false,
+      liveIncludesHistoricalFloorAncestry: false,
+      candidateIncludesCanonicalAncestry: true,
       liveIncludesCanonicalAncestry: false,
     });
     assert.equal(result.ok, true);
-    assert.equal(result.reason, 'live_stale_restoring_canonical_lineage');
+    assert.equal(result.reason, 'live_stale_restoring_lineage');
   });
 
-  it('blocks candidate that omits canonical production', () => {
+  it('blocks candidate that omits historical floor', () => {
     const result = evaluateDeployAncestry({
       candidateSha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-      liveSha: CANONICAL_PRODUCTION_SHA,
-      candidateIncludesCanonicalAncestry: false,
+      liveSha: HISTORICAL_FLOOR_SHA,
+      candidateIncludesHistoricalFloorAncestry: false,
       candidateIncludesLiveAncestry: false,
+      liveIncludesHistoricalFloorAncestry: true,
+      candidateIncludesCanonicalAncestry: false,
       liveIncludesCanonicalAncestry: true,
     });
     assert.equal(result.ok, false);
-    assert.equal(result.reason, 'candidate_omits_canonical_production');
+    assert.equal(result.reason, 'candidate_omits_historical_floor');
   });
 });
 
@@ -52,7 +58,7 @@ describe('deploy lease metadata', () => {
     const record = buildLeaseRecord({
       leaseId: 'lease-1',
       holderId: 'agent-a',
-      candidateSha: CANONICAL_PRODUCTION_SHA,
+      candidateSha: HISTORICAL_FLOOR_SHA,
       branch: 'test',
       durationSec: 1,
     });

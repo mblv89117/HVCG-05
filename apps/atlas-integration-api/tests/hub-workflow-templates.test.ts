@@ -15,7 +15,7 @@ import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import {
   evaluateDeployAncestry,
   normalizeSha,
-  CANONICAL_PRODUCTION_SHA,
+  HISTORICAL_FLOOR_SHA,
   BLOCKED_STALE_DEPLOY_SHAS,
 } from '../src/deploy/deployLineageGuard.ts';
 import {
@@ -182,7 +182,7 @@ describe('workflow templates', () => {
   });
 
   it('deployment lineage guard blocks stale overwrite', () => {
-    const live = normalizeSha(CANONICAL_PRODUCTION_SHA);
+    const live = normalizeSha(HISTORICAL_FLOOR_SHA);
     const stale = normalizeSha(BLOCKED_STALE_DEPLOY_SHAS[0]);
     assert.ok(live && stale);
     const block = evaluateDeployAncestry({
