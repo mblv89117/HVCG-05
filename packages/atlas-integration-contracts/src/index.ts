@@ -1,6 +1,5 @@
 export type {
   AtlasIntegrationEnvelope,
-  AuthorityClass,
   EnvelopeValidation,
   ModuleSource,
   ProvenanceConfidence,
@@ -28,3 +27,5 @@ export {
   SCHEMA_LEAD_CONVERSION_PREPARE,
   SCHEMA_MRI_FINDINGS,
 } from './events.ts';
+
+export * from './authority.ts';
