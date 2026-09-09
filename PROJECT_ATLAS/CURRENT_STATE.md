@@ -1,7 +1,15 @@
 # CURRENT_STATE
 
+> **SUPERSEDED_BY_CONSTITUTION / Wave 0 (2026-09-04)**  
+> This file is **historical**. It is **not** the production status system of record.  
+> Live production SoR: `mblv89117/hvcg-platform-governance` → `registry/ATLAS_PRODUCTION_CURRENT.json`  
+> Program state: `registry/HVCG_PROGRAM_STATE_CURRENT.json`  
+> Production tracking branch: `production/atlas-core` @ live Hub SHA.  
+> Constitution: `HVCG-CONSTITUTION-2026-09-04-v1.0` (`ONE_PLATFORM_MULTI_REPO`).  
+> Preserve Gate 11 closure history below; do not treat “seven independent products” framing as current platform strategy.
+
 **As of:** 2026-08-14 21:25 UTC  
-**Status SoR:** this file  
+**Status SoR:** ~~this file~~ → **SUPERSEDED** (see banner)  
 **Canonical worktree:** `.worktrees/atlas-canonical-integration`  
 **Canonical branch:** `integration/atlas-canonical`  
 **Owner operating guide:** [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md)  

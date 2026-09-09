@@ -1,0 +1,15 @@
+---
+description: Atlas platform inheritance for HVCG-05
+alwaysApply: true
+---
+
+Read `ATLAS.md` and `AGENTS.md` at the repo root before material changes.
+
+- Constitution: HVCG-CONSTITUTION-2026-09-04-v1.0
+- Canonical governance: mblv89117/hvcg-platform-governance
+- Platform: Atlas (ONE_PLATFORM_MULTI_REPO)
+- Role: ATLAS_CORE
+- Base Atlas work on `production/atlas-core`, not the July SharePoint-era default tip
+- Production SoR: governance `registry/ATLAS_PRODUCTION_CURRENT.json`
+- Unknown ClientCode: fail closed
+- Do not redeploy Hub/Elite merely to equalize SHAs

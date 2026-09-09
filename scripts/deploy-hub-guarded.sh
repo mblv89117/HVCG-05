@@ -10,8 +10,19 @@ source "$ROOT/scripts/lib/deploy-lease.sh"
 HUB_BASE="${HUB_BASE:-https://app-atlas-integration-hub.azurewebsites.net}"
 CANDIDATE_SHA="$(git rev-parse HEAD)"
 BRANCH="$(git branch --show-current)"
-CANONICAL_SHA="ecc357159277bccd76900961fd8e35ed1e7a4df0"
+# Wave 0 production floor = live Hub SHA / production/atlas-core tip. Not Elite.
+CANONICAL_SHA="${ATLAS_CANONICAL_PRODUCTION_SHA:-2d61fe65603b88d12d08456967c65dae8e5aec52}"
 HOLDER_ID="${ATLAS_DEPLOY_HOLDER_ID:-$(hostname)-$$}"
+
+# Refuse cosmetic SHA-equalization deploys and stale default-branch tips.
+if [[ "$BRANCH" == "cursor/v1.1.0-intelligence-ai-ops" ]]; then
+  echo "BLOCKED: refusing deploy from stale July SharePoint-era default branch tip"
+  exit 1
+fi
+if [[ "${ATLAS_ALLOW_SHA_EQUALIZE_DEPLOY:-}" != "1" && -n "${ATLAS_ELITE_SHA:-}" && "$CANDIDATE_SHA" == "$ATLAS_ELITE_SHA" && "$CANDIDATE_SHA" != "$(curl -sf "${HUB_BASE}/health" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).commit||'')}catch{console.log('')}})")" ]]; then
+  echo "BLOCKED: refusing Elite-SHA equalization deploy without ATLAS_ALLOW_SHA_EQUALIZE_DEPLOY=1"
+  exit 1
+fi
 
 cleanup() {
   deploy_lease_release || true

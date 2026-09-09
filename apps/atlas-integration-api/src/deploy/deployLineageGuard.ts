@@ -2,7 +2,14 @@
  * Hub/Elite deployment lineage guard — prevents stale overwrite of newer production.
  */
 
-export const CANONICAL_PRODUCTION_SHA = 'ecc357159277bccd76900961fd8e35ed1e7a4df0' as const;
+/**
+ * Floor SHA for Hub production lineage checks.
+ * Wave 0 (2026-09-04): set to the live Hub `/health.commit`
+ * `2d61fe65603b88d12d08456967c65dae8e5aec52` which is also
+ * `production/atlas-core` and tag `atlas-production-hub-2d61fe65`.
+ * Do not force Hub/Elite SHA equalization.
+ */
+export const CANONICAL_PRODUCTION_SHA = '2d61fe65603b88d12d08456967c65dae8e5aec52' as const;
 
 /** Known divergent SHAs that must not overwrite canonical workflow capability. */
 export const BLOCKED_STALE_DEPLOY_SHAS = [
