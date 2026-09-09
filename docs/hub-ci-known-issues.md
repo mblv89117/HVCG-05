@@ -1,6 +1,6 @@
 # Hub CI known issues (classification)
 
-As of tip `775b602d` / branch fixes (2026-09-09).
+As of tip `c56af1e5` (production/atlas-core HEAD; #211+#212 merged). Unit-test fixes landed via #211.
 
 ## Unit tests (FIXED on `cursor/atlas-hub-ci-preexisting-fix-472b`)
 
@@ -17,8 +17,8 @@ As of tip `775b602d` / branch fixes (2026-09-09).
 
 ## Typecheck gate (PRE_EXISTING_KNOWN_ISSUE)
 
-`scripts/ci/hub-typecheck-gate.mjs` currently allowlists only one historical TS2367.
-`tsc` on Hub reports a large set of **pre-existing** errors across operator desk / onboarding / tests
+`scripts/ci/hub-typecheck-gate.mjs` + `scripts/ci/hub-typecheck-known-debt.txt` fingerprint historical debt so **new** errors fail.
+`tsc` on Hub still reports a large set of **pre-existing** errors across operator desk / onboarding / tests
 that also fail on `production/atlas-core` tip without Wave 3 HMAC changes.
 
 **Exception fixed here:** `src/http/router.ts` module ingest passed undeclared `rawBody`
