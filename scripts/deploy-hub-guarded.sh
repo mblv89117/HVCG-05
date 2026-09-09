@@ -1,5 +1,25 @@
 #!/usr/bin/env bash
-# Deploy Hub with lease + lineage guard — refuses stale candidates.
+# Deploy Atlas Integration Hub (production) with lease + lineage guard.
+#
+# ── Owner / CI runbook (requires interactive `az login`; cloud agents cannot run this) ──
+#
+#   az login   # HVCG tenant 3df46563-86f3-4414-87fd-84ba967741ef, subscription ebc84d85-b5ff-4c4b-add1-b0a8de31b319
+#   cd /path/to/hvcg-05
+#   git fetch origin production/atlas-core
+#   git checkout production/atlas-core
+#   git pull origin production/atlas-core          # expect tip 0e95388d (Waves 0–10 + HMAC key-id hardening)
+#   npm ci                                         # esbuild bundle prerequisite
+#   export ATLAS_ELITE_SHA="$(./scripts/read-live-elite-sha.sh)"   # live Elite only — do NOT redeploy Elite to match Hub
+#   ./scripts/deploy-hub-guarded.sh
+#   curl -sf "${HUB_BASE:-https://app-atlas-integration-hub.azurewebsites.net}/health" | jq -r .commit
+#   # must equal: git rev-parse HEAD  (currently 0e95388dc46eb40884f9d0c461678e66c533db4c)
+#
+# Live Hub before deploy: 2d61fe65603b88d12d08456967c65dae8e5aec52 (ancestor of tip — forward deploy is safe/required for LIVE HMAC).
+# Live Elite SWA: https://zealous-rock-0090c7e1e.7.azurestaticapps.net — SHA differs from Hub by design; never equalize.
+# Full runbook: docs/hub-production-deploy-runbook.md
+#
+# GitHub Actions does NOT deploy Hub (no azure/login OIDC in repo). Use this script from an Owner workstation.
+#
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -10,8 +30,8 @@ source "$ROOT/scripts/lib/deploy-lease.sh"
 HUB_BASE="${HUB_BASE:-https://app-atlas-integration-hub.azurewebsites.net}"
 CANDIDATE_SHA="$(git rev-parse HEAD)"
 BRANCH="$(git branch --show-current)"
-# Wave 0 production floor = live Hub SHA / production/atlas-core tip. Not Elite.
-CANONICAL_SHA="${ATLAS_CANONICAL_PRODUCTION_SHA:-2d61fe65603b88d12d08456967c65dae8e5aec52}"
+# Production floor = production/atlas-core tip (not Elite). Override with ATLAS_CANONICAL_PRODUCTION_SHA if needed.
+CANONICAL_SHA="${ATLAS_CANONICAL_PRODUCTION_SHA:-0e95388dc46eb40884f9d0c461678e66c533db4c}"
 HOLDER_ID="${ATLAS_DEPLOY_HOLDER_ID:-$(hostname)-$$}"
 
 # Refuse cosmetic SHA-equalization deploys and stale default-branch tips.

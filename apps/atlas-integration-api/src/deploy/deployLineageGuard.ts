@@ -4,12 +4,11 @@
 
 /**
  * Floor SHA for Hub production lineage checks.
- * Wave 0 (2026-09-04): set to the live Hub `/health.commit`
- * `2d61fe65603b88d12d08456967c65dae8e5aec52` which is also
- * `production/atlas-core` and tag `atlas-production-hub-2d61fe65`.
+ * Updated to `production/atlas-core` tip `0e95388d` (Waves 0–10 + HMAC key-id hardening).
+ * Prior live Hub `2d61fe65` remains an ancestor — forward deploy only.
  * Do not force Hub/Elite SHA equalization.
  */
-export const CANONICAL_PRODUCTION_SHA = '2d61fe65603b88d12d08456967c65dae8e5aec52' as const;
+export const CANONICAL_PRODUCTION_SHA = '0e95388dc46eb40884f9d0c461678e66c533db4c' as const;
 
 /** Known divergent SHAs that must not overwrite canonical workflow capability. */
 export const BLOCKED_STALE_DEPLOY_SHAS = [
