@@ -549,6 +549,10 @@ export function loadConfig() {
      * Does not grant Hub Bearer access and is not a Graph/BA token.
      */
     websiteIntakeKey: (process.env.INTEGRATION_WEBSITE_INTAKE_KEY || '').trim(),
+    moduleIngestKey: (process.env.INTEGRATION_MODULE_INGEST_KEY || '').trim(),
+    moduleIngestKeyId: (process.env.INTEGRATION_MODULE_INGEST_KEY_ID || 'module').trim(),
+    /** Optional JSON map of key-id → secret for rotation / module-scoped IDs. Never log. */
+    moduleIngestKeysJson: (process.env.INTEGRATION_MODULE_INGEST_KEYS_JSON || '').trim(),
     websiteLeadOwnerEmail: (
       process.env.INTEGRATION_WEBSITE_LEAD_OWNER_EMAIL || 'manny@highvaluecapitalgroup.com'
     ).trim(),
