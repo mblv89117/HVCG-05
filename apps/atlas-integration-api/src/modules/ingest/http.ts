@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { buildModuleKeyRing, verifyModuleIngestHmac, type ModuleKeyRing } from './hmac.ts';
 import { handleModuleEnvelope } from './handlers.ts';
-import { upsertIngest } from './store.ts';
+import { resolveModuleIngestBackend, upsertModuleIngest } from './backend.ts';
 
 function send(res: ServerResponse, status: number, body: unknown, origin?: string | null): void {
   const headers: Record<string, string> = {
@@ -87,11 +87,29 @@ export async function handleModuleIngestRoutes(opts: {
     return true;
   }
 
-  const stored = upsertIngest({
-    dataDir: opts.dataDir,
-    keyId: auth.keyId,
-    envelope: handled.envelope,
-  });
+  const backend = resolveModuleIngestBackend(process.env);
+  let stored: { replay: boolean; record: { receivedAt: string } };
+  try {
+    stored = await upsertModuleIngest({
+      backend,
+      dataDir: opts.dataDir,
+      keyId: auth.keyId,
+      envelope: handled.envelope,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'MODULE_INGEST_PERSIST_FAILED';
+    send(
+      opts.res,
+      503,
+      {
+        error: 'MODULE_INGEST_DURABLE_UNAVAILABLE',
+        message,
+        backend,
+      },
+      opts.origin,
+    );
+    return true;
+  }
 
   send(
     opts.res,
@@ -104,6 +122,7 @@ export async function handleModuleIngestRoutes(opts: {
       eventType: handled.envelope.eventType,
       notes: handled.notes,
       receivedAt: stored.record.receivedAt,
+      backend,
     },
     opts.origin,
   );

@@ -62,7 +62,10 @@ export const PRODUCTION_CLIENT_IDENTITY_SEED: readonly ClientIdentityMapping[] =
   row({
     clientCode: 'PDG01',
     displayName: 'Prodigy Games',
+    gccOrganizationId: 'org-prodigy-games-llc',
     confidence: 'VERIFIED',
+    notes:
+      'Verified 2026-09-09: GCC org-prodigy-games-llc name matches Atlas PDG01 (Prodigy Games). Dual-resolve authorized.',
   }),
 ];
 
