@@ -99,7 +99,7 @@ export function WorkflowTemplatesPanel() {
     [auth],
   );
 
-  const useTemplate = useCallback(async () => {
+  const applyTemplate = useCallback(async () => {
     if (!selectedId || !auth.hasBearer) return;
     setBusy(true);
     setError(null);
@@ -212,7 +212,7 @@ export function WorkflowTemplatesPanel() {
           ) : null}
 
           <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Button appearance="primary" disabled={busy} onClick={() => void useTemplate()}>
+            <Button appearance="primary" disabled={busy} onClick={() => void applyTemplate()}>
               Use template
             </Button>
             {draftWorkflowId ? (
