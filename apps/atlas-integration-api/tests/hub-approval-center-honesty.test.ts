@@ -42,7 +42,7 @@ function entitledPending(over: {
 
 describe('approval center honesty', () => {
   it('keeps the entitled roster and fail-closed constants', () => {
-    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
+    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'KAVA01', 'CPL01', 'LIEN01']);
     assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
     assert.equal(APPROVAL_CENTER_HONESTY_MISSION_KEY, 'ATLAS-APPROVAL-CENTER-HONESTY-001');
     assert.equal(APPROVAL_CENTER_AUTO_APPROVE, false);
@@ -152,7 +152,7 @@ describe('approval center honesty', () => {
     assert.match(answer, /LIEN01 owner review gate/);
     assert.match(answer, /did not invent clients, amounts, lender criteria, or approval or funded state/);
     assert.match(answer, /did not auto-approve, send mail, or execute/);
-    assert.equal(/\$|8,400,000|AUTO_RESPOND|CPL01/.test(answer), false);
+    assert.equal(/\$|8,400,000|AUTO_RESPOND/.test(answer), false);
   });
 
   it('never leaks ACCG01 into a LIEN01 approval question', () => {
@@ -199,7 +199,7 @@ describe('approval center honesty', () => {
       ],
     });
     assert.match(answer, /Approval Center for LIEN01/);
-    assert.equal(/ACCG01|CPL01|\$/.test(answer), false);
+    assert.equal(/ACCG01|\$/.test(answer), false);
   });
 
   it('keeps autoApprove, send, and execute false even with entitled pending items', () => {

@@ -61,7 +61,7 @@ function entitledRun(over: {
 
 describe('onboarding execute honesty', () => {
   it('keeps the entitled roster and fail-closed constants', () => {
-    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
+    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'KAVA01', 'CPL01', 'LIEN01']);
     assert.equal(ONBOARDING_EXECUTE_HONESTY_MISSION_KEY, 'ATLAS-ONBOARDING-EXECUTE-HONESTY-001');
     assert.equal(ONBOARDING_AGENT_POLICY_CLASS, 'OWNER_ESCALATE');
     assert.equal(ONBOARDING_AGENT_EXECUTE, false);
@@ -199,7 +199,7 @@ describe('onboarding execute honesty', () => {
       ],
     });
     assert.match(answer, /Onboarding status for LIEN01/);
-    assert.equal(/ACCG01|CPL01|sent mail/i.test(answer), false);
+    assert.equal(/ACCG01|sent mail/i.test(answer), false);
   });
 
   it('keeps invented, send, autoRespond false and never invents execute facts', () => {
@@ -274,19 +274,19 @@ describe('onboarding execute honesty', () => {
     assert.match(answer, /AUTO_RESPOND: false/);
     assert.match(answer, /did not invent ClientCodes, workspaces, projects, or Hub-MI/);
     assert.match(answer, /LIVE execution: false/);
-    assert.equal(/sent mail|delivery receipt|CPL01|SYN01|invented workspace|invented project/i.test(answer), false);
+    assert.equal(/sent mail|delivery receipt|SYN01|invented workspace|invented project/i.test(answer), false);
   });
 
   it('does not treat an outside sixth-client execute ask as LIVE or invented roster', () => {
     const pack = composeOnboardingExecuteHonesty({
-      question: 'Start onboarding CPL01',
+      question: 'Start onboarding NORTH01',
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
       entitledItems: [
         entitledRun({
           runId: 'run:cpl-invented',
-          title: 'CPL01 invented project',
-          clientCode: 'CPL01',
-          projectName: 'CPL01 invented workspace',
+          title: 'NORTH01 invented project',
+          clientCode: 'NORTH01',
+          projectName: 'NORTH01 invented workspace',
         }),
       ],
     });
@@ -299,13 +299,13 @@ describe('onboarding execute honesty', () => {
     assert.equal(pack.invented, false);
     assert.equal(onboardingHonestyShouldCallExecute(pack), false);
     assert.ok(pack.items.some((row) => /sixth client/i.test(row)));
-    assert.deepEqual(pack.entitledCodes, ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
-    const answer = answerOnboardingExecuteHonesty('Start onboarding CPL01', {
+    assert.deepEqual(pack.entitledCodes, ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'KAVA01', 'CPL01', 'LIEN01']);
+    const answer = answerOnboardingExecuteHonesty('Start onboarding NORTH01', {
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
       entitledItems: [],
     });
     assert.match(answer, /Execute not allowed/);
-    assert.equal(/CPL01 workspace|invented project|LIVE execution: true/i.test(answer), false);
+    assert.equal(/NORTH01 workspace|invented project|LIVE execution: true/i.test(answer), false);
   });
 
   it('never calls execute for status questions even with an entitled overlay run', () => {

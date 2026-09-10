@@ -2,7 +2,7 @@
  * Hub-only Ask Atlas honesty for onboarding status vs execute questions.
  * Status questions never claim LIVE execution and never call execute.
  * Execute answers never invent ClientCodes, workspaces, projects, or Hub-MI.
- * Execute stays entitled-only (PDG01, ACCG01, CCB01, HFD01, LIEN01).
+ * Execute stays entitled-only (PDG01, ACCG01, CCB01, HFD01, KAVA01, CPL01, LIEN01).
  * Empty/unsigned snapshots are not LIVE. Client A never receives Client B.
  * Capital, approval, communication-policy, and client-support honesty win first.
  * Reuses askAtlasOnboardingExecute / clientOnboardingAutomation / onboardingAgent.
@@ -109,7 +109,7 @@ export type OnboardingExecuteHonesty = {
   invented: false;
 };
 
-const FOREIGN_CODE = /(?:^|[^A-Z0-9])(PDG01|ACCG01|CCB01|HFD01|LIEN01)(?:[^A-Z0-9]|$)/g;
+const FOREIGN_CODE = /(?:^|[^A-Z0-9])(PDG01|ACCG01|CCB01|HFD01|KAVA01|CPL01|LIEN01)(?:[^A-Z0-9]|$)/g;
 const ACCG_TOKEN = /(?:^|[^A-Z0-9])ACCG(?:[^A-Z0-9]|$)/;
 const INVENTED_SEND_RECEIPT =
   /(?:\bsent mail\b|\bauto-send complete\b|\bdelivery receipt\b|\bmessage-id\b|\boutbound sent\b|\bsend receipt\b)/i;
@@ -208,7 +208,7 @@ export function composeOnboardingExecuteHonesty(opts: {
   const askedOutside = Boolean(
     match.kind === 'none'
     && opts.question
-    && /\b(CPL01|SYN01|NORTH01)\b/i.test(opts.question),
+    && /\b(SYN01|NORTH01|ZZZ99)\b/i.test(opts.question),
   );
   const overlayIds = new Set(opts.overlayRunIds ?? []);
 

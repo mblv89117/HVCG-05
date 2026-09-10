@@ -76,7 +76,7 @@ export type HistoricalReconstructionHonesty = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'STALE_OR_UNCERTAIN';
 };
 
-const FOREIGN_CODE = /(?:^|[^A-Z0-9])(PDG01|ACCG01|CCB01|HFD01|LIEN01)(?:[^A-Z0-9]|$)/g;
+const FOREIGN_CODE = /(?:^|[^A-Z0-9])(PDG01|ACCG01|CCB01|HFD01|KAVA01|CPL01|LIEN01)(?:[^A-Z0-9]|$)/g;
 const ACCG_TOKEN = /(?:^|[^A-Z0-9])ACCG(?:[^A-Z0-9]|$)/;
 
 function rosterEntitled(entitledCodes: readonly string[]): string[] {
@@ -234,7 +234,7 @@ export function composeHistoricalReconstructionHonesty(opts: {
   }
   if (match.kind === 'none' && opts.question && /lien|accg|pdg|ccb|hfd|client/i.test(opts.question)
     && !scoped) {
-    const askedOutside = /\b(CPL01|SYN01|NORTH01)\b/i.test(opts.question);
+    const askedOutside = /\b(SYN01|NORTH01|ZZZ99)\b/i.test(opts.question);
     if (askedOutside) items.push('Asked ClientCode is outside the entitled roster. Atlas does not invent a sixth client.');
   }
   if (!projects.length && !documents.length) {

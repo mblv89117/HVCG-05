@@ -457,7 +457,7 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(mapsToOnboardingExecuteIntent('Is onboarding complete for ACCG?'), false);
     const overlay = readWorkflowDefinitionOverlay(resolveWorkflowDefinitionOverlayDir(dir));
     assert.equal(overlay.definitions.length, 0);
-    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
+    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'KAVA01', 'CPL01', 'LIEN01']);
     rmSync(dir, { recursive: true, force: true });
   });
 

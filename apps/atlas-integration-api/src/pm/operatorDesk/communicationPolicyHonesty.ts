@@ -81,7 +81,7 @@ export type CommunicationPolicyHonesty = {
   invented: false;
 };
 
-const FOREIGN_CODE = /(?:^|[^A-Z0-9])(PDG01|ACCG01|CCB01|HFD01|LIEN01)(?:[^A-Z0-9]|$)/g;
+const FOREIGN_CODE = /(?:^|[^A-Z0-9])(PDG01|ACCG01|CCB01|HFD01|KAVA01|CPL01|LIEN01)(?:[^A-Z0-9]|$)/g;
 const ACCG_TOKEN = /(?:^|[^A-Z0-9])ACCG(?:[^A-Z0-9]|$)/;
 const INVENTED_EMAIL = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
 const INVENTED_SEND_RECEIPT =
@@ -172,7 +172,7 @@ export function composeCommunicationPolicyHonesty(opts: {
   const askedOutside = Boolean(
     match.kind === 'none'
     && opts.question
-    && /\b(CPL01|SYN01|NORTH01)\b/i.test(opts.question),
+    && /\b(SYN01|NORTH01|ZZZ99)\b/i.test(opts.question),
   );
   const overlayIds = new Set(opts.overlayPolicyIds ?? []);
 

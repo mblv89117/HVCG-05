@@ -18,7 +18,7 @@ import {
 
 describe('historical reconstruction honesty', () => {
   it('keeps the entitled roster and communication fail-closed constants', () => {
-    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
+    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'KAVA01', 'CPL01', 'LIEN01']);
     assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
   });
 
@@ -63,7 +63,7 @@ describe('historical reconstruction honesty', () => {
     assert.match(answer, /historical_reconstruction_v1/);
     assert.match(answer, /CONSULTING AGREEMENT 6.12.25/);
     assert.match(answer, /did not invent ClientCodes/);
-    assert.equal(/\$|8,400,000|AUTO_RESPOND|submitted|CPL01|ACCG01/.test(answer), false);
+    assert.equal(/\$|8,400,000|AUTO_RESPOND|submitted|ACCG01/.test(answer), false);
   });
 
   it('rejects quoted mailbox search that returned ACCG subjects for LIEN01', () => {
@@ -100,22 +100,22 @@ describe('historical reconstruction honesty', () => {
       recoveredProjects: hvsRecoveredProjects(),
       recoveredDocuments: hvsRecoveredDocuments(),
     });
-    assert.equal(pack.projects.some((row) => row.clientCode === 'CPL01'), false);
-    assert.equal(pack.documents.some((row) => row.clientCode === 'CPL01'), false);
+    assert.equal(pack.projects.some((row) => row.clientCode === 'SYN01'), false);
+    assert.equal(pack.documents.some((row) => row.clientCode === 'SYN01'), false);
     assert.equal(pack.projects.some((row) => !row.clientCode), false);
     assert.equal(pack.projects.some((row) => row.client === "That's Kava" || row.client === 'Frocovery'), false);
     const invented = composeHistoricalReconstructionHonesty({
-      question: 'what did we reconstruct for CPL01?',
+      question: 'what did we reconstruct for NORTH01?',
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
       recoveredProjects: hvsRecoveredProjects(),
       recoveredDocuments: hvsRecoveredDocuments(),
     });
     assert.equal(invented.clientCode, undefined);
-    assert.equal(invented.projects.some((row) => row.clientCode === 'CPL01'), false);
-    const answer = answerHistoricalReconstructionHonesty('what did we reconstruct for CPL01?', {
+    assert.equal(invented.projects.some((row) => row.clientCode === 'NORTH01'), false);
+    const answer = answerHistoricalReconstructionHonesty('what did we reconstruct for NORTH01?', {
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
     });
-    assert.equal(/CPL01|Christie's Place|sixth client invented/i.test(answer) && /ClientCode: CPL01/.test(answer), false);
+    assert.equal(/CPL01|Christie's Place|sixth client invented/i.test(answer) && /ClientCode: NORTH01/.test(answer), false);
     assert.match(answer, /did not invent ClientCodes/);
   });
 
