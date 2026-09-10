@@ -46,8 +46,11 @@ export const PRODUCTION_CLIENT_IDENTITY_SEED: readonly ClientIdentityMapping[] =
     clientCode: 'HFD01',
     displayName: 'Hart Family Dental',
     growth360Slug: 'hart-family-dental',
+    growth360OrganizationId: '99cdffba-3cf2-4343-9e4a-3dca42ff4711',
     confidence: 'VERIFIED',
-    notes: '360 slug mapped; UUID filled when dual-resolve validates against live org row.',
+    notes:
+      'Verified 2026-09-10: 360 org UUID dual-resolved via production campaigns API (hart-family-dental). SQL reconfirm pending when Azure PG reachable from cert host.',
+    updatedAt: '2026-09-10T03:05:00.000Z',
   }),
   row({
     clientCode: 'KAVA01',
