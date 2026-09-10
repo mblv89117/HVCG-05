@@ -1,0 +1,107 @@
+{
+  "schema": "HVCG_PROGRAM_STATE_CURRENT",
+  "asOf": "2026-09-10T00:30:00Z",
+  "constitution": {
+    "id": "HVCG-CONSTITUTION-2026-09-04-v1.0",
+    "status": "APPROVED_PUBLISHED_ACTIVE"
+  },
+  "platform": {
+    "master": "Atlas",
+    "model": "ONE_PLATFORM_MULTI_REPO",
+    "defaultBranch": "production/atlas-core"
+  },
+  "repos": {
+    "atlasCore": "mblv89117/HVCG-05",
+    "gcc": "mblv89117/growth-command-center",
+    "canonicalGovernance": "mblv89117/hvcg-platform-governance"
+  },
+  "hub": {
+    "liveRuntimeSha": "502d5ea6a2d7e258dd275dfae1b2dadb6c9ef5b5",
+    "gitTipSha": "7016e4c61b1145d0cf091608fc93d603e87ecada",
+    "runtimeVsGitTip": "GIT_TIP_AHEAD_DOCS_ONLY_EXPECTED",
+    "redeployRequiredForShaEquality": false,
+    "moduleIngestBackend": "azure-table",
+    "moduleIngestDurable": "PASS",
+    "hmac": {
+      "status": "LIVE_CONFIGURED_KEY_VAULT_BACKED",
+      "keyId": "gcc",
+      "secretStorage": "Azure Key Vault \u2014 secret value NEVER in governance"
+    },
+    "signedSyntheticCert": "PASS",
+    "signedRealClientCert": "PASS",
+    "signedRealClientCode": "PDG01",
+    "signedRealClientAuthority": "OBSERVE",
+    "autoProvision": false
+  },
+  "gcc": {
+    "compute": "AZURE_CONTAINER_APPS",
+    "database": "AZURE_POSTGRESQL",
+    "auth": "ENTRA_EXTERNAL_ID",
+    "liveRevision": "azapprngzn--0000034",
+    "microsoftNativeComplete": true,
+    "pr123": {
+      "status": "MERGED",
+      "mergeSha": "b87a87a80ef23264e2121e927bcce6ce5fc625ce"
+    },
+    "pr124": {
+      "status": "MERGED",
+      "mergeSha": "62124fe4d9c0882e4e34c971052a834f4ba30a41"
+    }
+  },
+  "providers": {
+    "supabaseDb": "ROLLBACK_ONLY",
+    "supabaseAuth": "ROLLBACK_ONLY",
+    "vercel": "NON_AUTHORITATIVE_DECOMMISSION_PENDING_ROLLBACK_WINDOW",
+    "supabaseDeleted": false,
+    "vercelDeleted": false
+  },
+  "clientCodes": {
+    "PDG01": {
+      "status": "VERIFIED",
+      "organizationId": "org-prodigy-games-llc",
+      "evidence": "Atlas seed legalName Prodigy Games LLC matches GCC org name/status onboarded"
+    },
+    "SYN01": {
+      "status": "FIXTURE_ONLY",
+      "productionEntitlement": false
+    },
+    "othersWithoutGccTenant": "MISSING_GCC_ORG"
+  },
+  "certifications": {
+    "wave10": "PASS",
+    "crossClientLeakage": 0,
+    "idempotency": "PASS",
+    "provenance": "PASS",
+    "clientCodeFailClosed": "PASS"
+  },
+  "controlPlane": {
+    "p0": 0,
+    "p1": [
+      "Bounded Supabase rollback-window retirement",
+      "Vercel final provider decommission after rollback verification",
+      "Additional real GCC tenants only when commercially warranted",
+      "Local Obsidian sync certification if not yet done"
+    ],
+    "globalAutoRespond": false,
+    "supervisorV4": {
+      "name": "HVCG Platform Engineering Supervisor V4 \u2014 Constitutional Control Plane",
+      "desiredCadence": "HOURLY",
+      "active": false,
+      "activationGate": "CANONICAL_GOVERNANCE_CURRENT_AND_CI_PASS"
+    }
+  },
+  "staleClaimsToRemoveFromCurrentRegistries": [
+    "Hub still running 2d61fe65...",
+    "Hub Waves not deployed",
+    "Default branch cursor/v1.1.0-intelligence-ai-ops",
+    "GCC DB still Supabase",
+    "GCC Auth still Supabase",
+    "Microsoft-native cutover pending",
+    "HMAC not deployed",
+    "Module ingest only local JSON",
+    "Wave 10 not operationally certified",
+    "PR #123 open",
+    "PR #124 not merged",
+    "Supervisor blocked by default branch / Hub / GCC Microsoft-native cutover"
+  ]
+}

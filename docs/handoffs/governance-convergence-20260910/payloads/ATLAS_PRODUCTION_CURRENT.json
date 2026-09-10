@@ -1,0 +1,17 @@
+{
+  "schema": "ATLAS_PRODUCTION_CURRENT",
+  "asOf": "2026-09-10T00:30:00Z",
+  "defaultBranch": "production/atlas-core",
+  "liveHubSha": "502d5ea6a2d7e258dd275dfae1b2dadb6c9ef5b5",
+  "hubGitTipSha": "7016e4c61b1145d0cf091608fc93d603e87ecada",
+  "hubRedeployRequired": false,
+  "moduleIngestBackend": "azure-table",
+  "hmacKeyId": "gcc",
+  "hmacStatus": "LIVE_CONFIGURED",
+  "gccDatabase": "AZURE_POSTGRESQL",
+  "gccAuth": "ENTRA_EXTERNAL_ID",
+  "microsoftNativeComplete": true,
+  "wave10": "PASS",
+  "p0": 0,
+  "globalAutoRespond": false
+}
