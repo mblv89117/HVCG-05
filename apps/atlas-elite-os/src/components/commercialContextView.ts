@@ -96,26 +96,27 @@ export function commercialContextCopy(
 
   return {
     title: 'Commercial context',
-    subtitle: 'Read-only GCC / Copilot / GTM records. Outbound and paid ads stay off.',
+    subtitle:
+      'Unified module observations (GCC · MRI/Copilot · Growth360/GTM) for this ClientCode. Live outbound and paid ads stay OFF. Atlas does not invent missing facts.',
     outboundOff: true,
     paidAdsOff: true,
     lanes: [
       {
-        title: 'GCC value',
+        title: 'GCC financial intelligence',
         available: Boolean(desk?.gcc.available),
         count: desk?.gcc.count ?? 0,
         emptyReason: desk?.gcc.emptyReason || GCC_EMPTY,
         lines: gccLines,
       },
       {
-        title: 'Agent Copilot',
+        title: 'MRI / Agent Copilot',
         available: Boolean(desk?.copilot.available),
         count: desk?.copilot.count ?? 0,
         emptyReason: desk?.copilot.emptyReason || COPILOT_EMPTY,
         lines: copilotLines,
       },
       {
-        title: 'GTM origin',
+        title: 'Growth360 / GTM origin',
         available: Boolean(desk?.gtm.available),
         count: desk?.gtm.count ?? 0,
         emptyReason: desk?.gtm.emptyReason || GTM_EMPTY,

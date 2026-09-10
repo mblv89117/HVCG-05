@@ -1,0 +1,139 @@
+{
+  "certifiedAt": "2026-09-10T02:43:46Z",
+  "hub": "https://app-atlas-integration-hub.azurewebsites.net",
+  "contractFreezeId": "HVCG-ATLAS-MODULE-CONTRACT-FREEZE-2026-09-10",
+  "modules": {
+    "copilot_mri": {
+      "valid": {
+        "status": 201,
+        "ok": true,
+        "detail": {
+          "ok": true,
+          "replay": false,
+          "backend": "azure-table",
+          "idempotencyKey": "mri|MRI01|cert|syn-1",
+          "eventType": "mri.findings.v1"
+        }
+      },
+      "replay": {
+        "status": 200,
+        "ok": true,
+        "detail": {
+          "ok": true,
+          "replay": true,
+          "backend": "azure-table",
+          "idempotencyKey": "mri|MRI01|cert|syn-1",
+          "eventType": "mri.findings.v1"
+        }
+      },
+      "badSig": {
+        "status": 401,
+        "ok": true,
+        "detail": {
+          "error": "unauthorized",
+          "message": "Module signature invalid."
+        }
+      },
+      "unknownKey": {
+        "status": 401,
+        "ok": true,
+        "detail": {
+          "error": "unauthorized",
+          "message": "Unknown module key id."
+        }
+      },
+      "expiredTs": {
+        "status": 401,
+        "ok": true,
+        "detail": {
+          "error": "unauthorized",
+          "message": "Module timestamp invalid or skewed."
+        }
+      },
+      "rawSecretHeader": {
+        "status": 401,
+        "ok": true,
+        "detail": {
+          "error": "unauthorized",
+          "message": "Module signature invalid."
+        }
+      },
+      "unknownClientCode": {
+        "status": 403,
+        "ok": true,
+        "detail": {
+          "error": "CLIENTCODE_UNMAPPED",
+          "message": "Unknown ClientCode \u2014 fail closed."
+        }
+      },
+      "PASS": true
+    },
+    "growth360": {
+      "valid": {
+        "status": 201,
+        "ok": true,
+        "detail": {
+          "ok": true,
+          "replay": false,
+          "backend": "azure-table",
+          "idempotencyKey": "growth360|HFD01|cert|syn-1",
+          "eventType": "360.campaign_approval.v1"
+        }
+      },
+      "replay": {
+        "status": 200,
+        "ok": true,
+        "detail": {
+          "ok": true,
+          "replay": true,
+          "backend": "azure-table",
+          "idempotencyKey": "growth360|HFD01|cert|syn-1",
+          "eventType": "360.campaign_approval.v1"
+        }
+      },
+      "badSig": {
+        "status": 401,
+        "ok": true,
+        "detail": {
+          "error": "unauthorized",
+          "message": "Module signature invalid."
+        }
+      },
+      "unknownKey": {
+        "status": 401,
+        "ok": true,
+        "detail": {
+          "error": "unauthorized",
+          "message": "Unknown module key id."
+        }
+      },
+      "expiredTs": {
+        "status": 401,
+        "ok": true,
+        "detail": {
+          "error": "unauthorized",
+          "message": "Module timestamp invalid or skewed."
+        }
+      },
+      "rawSecretHeader": {
+        "status": 401,
+        "ok": true,
+        "detail": {
+          "error": "unauthorized",
+          "message": "Module signature invalid."
+        }
+      },
+      "crossClientHart": {
+        "status": 403,
+        "ok": true,
+        "detail": {
+          "error": "HART_CLIENTCODE_REQUIRED",
+          "message": "Hart Family Dental requires ClientCode HFD01."
+        }
+      },
+      "PASS": true
+    }
+  },
+  "hubLiveShaProbe": "502d5ea6a2d7e258dd275dfae1b2dadb6c9ef5b5",
+  "overallSyntheticPass": true
+}
