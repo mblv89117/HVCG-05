@@ -1,0 +1,53 @@
+{
+  "certifiedAt": "2026-09-10T00:35:00Z",
+  "constitutionVersion": "HVCG-CONSTITUTION-2026-09-04-v1.0",
+  "canonicalGovernanceRepo": "mblv89117/hvcg-platform-governance",
+  "canonicalGovernanceAccess": "AGENT_ACCESS_LIMITATION",
+  "canonicalGovernanceAccessDetail": {
+    "githubMcpPrincipal": "mblv89117",
+    "visibleReposForPrincipal": 8,
+    "governanceRepoInVisibleSet": false,
+    "httpStatus": 404,
+    "ghCliPrincipal": "cursor[bot]",
+    "conclusion": "Existing canonical repo is not readable/writable from this Cloud agent; do NOT create a replacement repo."
+  },
+  "canonicalGovernanceCurrent": false,
+  "governancePr": null,
+  "governanceMergeSha": null,
+  "governanceCi": "NOT_RUN_NO_REPO_ACCESS",
+  "hvcgDefaultBranch": "production/atlas-core",
+  "liveHubSha": "502d5ea6a2d7e258dd275dfae1b2dadb6c9ef5b5",
+  "hubGitTip": "7016e4c61b1145d0cf091608fc93d603e87ecada",
+  "hubRedeployRequired": false,
+  "gccDatabase": "AZURE_POSTGRESQL",
+  "gccAuth": "ENTRA_EXTERNAL_ID",
+  "microsoftNativeComplete": true,
+  "moduleIngestBackend": "azure-table",
+  "hmac": "LIVE_CONFIGURED_KEY_VAULT_BACKED",
+  "signedRealClientCert": "PASS",
+  "realClientCode": "PDG01",
+  "wave10": "PASS",
+  "p0": 0,
+  "p1": [
+    "Bounded Supabase rollback-window retirement",
+    "Vercel final provider decommission after rollback verification",
+    "Additional real GCC tenants only when commercially warranted",
+    "Local Obsidian sync certification if not yet done"
+  ],
+  "globalAutoRespond": false,
+  "supervisorV4Found": "TOOLING_VISIBILITY_LIMITATION",
+  "supervisorV4FoundDetail": "cursor-cloud get-automation requires UUID; no list-automations API exposed to this agent. Do NOT create a substitute Supervisor.",
+  "supervisorV4PromptCurrent": "UNKNOWN_NOT_READABLE",
+  "v4PromptReplacementRequired": "UNKNOWN_PENDING_PROMPT_READ",
+  "supervisorV4Cadence": "HOURLY_TARGET_NOT_ACTIVATED",
+  "supervisorV4Active": false,
+  "initialV4Health": "NOT_OBSERVED",
+  "duplicateSupervisorCount": 0,
+  "ownerActionRequired": true,
+  "ownerActions": [
+    "Grant Cloud agent / GitHub App access to existing private repo mblv89117/hvcg-platform-governance OR run Local Cursor against that repo with full GitHub auth",
+    "Ensure Cursor Automations UI visibility so Supervisor V4 UUID can be resolved (or provide UUID once)"
+  ],
+  "nextAutomaticAction": "Local Cursor executes docs/handoffs/governance-convergence-20260910/run-converge.sh then activates existing Supervisor V4 HOURLY",
+  "executableHandoff": "docs/handoffs/governance-convergence-20260910/"
+}
