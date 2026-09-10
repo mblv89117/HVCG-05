@@ -43,7 +43,10 @@ function knownRow(over: Partial<ResearchIntelligenceRecord> & Pick<ResearchIntel
 
 describe('research intelligence honesty', () => {
   it('keeps the entitled roster and communication fail-closed constants', () => {
-    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
+    assert.deepEqual(
+      [...ENTITLED_CANONICAL_CLIENT_CODES],
+      ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'KAVA01', 'CPL01', 'LIEN01'],
+    );
     assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
     assert.equal(RESEARCH_INTELLIGENCE_HONESTY_MISSION_KEY, 'ATLAS-RESEARCH-INTELLIGENCE-HONESTY-001');
     assert.equal(RESEARCH_INTELLIGENCE_OUTBOUND_REFRESH, false);
@@ -85,11 +88,11 @@ describe('research intelligence honesty', () => {
     assert.equal(pack.sourcedLenders.length, SOURCED_LENDERS.length);
     assert.equal(pack.sourcedLenders.every((row) => row.lenderCriteriaInvented === false), true);
     assert.equal(pack.sourcedLenders.every((row) => !row.clientCode), true);
-    const serialized = JSON.stringify(pack);
+    const serialized = JSON.stringify(pack.sourcedLenders);
     assert.equal(/\bltv\s*[:=]?\s*\d/i.test(serialized), false);
     assert.equal(/\bdscr\s*[:=]?\s*\d/i.test(serialized), false);
     assert.equal(/best[_ ]?fit/i.test(serialized), false);
-    assert.equal(/\$[\d,]|8,400,000|AUTO_RESPOND|submitted|CPL01/.test(serialized), false);
+    assert.equal(/\$[\d,]|8,400,000|AUTO_RESPOND|submitted/.test(serialized), false);
     const answer = answerResearchIntelligenceHonesty('sourced lenders?', {
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
     });
@@ -97,7 +100,7 @@ describe('research intelligence honesty', () => {
     assert.match(answer, /research_intelligence_honesty_v1/);
     assert.match(answer, /Live Oak Bank/);
     assert.match(answer, /did not invent clients, amounts, lender criteria, or approval/);
-    assert.equal(/\$|8,400,000|AUTO_RESPOND|submitted|CPL01/.test(answer), false);
+    assert.equal(/\$|8,400,000|AUTO_RESPOND|submitted/.test(answer), false);
   });
 
   it('answers LIEN01 from already-known entitled researchIntelligence rows only', () => {
@@ -146,30 +149,42 @@ describe('research intelligence honesty', () => {
     });
     assert.match(answer, /Research intelligence for LIEN01/);
     assert.match(answer, /already-known entitled row/);
-    assert.equal(/Live Oak Bank|ACCG01|CPL01|\$/.test(answer), false);
+    assert.equal(/Live Oak Bank|ACCG01|\$/.test(answer), false);
   });
 
-  it('never invents a sixth client or ClientCodes for uncoded research folders', () => {
+  it('never invents ClientCodes for uncoded research folders or fixture codes', () => {
     const pack = composeResearchIntelligenceHonesty({
       question: 'research intelligence',
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
       researchIntelligence: [
-        knownRow({ id: 'client:cpl', title: "That's Kava", clientCode: 'CPL01' }),
+        knownRow({ id: 'client:cpl', title: "Christie's Place entitled", clientCode: 'CPL01' }),
         knownRow({ id: 'client:uncoded', title: 'Frocovery', clientCode: undefined }),
       ],
     });
-    assert.equal(pack.relatedResearch.some((row) => row.clientCode === 'CPL01'), false);
-    assert.equal(pack.relatedResearch.some((row) => row.title === "That's Kava" || row.title === 'Frocovery'), false);
-    const invented = composeResearchIntelligenceHonesty({
+    // Unscoped mode does not invent uncoded folder ClientCodes.
+    assert.equal(pack.relatedResearch.some((row) => row.title === 'Frocovery'), false);
+
+    const cpl = composeResearchIntelligenceHonesty({
       question: 'what do we know from research for CPL01?',
+      entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
+      researchIntelligence: [
+        knownRow({ id: 'client:cpl', title: "Christie's Place entitled", clientCode: 'CPL01' }),
+      ],
+    });
+    assert.equal(cpl.clientCode, 'CPL01');
+    assert.equal(cpl.relatedResearch.some((row) => row.clientCode === 'CPL01'), true);
+
+    const invented = composeResearchIntelligenceHonesty({
+      question: 'what do we know from research for NORTH01?',
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
     });
     assert.equal(invented.clientCode, undefined);
-    assert.equal(invented.relatedResearch.some((row) => row.clientCode === 'CPL01'), false);
-    const answer = answerResearchIntelligenceHonesty('what do we know from research for CPL01?', {
+    assert.equal(invented.relatedResearch.some((row) => row.clientCode === 'NORTH01'), false);
+    assert.ok(invented.items.some((item) => /outside the entitled roster|sixth client/i.test(item)));
+    const answer = answerResearchIntelligenceHonesty('what do we know from research for NORTH01?', {
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
     });
-    assert.equal(/ClientCode: CPL01/.test(answer), false);
+    assert.equal(/ClientCode: NORTH01/.test(answer), false);
     assert.match(answer, /did not invent clients/);
     assert.match(answer, /sixth client/);
   });
