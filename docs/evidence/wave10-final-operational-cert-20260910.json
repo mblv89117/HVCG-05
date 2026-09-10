@@ -1,0 +1,66 @@
+{
+  "certifiedAt": "2026-09-10T00:20:00Z",
+  "directive": "HVCG_ATLAS_FINAL_OPERATIONAL_CERTIFICATION",
+  "microsoftNativeComplete": true,
+  "pr123": "MERGED",
+  "pr123MergeSha": "b87a87a80ef23264e2121e927bcce6ce5fc625ce",
+  "pr124": "MERGED",
+  "pr124MergeSha": "62124fe4d9c0882e4e34c971052a834f4ba30a41",
+  "gccMainMatchesProduction": true,
+  "gccRealClientCodeResolver": "LIVE",
+  "realGccMappings": {
+    "PDG01": {
+      "organizationId": "org-prodigy-games-llc",
+      "status": "VERIFIED",
+      "evidence": "Atlas seed legalName Prodigy Games LLC matches GCC org name/status onboarded"
+    },
+    "SYN01": {
+      "status": "FIXTURE_ONLY",
+      "productionEntitlement": false
+    },
+    "ACCG01": "MISSING_GCC_ORG",
+    "CCB01": "MISSING_GCC_ORG",
+    "CPL01": "MISSING_GCC_ORG",
+    "HFD01": "MISSING_GCC_ORG",
+    "KAVA01": "MISSING_GCC_ORG",
+    "LIEN01": "MISSING_GCC_ORG"
+  },
+  "moduleIngestBackend": "azure-table",
+  "moduleIngestDurable": "PASS",
+  "hmacKeyRing": "CONFIGURED",
+  "hmacKeyIdGcc": "gcc",
+  "hmacSyntheticCert": "PASS",
+  "signedRealClientCert": "PASS",
+  "realClientCode": "PDG01",
+  "authorityClass": "OBSERVE",
+  "autoProvision": false,
+  "crossClientLeakage": 0,
+  "idempotency": "PASS",
+  "provenance": "PASS",
+  "wave10": "PASS",
+  "canonicalGovernanceAccess": "AGENT_ACCESS_LIMITATION",
+  "canonicalGovernanceCurrent": false,
+  "governanceHandoff": "docs/handoffs/GOVERNANCE_REFRESH_LOCAL_CURSOR_20260910.md",
+  "supabaseDb": "ROLLBACK_ONLY",
+  "supabaseAuth": "ROLLBACK_ONLY",
+  "vercel": "NON_AUTHORITATIVE",
+  "supervisorV4": "NOT_ACTIVATED_PENDING_GOVERNANCE",
+  "supervisorV4Visibility": "TOOLING_VISIBILITY_LIMITATION",
+  "globalAutoRespond": false,
+  "p0": 0,
+  "p1": [
+    "Refresh hvcg-platform-governance via Local Cursor handoff",
+    "Activate Supervisor V4 HOURLY after governance CI PASS"
+  ],
+  "automatableWorkRemaining": [
+    "Governance registry refresh (requires GitHub access to hvcg-platform-governance)",
+    "Supervisor V4 activation after governance current"
+  ],
+  "ownerActionRequired": false,
+  "ownerActions": [],
+  "nextAutomaticAction": "Local Cursor executes governance handoff; then activate Supervisor V4 HOURLY",
+  "hubLiveSha": "502d5ea6a2d7e258dd275dfae1b2dadb6c9ef5b5",
+  "hubGitTip": "5364a44683230a9e8cc4e51e7bf305bdcb82eaaf",
+  "gccAcaRevision": "azapprngzn--0000034",
+  "sourceEvidence": "docs/evidence/wave10-hmac-durable-cert-20260909.json"
+}
