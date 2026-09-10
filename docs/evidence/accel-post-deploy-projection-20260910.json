@@ -1,0 +1,38 @@
+{
+  "certifiedAt": "2026-09-10T03:01:11Z",
+  "hubCommit": "f3c9e5149596d7bccec0f245ec51caf46c2b3b59",
+  "hfd01": {
+    "status": 201,
+    "ok": true,
+    "commercialProjection": {
+      "projected": true,
+      "kind": "attribution-lineage.v1",
+      "replay": false,
+      "fixtureOnly": false
+    },
+    "backend": "azure-table"
+  },
+  "pdg01": {
+    "status": 201,
+    "ok": true,
+    "commercialProjection": {
+      "projected": true,
+      "kind": "gcc-value-signal.v1",
+      "replay": false,
+      "fixtureOnly": false
+    },
+    "backend": "azure-table"
+  },
+  "mri01": {
+    "status": 201,
+    "ok": true,
+    "commercialProjection": {
+      "projected": true,
+      "kind": "atlas-lead-handoff.v1",
+      "replay": false,
+      "fixtureOnly": true
+    },
+    "backend": "azure-table"
+  },
+  "PASS": true
+}
