@@ -53,7 +53,7 @@ function entitledSupport(over: {
 
 describe('client support honesty', () => {
   it('keeps the entitled roster and fail-closed constants', () => {
-    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
+    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'KAVA01', 'CPL01', 'LIEN01']);
     assert.equal(CLIENT_SUPPORT_HONESTY_MISSION_KEY, 'ATLAS-CLIENT-SUPPORT-HONESTY-001');
     assert.equal(CLIENT_SUPPORT_AGENT_POLICY_CLASS, 'OWNER_ESCALATE');
     assert.equal(CLIENT_SUPPORT_AGENT_EXECUTE, false);
@@ -175,7 +175,7 @@ describe('client support honesty', () => {
       ],
     });
     assert.match(answer, /Client support for LIEN01/);
-    assert.equal(/ACCG01|CPL01|sent mail/i.test(answer), false);
+    assert.equal(/ACCG01|sent mail/i.test(answer), false);
   });
 
   it('keeps invented, send, autoRespond, and execute false even with recorded items', () => {
@@ -237,26 +237,26 @@ describe('client support honesty', () => {
     assert.match(answer, /AUTO_RESPOND: false/);
     assert.match(answer, /did not invent clients, tickets, Hub-MI rows, or send receipts/);
     assert.match(answer, /did not send mail, auto-respond, or execute routing/);
-    assert.equal(/sent mail|delivery receipt|CPL01|SYN01/.test(answer), false);
+    assert.equal(/sent mail|delivery receipt|SYN01/.test(answer), false);
   });
 
   it('does not treat an outside sixth-client ask as LIVE or invented roster', () => {
     const pack = composeClientSupportHonesty({
-      question: 'client support for CPL01',
+      question: 'client support for NORTH01',
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
       entitledItems: [
         entitledSupport({
           supportId: 'task:cpl-invented',
-          title: 'CPL01 invented ticket',
-          clientCode: 'CPL01',
+          title: 'NORTH01 invented ticket',
+          clientCode: 'NORTH01',
         }),
       ],
     });
-    assert.equal(pack.clientCode, undefined);
+    assert.equal(pack.clientCode, undefined);  // NORTH01 outside
     assert.equal(pack.recordedCount, 0);
     assert.equal(pack.liveEvidence, false);
     assert.equal(pack.invented, false);
     assert.ok(pack.items.some((row) => /sixth client/i.test(row)));
-    assert.deepEqual(pack.entitledCodes, ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
+    assert.deepEqual(pack.entitledCodes, ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'KAVA01', 'CPL01', 'LIEN01']);
   });
 });

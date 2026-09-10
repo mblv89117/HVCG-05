@@ -1,0 +1,48 @@
+{
+  "schema": "atlas_business_useful_scorecard.v1",
+  "asOf": "2026-09-10T03:00:00Z",
+  "definition": "Manny can open the client and understand relationship, engagement, people, recent comms/docs, projects/tasks/decisions, risks/opportunities, financial/growth/capital where supported, and next actions — without reconstructing elsewhere.",
+  "clients": {
+    "ACCG01": {
+      "score": "NOT_BUSINESS_USEFUL",
+      "honestGaps": ["contacts MISSING", "tasks/decisions/next_actions MISSING", "finance/growth NOT_CERTIFIED"],
+      "strengths": ["docs/comms INDEXED", "isolation LIVE_FAIL_CLOSED"],
+      "next": "Contact bootstrap + next-action drafts from indexed fabric"
+    },
+    "HFD01": {
+      "score": "PARTIAL_BUSINESS_USEFUL",
+      "honestGaps": ["finance/capital NOT_CERTIFIED", "tasks/decisions MISSING"],
+      "strengths": ["360 OBSERVE live certified", "growth MAPPED_360", "partial CRM domains"],
+      "evidence": "docs/evidence/accel-hfd01-growth360-real-client-20260910.json",
+      "next": "Surface Growth360 attributions in Live Client after Hub projection deploy"
+    },
+    "PDG01": {
+      "score": "PARTIAL_BUSINESS_USEFUL",
+      "honestGaps": ["workspace domains thin outside GCC OBSERVE path"],
+      "strengths": ["GCC→Atlas END_TO_END_VALIDATED", "isolation PASS", "durable ingest PASS"],
+      "evidence": "docs/evidence/wave10-hmac-durable-cert-20260909.json",
+      "next": "Project GCC signals into Live Client; bootstrap projects/tasks"
+    },
+    "KAVA01": {
+      "score": "NOT_BUSINESS_USEFUL",
+      "honestGaps": ["shallow entitlement only"],
+      "strengths": ["isolation LIVE_FAIL_CLOSED", "now on ENTITLED_CANONICAL roster"],
+      "next": "Minimal Hub-visible bootstrap — no invented history"
+    },
+    "CPL01": {
+      "score": "NOT_BUSINESS_USEFUL",
+      "honestGaps": ["shallow entitlement only"],
+      "strengths": ["isolation LIVE_FAIL_CLOSED", "christiesplace CLIENT_ASSET isolated", "on ENTITLED_CANONICAL roster"],
+      "next": "Minimal Hub bootstrap; do not merge website into Atlas core"
+    }
+  },
+  "modules": {
+    "gcc_to_atlas": {"maturity": "END_TO_END_VALIDATED", "business": "OPERATIONALLY_CERTIFIED_OBSERVATION_PATH"},
+    "growth360_to_atlas": {"maturity_target": "END_TO_END_VALIDATED", "liveCert": "HFD01_OBSERVE_PASS", "canExecute": false},
+    "copilot_mri_to_atlas": {"maturity_target": "OBSERVATION_LIVE_SYNTHETIC", "realClientMap": "NONE_OWNER_GATE_IF_NEEDED", "synthetic": "PASS"},
+    "website_eva_to_atlas": {"maturity_target": "END_TO_END_VALIDATED", "liveCert": "LEAD_UPSERT_RECERT_PASS", "conversion": "PREPARE_ONLY"}
+  },
+  "founderDependency": "MEASURABLY_REDUCED_FOR_MODULE_CERT_PATHS_NOT_YET_FOR_FULL_WORKSPACE_STORY",
+  "GLOBAL_AUTO_RESPOND": false,
+  "crossClientLeakage": 0
+}

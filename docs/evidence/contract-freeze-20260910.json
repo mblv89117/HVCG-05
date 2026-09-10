@@ -1,0 +1,21 @@
+{
+  "freeze_id": "HVCG-ATLAS-MODULE-CONTRACT-FREEZE-2026-09-10",
+  "publishedAt": "2026-09-10T02:45:00Z",
+  "hubLiveSha": "502d5ea6a2d7e258dd275dfae1b2dadb6c9ef5b5",
+  "atlasCoreTip": "a0ea50bba221867a83b09e3391591aa1a45cf2d2",
+  "governanceRegistry": "registry/ATLAS_MODULE_CONTRACT_FREEZE_CURRENT.json",
+  "keyRingConfigured": {
+    "gcc": "AtlasModuleIngestKeyGcc",
+    "mri": "AtlasModuleIngestKeyMri",
+    "growth360": "AtlasModuleIngestKeyGrowth360",
+    "keysJson": "AtlasModuleIngestKeysJson",
+    "hubAppSetting": "INTEGRATION_MODULE_INGEST_KEYS_JSON"
+  },
+  "hubRedeployed": false,
+  "hubRestartedForAppSettings": true,
+  "hubHealthAfterRestart": {
+    "ok": true,
+    "commit": "502d5ea6a2d7e258dd275dfae1b2dadb6c9ef5b5"
+  },
+  "note": "Secret values never stored in git. Wave B modules must sign with key ids mri / growth360 against Hub key ring."
+}

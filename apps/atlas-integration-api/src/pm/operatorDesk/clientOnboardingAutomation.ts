@@ -2964,7 +2964,16 @@ export async function runClientOnboardingAutomation(opts: {
 }
 
 /** Canonical entitled ClientCodes. Never invent a code outside this roster. */
-export const ENTITLED_CANONICAL_CLIENT_CODES = ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01'] as const;
+/** Production Entra HVCG-Client-* roster — keep aligned with atlas-identity-map seed. */
+export const ENTITLED_CANONICAL_CLIENT_CODES = [
+  'PDG01',
+  'ACCG01',
+  'CCB01',
+  'HFD01',
+  'KAVA01',
+  'CPL01',
+  'LIEN01',
+] as const;
 
 export type EntitledClientCodeMatch =
   | { kind: 'exact' | 'unique_prefix'; clientCode: string; candidates: string[] }

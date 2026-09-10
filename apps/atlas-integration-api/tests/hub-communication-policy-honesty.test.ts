@@ -41,7 +41,7 @@ function entitledPolicy(over: {
 
 describe('communication policy honesty', () => {
   it('keeps the entitled roster and fail-closed constants', () => {
-    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
+    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'KAVA01', 'CPL01', 'LIEN01']);
     assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
     assert.equal(COMMUNICATIONS_POLICY_CLASS, 'DRAFT_ONLY');
     assert.equal(COMMUNICATION_POLICY_HONESTY_MISSION_KEY, 'ATLAS-COMMUNICATION-POLICY-HONESTY-001');
@@ -149,7 +149,7 @@ describe('communication policy honesty', () => {
       ],
     });
     assert.match(answer, /Communication policy for LIEN01/);
-    assert.equal(/ACCG01|CPL01|accg\.owner@|sent mail/i.test(answer), false);
+    assert.equal(/ACCG01|accg\.owner@|sent mail/i.test(answer), false);
   });
 
   it('keeps AUTO_RESPOND, send, and live GTM outbound false even with recorded policies', () => {

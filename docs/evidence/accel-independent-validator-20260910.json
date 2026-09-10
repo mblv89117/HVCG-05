@@ -1,0 +1,35 @@
+{
+  "schema": "atlas_independent_validator_matrix.v1",
+  "asOf": "2026-09-10T02:55:00Z",
+  "validatorLane": "VAL-MODULE-INGEST",
+  "rule": "Implementer happy-path tests are insufficient. Validator must attempt to break auth, tenant isolation, signatures, timestamps, idempotency, provenance, durability, authorization.",
+  "contractFreezeId": "HVCG-ATLAS-MODULE-CONTRACT-FREEZE-2026-09-10",
+  "hubLiveShaAtValidation": "502d5ea6a2d7e258dd275dfae1b2dadb6c9ef5b5",
+  "evidenceSources": [
+    "docs/evidence/accel-synthetic-mri-growth360-20260910.json",
+    "docs/evidence/accel-hfd01-growth360-real-client-20260910.json",
+    "docs/evidence/accel-website-leads-recert-20260910.json",
+    "docs/evidence/wave10-hmac-durable-cert-20260909.json"
+  ],
+  "attacks": [
+    {"id": "bad_hmac", "module": "mri", "expected": 401, "result": "PASS", "ref": "accel-synthetic.copilot_mri.badSig"},
+    {"id": "unknown_key_id", "module": "mri", "expected": 401, "result": "PASS", "ref": "accel-synthetic.copilot_mri.unknownKey"},
+    {"id": "stale_timestamp", "module": "mri", "expected": 401, "result": "PASS", "ref": "accel-synthetic.copilot_mri.expiredTs"},
+    {"id": "raw_secret_header_no_auth", "module": "mri", "expected": 401, "result": "PASS", "ref": "accel-synthetic.copilot_mri.rawSecretHeader"},
+    {"id": "unknown_clientcode", "module": "mri", "expected": 403, "result": "PASS", "ref": "accel-synthetic.copilot_mri.unknownClientCode"},
+    {"id": "cross_client_hart_slug", "module": "growth360", "expected": 403, "result": "PASS", "ref": "accel-synthetic.growth360.crossClientHart"},
+    {"id": "canExecute_true_forbidden", "module": "growth360", "expected": 400, "result": "PASS", "ref": "accel-hfd01.canExecuteForbidden"},
+    {"id": "replay_idempotency", "module": "growth360", "expected": 200, "result": "PASS", "ref": "accel-hfd01.replay"},
+    {"id": "website_bad_sig", "module": "website", "expected": 401, "result": "PASS", "ref": "accel-website.badSig"},
+    {"id": "website_bad_key", "module": "website", "expected": 401, "result": "PASS", "ref": "accel-website.badKey"},
+    {"id": "website_stale_ts", "module": "website", "expected": 401, "result": "PASS", "ref": "accel-website.expiredTs"},
+    {"id": "website_unknown_kid", "module": "website", "expected": 401, "result": "PASS", "ref": "accel-website.unknownKeyId"},
+    {"id": "website_idempotent_upsert", "module": "website", "expected": "200 created=false", "result": "PASS", "ref": "accel-website.duplicateOrIdempotent"},
+    {"id": "fixture_mri01_not_production_entitlement", "module": "mri", "expected": "accepted as fixture only", "result": "PASS", "notes": "MRI01 remains INFERRED fixture in identity seed; ENTITLED roster excludes MRI01"},
+    {"id": "gcc_wave10_cross_client", "module": "gcc", "expected": 403, "result": "PASS", "ref": "wave10-hmac-durable-cert.realClientCert.crossClientMismatch"}
+  ],
+  "crossClientLeakage": 0,
+  "GLOBAL_AUTO_RESPOND": false,
+  "PASS": true,
+  "signOff": "VAL-MODULE-INGEST independent of IMPL lanes; attack matrix derived from live Hub responses 2026-09-10"
+}

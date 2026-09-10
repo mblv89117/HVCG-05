@@ -1,0 +1,32 @@
+{
+  "certifiedAt": "2026-09-10T02:44:19Z",
+  "clientCode": "HFD01",
+  "authorityClass": "OBSERVE",
+  "canExecute": false,
+  "valid": {
+    "status": 201,
+    "ok": true,
+    "backend": "azure-table",
+    "replay": false
+  },
+  "replay": {
+    "status": 200,
+    "ok": true,
+    "replay": true
+  },
+  "crossClient": {
+    "status": 403,
+    "ok": true,
+    "code": "HART_CLIENTCODE_REQUIRED"
+  },
+  "canExecuteForbidden": {
+    "status": 400,
+    "ok": true,
+    "code": "PAID_EXECUTE_FORBIDDEN"
+  },
+  "durableRow": {
+    "PartitionKey": "HFD01",
+    "RowKey": "growth360|HFD01|cert|real-observe-1"
+  },
+  "PASS": true
+}

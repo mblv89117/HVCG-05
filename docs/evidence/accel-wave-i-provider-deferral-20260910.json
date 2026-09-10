@@ -1,0 +1,21 @@
+{
+  "schema": "atlas_provider_cleanup_deferral.v1",
+  "asOf": "2026-09-10T03:00:00Z",
+  "wave": "I",
+  "decision": "DEFER_DESTRUCTIVE_CLEANUP",
+  "supabaseDb": "ROLLBACK_ONLY",
+  "supabaseAuth": "ROLLBACK_ONLY",
+  "supabaseDeleted": false,
+  "vercel": "NON_AUTHORITATIVE_DECOMMISSION_PENDING_ROLLBACK_WINDOW",
+  "vercelDeleted": false,
+  "eligibilityChecklist": {
+    "rollbackWindowComplete": false,
+    "trafficVerificationComplete": false,
+    "backupExportComplete": false,
+    "ownerApprovalForDestructive": false,
+    "decommissionVerification": false,
+    "governanceUpdate": false
+  },
+  "ownerActionRequired": false,
+  "notes": "Business operationalization and module certification take priority over provider destruction this sprint."
+}

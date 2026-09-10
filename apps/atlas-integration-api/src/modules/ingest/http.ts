@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { buildModuleKeyRing, verifyModuleIngestHmac, type ModuleKeyRing } from './hmac.ts';
 import { handleModuleEnvelope } from './handlers.ts';
 import { resolveModuleIngestBackend, upsertModuleIngest } from './backend.ts';
+import { projectModuleEnvelopeToOverlay } from './projectToCommercialOverlay.ts';
 
 function send(res: ServerResponse, status: number, body: unknown, origin?: string | null): void {
   const headers: Record<string, string> = {
@@ -111,6 +112,16 @@ export async function handleModuleIngestRoutes(opts: {
     return true;
   }
 
+  let projection: { projected: boolean; kind?: string; replay?: boolean; fixtureOnly?: boolean } = {
+    projected: false,
+  };
+  try {
+    projection = projectModuleEnvelopeToOverlay(opts.dataDir, handled.envelope);
+  } catch {
+    // Durable ingest already succeeded; overlay projection must not fail the cert path.
+    projection = { projected: false };
+  }
+
   send(
     opts.res,
     stored.replay ? 200 : 201,
@@ -123,6 +134,7 @@ export async function handleModuleIngestRoutes(opts: {
       notes: handled.notes,
       receivedAt: stored.record.receivedAt,
       backend,
+      commercialProjection: projection,
     },
     opts.origin,
   );

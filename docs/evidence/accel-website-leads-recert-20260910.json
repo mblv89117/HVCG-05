@@ -1,0 +1,45 @@
+{
+  "certifiedAt": "2026-09-10T02:45:41Z",
+  "endpoint": "/api/website/leads",
+  "keyId": "website",
+  "conversionBoundary": "PREPARE_ONLY",
+  "contractFreezeId": "HVCG-ATLAS-MODULE-CONTRACT-FREEZE-2026-09-10",
+  "valid": {
+    "status": 201,
+    "ok": true,
+    "detail": {
+      "ok": true,
+      "created": true,
+      "itemId": "40",
+      "list": "HVCG_Leads"
+    }
+  },
+  "duplicateOrIdempotent": {
+    "status": 200,
+    "ok": true,
+    "created": false,
+    "detail": {
+      "ok": true,
+      "created": false,
+      "itemId": "40",
+      "list": "HVCG_Leads"
+    }
+  },
+  "badSig": {
+    "status": 401,
+    "ok": true
+  },
+  "badKey": {
+    "status": 401,
+    "ok": true
+  },
+  "expiredTs": {
+    "status": 401,
+    "ok": true
+  },
+  "unknownKeyId": {
+    "status": 401,
+    "ok": true
+  },
+  "PASS": true
+}

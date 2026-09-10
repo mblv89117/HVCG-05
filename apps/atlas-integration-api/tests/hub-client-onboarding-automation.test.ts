@@ -2186,7 +2186,7 @@ describe('client onboarding automation', () => {
   });
 
   it('prepares realtime documents honesty from already-known fabric and documentGaps', () => {
-    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
+    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'KAVA01', 'CPL01', 'LIEN01']);
     assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
 
     const lastRunAt = '2026-08-25T11:00:00.000Z';

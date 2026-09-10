@@ -41,7 +41,7 @@ function entitledHit(
 
 describe('capital submission honesty', () => {
   it('keeps the entitled roster and PREPARE_ONLY fail-closed constants', () => {
-    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
+    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'KAVA01', 'CPL01', 'LIEN01']);
     assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
     assert.equal(CAPITAL_SUBMISSION_HONESTY_MISSION_KEY, 'ATLAS-CAPITAL-SUBMISSION-HONESTY-001');
     assert.equal(CAPITAL_SUBMISSION_POLICY_CLASS, 'PREPARE_ONLY');
@@ -119,7 +119,7 @@ describe('capital submission honesty', () => {
     assert.equal(/\bltv\s*[:=]?\s*\d/i.test(serialized), false);
     assert.equal(/\bdscr\s*[:=]?\s*\d/i.test(serialized), false);
     assert.equal(/best[_ ]?fit/i.test(serialized), false);
-    assert.equal(/\$[\d,]|8,400,000|AUTO_RESPOND|submitted|CPL01/.test(serialized), false);
+    assert.equal(/\$[\d,]|8,400,000|AUTO_RESPOND|submitted/.test(serialized), false);
     const answer = answerCapitalSubmissionHonesty('prepare capital for LIEN01', {
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
       entitledHits: [
@@ -138,7 +138,7 @@ describe('capital submission honesty', () => {
     assert.match(answer, /PREPARE_ONLY/);
     assert.match(answer, /did not invent clients, amounts, lender criteria, or approval/);
     assert.match(answer, /did not send mail, launch GTM, or submit capital/);
-    assert.equal(/\$|8,400,000|AUTO_RESPOND|submitted|CPL01/.test(answer), false);
+    assert.equal(/\$|8,400,000|AUTO_RESPOND|submitted/.test(answer), false);
   });
 
   it('rejects invented lender criteria and does not submit', () => {
@@ -197,13 +197,6 @@ describe('capital submission honesty', () => {
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
       entitledHits: [
         entitledHit({
-          id: 'cap-cpl',
-          title: "That's Kava",
-          kind: 'capital_opportunity',
-          source: 'HVCG_CapitalOpportunities',
-          clientCode: 'CPL01',
-        }),
-        entitledHit({
           id: 'cap-uncoded',
           title: 'Frocovery packet',
           kind: 'capital_opportunity',
@@ -218,21 +211,20 @@ describe('capital submission honesty', () => {
         }),
       ],
     });
-    assert.equal(pack.prepare.items.some((row) => row.clientCode === 'CPL01'), false);
     assert.equal(pack.prepare.items.some((row) => row.clientCode === 'SYN01'), false);
-    assert.equal(pack.prepare.items.some((row) => row.title === "That's Kava" || row.title === 'Frocovery packet'), false);
-    assert.equal(pack.entitledCodes.includes('CPL01'), false);
-    assert.equal(pack.entitledCodes.length, 5);
+    assert.equal(pack.prepare.items.some((row) => row.title === 'Frocovery packet'), false);
+    assert.equal(pack.entitledCodes.includes('NORTH01'), false);
+    assert.equal(pack.entitledCodes.length, 7);
     const invented = composeCapitalSubmissionHonesty({
-      question: 'capital submission for CPL01',
+      question: 'capital submission for NORTH01',
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
     });
     assert.equal(invented.clientCode, undefined);
-    assert.equal(invented.prepare.items.some((row) => row.clientCode === 'CPL01'), false);
-    const answer = answerCapitalSubmissionHonesty('capital submission for CPL01', {
+    assert.equal(invented.prepare.items.some((row) => row.clientCode === 'NORTH01'), false);
+    const answer = answerCapitalSubmissionHonesty('capital submission for NORTH01', {
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
     });
-    assert.equal(/ClientCode: CPL01/.test(answer), false);
+    assert.equal(/ClientCode: NORTH01/.test(answer), false);
     assert.match(answer, /did not invent clients/);
     assert.match(answer, /sixth client/);
   });
@@ -291,7 +283,7 @@ describe('capital submission honesty', () => {
       ],
     });
     assert.match(answer, /Capital submission for LIEN01/);
-    assert.equal(/ACCG01|CPL01|\$/.test(answer), false);
+    assert.equal(/ACCG01|\$/.test(answer), false);
   });
 
   it('does not guess an ambiguous entitled ClientCode and does not submit', () => {
