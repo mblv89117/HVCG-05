@@ -1,0 +1,64 @@
+{
+  "schema": "atlas_wave1_evidence.v1",
+  "lane": "D",
+  "title": "contacts=0 root cause",
+  "asOf": "2026-09-11T04:30:00Z",
+  "status": "PROVEN",
+  "constitutionVersion": "HVCG-CONSTITUTION-2026-09-04-v1.0",
+  "finding": {
+    "summary": "contacts=0 is empty Graph Outlook Contacts source, not a permissions failure or ClientCode filter bug.",
+    "graphProbe": {
+      "endpoint": "GET /users/{Manny}/contacts",
+      "httpStatus": 200,
+      "page": "EMPTY",
+      "interpretation": "Authorized empty result — Graph returned success with zero Outlook Contacts cards."
+    },
+    "ruledOut": [
+      "permissions_failure",
+      "ClientCode_filter_bug",
+      "fabric_indexer_silent_drop_of_existing_cards"
+    ],
+    "rootCause": {
+      "primary": "Fabric only indexes Outlook Contacts cards (People/Contacts folder entities).",
+      "notIndexed": [
+        "mail_From",
+        "mail_To",
+        "mail_Cc",
+        "mail_participants_generally"
+      ],
+      "consequence": "When Outlook Contacts is empty, fabric contact index remains 0 even if mailbox traffic with client people exists."
+    }
+  },
+  "honesty": {
+    "registriesMarkContacts": "MISSING",
+    "inventHistory": false,
+    "memoryContactsIndexed": 0,
+    "alignedEvidence": [
+      "docs/evidence/accel-client-recon-dossiers-20260910.json",
+      "docs/evidence/accel-business-useful-scorecard-20260910.json"
+    ]
+  },
+  "accg01": {
+    "clientCode": "ACCG01",
+    "contacts": "MISSING",
+    "nextActions": "MISSING",
+    "gapExplanation": "empty_source + no_invent_history_bootstrap",
+    "businessUseful": "NOT_BUSINESS_USEFUL",
+    "note": "ACCG01 contacts/next-action gap is honesty-correct: source is empty and bootstrap that invents history is disallowed."
+  },
+  "safeLaterStep": {
+    "kind": "PREPARE_ONLY_BOOTSTRAP",
+    "source": "entitled_mail_participants",
+    "writes": "OWNER_GATED",
+    "allowedNow": false,
+    "description": "Prepare-only contact candidates derived from entitled mail participants; no automatic writes without Owner gate."
+  },
+  "doNot": [
+    "Treat contacts=0 as a Graph auth outage",
+    "Claim ClientCode isolation caused empty contacts",
+    "Invent contact history to fill ACCG01 gaps",
+    "Write contacts without Owner gate"
+  ],
+  "wave": 1,
+  "GLOBAL_AUTO_RESPOND": false
+}
