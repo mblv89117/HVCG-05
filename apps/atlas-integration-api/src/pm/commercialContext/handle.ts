@@ -31,8 +31,13 @@ export function readCommercialContext(opts: {
   leads?: SharePointLead[];
   clientCode?: string;
   hydratedFrom?: string[];
+  /** In-memory overlay from durable hydrate; when set, disk overlay is not re-read. */
+  overlay?: ReturnType<typeof loadOverlay>;
+  durableStatus?: string;
+  durableReason?: string;
+  truncated?: boolean;
 }) {
-  const overlay = loadOverlay(opts.dataDir);
+  const overlay = opts.overlay ?? loadOverlay(opts.dataDir);
   const ctx = buildOperatorCommercialContext({
     principal: opts.principal,
     overlay,
@@ -41,7 +46,12 @@ export function readCommercialContext(opts: {
     clientCode: opts.clientCode,
   });
   if (opts.clientCode) {
-    ctx.liveClientPilot = buildLiveClientPilotBrief(ctx, { hydratedFrom: opts.hydratedFrom });
+    ctx.liveClientPilot = buildLiveClientPilotBrief(ctx, {
+      hydratedFrom: opts.hydratedFrom,
+      durableStatus: opts.durableStatus,
+      durableReason: opts.durableReason,
+      truncated: opts.truncated,
+    });
   }
   return ctx;
 }
@@ -55,23 +65,34 @@ export async function readCommercialContextAsync(opts: {
   clientCode?: string;
   env?: NodeJS.Dict<string>;
 }) {
-  let hydratedFrom: string[] | undefined;
-  if (opts.clientCode) {
-    const hydrated = await hydrateCommercialOverlayForClient({
+  if (!opts.clientCode) {
+    return readCommercialContext({
       dataDir: opts.dataDir,
-      clientCode: opts.clientCode,
-      env: opts.env,
-      persist: true,
+      principal: opts.principal,
+      opportunities: opts.opportunities,
+      leads: opts.leads,
     });
-    hydratedFrom = hydrated.hydratedFrom;
   }
+
+  // Pure GET composition: hydrate in memory, do not rewrite local overlay history.
+  const hydrated = await hydrateCommercialOverlayForClient({
+    dataDir: opts.dataDir,
+    clientCode: opts.clientCode,
+    env: opts.env,
+    persist: false,
+  });
+
   return readCommercialContext({
     dataDir: opts.dataDir,
     principal: opts.principal,
     opportunities: opts.opportunities,
     leads: opts.leads,
     clientCode: opts.clientCode,
-    hydratedFrom,
+    hydratedFrom: hydrated.hydratedFrom,
+    overlay: hydrated.overlay,
+    durableStatus: hydrated.durableStatus,
+    durableReason: hydrated.durableReason,
+    truncated: hydrated.truncated,
   });
 }
 

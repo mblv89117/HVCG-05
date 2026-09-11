@@ -27,7 +27,7 @@
         },
         "whatIsMissing": {
           "answerableFromAtlas": true,
-          "evidence": "unknown[] populated from honesty emptyReason and missing lanes; no invented financials."
+          "evidence": "unknown[] populated from honesty emptyReason, missing lanes, and durable UNAVAILABLE/TRUNCATED (never silent empty on Azure read failure)."
         },
         "whatRequiresApproval": {
           "answerableFromAtlas": true,
@@ -70,16 +70,19 @@
     }
   },
   "overallBusinessUseful": "CONDITIONAL_PASS",
-  "overallRationale": "Operator questions 1–6 are answerable from Atlas Live Client commercial context after hydrate-on-read when durable module observations exist. Without durable observations, honest empty states remain. Do not mark unconditional PASS until independent review + current-runtime signed recert for any tip that changes ingest/HMAC/commercial projection.",
+  "overallRationale": "Operator questions 1–6 are answerable from Atlas Live Client commercial context after pure hydrate-on-read when durable module observations exist. Durable Azure failures surface as unavailable/incomplete rather than fabricated empty. Without durable observations, honest empty states remain. Do not mark unconditional PASS until independent review + current-runtime signed recert for any tip that changes ingest/HMAC/commercial projection.",
   "securityInvariantsPreserved": [
     "GLOBAL_AUTO_RESPOND=false",
     "canExecute=false for Growth360",
     "no fabricated financials",
     "OBSERVE/RECOMMEND/PREPARE only",
     "ClientCode fail-closed entitlement on commercial read",
-    "fixture/production separation for MRI"
+    "fixture/production separation for MRI",
+    "SharedKeyLite signs table resource only (no OData query in canonical resource)",
+    "GET hydrate does not rewrite recordedAt / does not require disk persist"
   ],
   "tests": [
-    "apps/atlas-integration-api/tests/live-client-pilot-pdg-hfd.test.ts"
+    "apps/atlas-integration-api/tests/live-client-pilot-pdg-hfd.test.ts",
+    "apps/atlas-integration-api/tests/wave1-hydrate-review-blockers.test.ts"
   ]
 }

@@ -17,6 +17,10 @@
 
 Do not treat this as signed-current runtime cert. See `wave1-recert-current-sha-2026-09-11` (`PARTIAL` / signed matrix `BLOCKED` without HMAC secrets).
 
+## Hydrate-on-read honesty (PR #222 remediation)
+
+Durable Azure Table read now returns explicit `SUCCESS_WITH_ROWS` / `SUCCESS_EMPTY` / `UNAVAILABLE` / `ERROR` (no silent empty on auth/5xx). Continuation + safety ceiling surfaces `TRUNCATED` incompleteness. GET composition is pure in-memory (`persist: false`) and preserves historical `recordedAt`/`emittedAt`. Live Client `unknown[]` communicates durable unavailable/truncated without fabricating “no observations.”
+
 ## Test
 
-`npm test -w @hvcg/atlas-integration-api` includes `live-client-pilot-pdg-hfd.test.ts`.
+`npm test -w @hvcg/atlas-integration-api` includes `live-client-pilot-pdg-hfd.test.ts` and `wave1-hydrate-review-blockers.test.ts`.

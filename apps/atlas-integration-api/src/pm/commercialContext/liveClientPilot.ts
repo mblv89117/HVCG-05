@@ -12,7 +12,12 @@ export type { LiveClientPilotAction, LiveClientPilotBrief };
 
 export function buildLiveClientPilotBrief(
   ctx: OperatorCommercialContext,
-  extras?: { hydratedFrom?: string[] },
+  extras?: {
+    hydratedFrom?: string[];
+    durableStatus?: string;
+    durableReason?: string;
+    truncated?: boolean;
+  },
 ): LiveClientPilotBrief {
   const clientCode = ctx.clientCode || 'UNKNOWN';
   const whatIsHappening: string[] = [];
@@ -32,6 +37,18 @@ export function buildLiveClientPilotBrief(
       source: 'module-ingest-hydrate',
       detail: `Commercial observations hydrated from: ${extras.hydratedFrom.join(', ')}`,
     });
+  }
+  if (extras?.durableStatus === 'unavailable' || extras?.durableStatus === 'error') {
+    unknown.push(
+      `Durable Azure Table ingest is currently ${extras.durableStatus}` +
+        (extras.durableReason ? ` (${extras.durableReason})` : '') +
+        '. Atlas is not treating this as an empty observation set.',
+    );
+  }
+  if (extras?.truncated || extras?.durableStatus === 'truncated') {
+    unknown.push(
+      'Durable Azure Table ingest read hit a safety ceiling (TRUNCATED). Hydration may be incomplete.',
+    );
   }
 
   for (const signal of ctx.gcc.signals) {

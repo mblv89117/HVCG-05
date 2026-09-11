@@ -11,7 +11,7 @@
 
 ## What ran
 
-- **Local fixture harnesses:** `hub-module-ingest.test.ts`, `hub-module-ingest-backend.test.ts`, `module-ingest-commercial-projection.test.ts` (plus full `@hvcg/atlas-integration-api` suite: 754/754 PASS).
+- **Local fixture harnesses:** `hub-module-ingest.test.ts`, `hub-module-ingest-backend.test.ts`, `module-ingest-commercial-projection.test.ts`, `wave1-hydrate-review-blockers.test.ts` (plus full `@hvcg/atlas-integration-api` suite: 767/767 PASS). Signed live recert remains **PARTIAL/PENDING** — no current-SHA signed matrix without HMAC secrets.
 - **Live unsigned fail-closed:** bad signature (gcc/mri/growth360), unknown key-id, expired timestamp, raw-secret-only rejection, website missing intake auth → all 401 as expected.
 - **Not run:** valid signed ingest, live replay/durable row proof, signed cross-client, website signed PREPARE — require Key Vault–backed HMAC material.
 

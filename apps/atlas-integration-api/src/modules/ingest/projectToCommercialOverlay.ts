@@ -30,6 +30,23 @@ function asString(raw: unknown, max = 2000): string | undefined {
   return trimmed.slice(0, max);
 }
 
+export type ApplyEnvelopeOptions = {
+  /** Prefer envelope.timestamp / durable receivedAt over wall-clock on hydrate. */
+  recordedAtHint?: string;
+};
+
+function resolveRecordedAt(
+  envelope: AtlasIntegrationEnvelope,
+  opts?: ApplyEnvelopeOptions,
+): string {
+  return (
+    opts?.recordedAtHint ||
+    envelope.timestamp ||
+    (typeof envelope.provenance?.observedAt === 'string' ? envelope.provenance.observedAt : undefined) ||
+    new Date().toISOString()
+  );
+}
+
 export type ProjectionResult = {
   projected: boolean;
   kind?: string;
@@ -42,6 +59,7 @@ export type ProjectionResult = {
 export function applyEnvelopeToOverlay(
   overlay: CommercialOverlay,
   envelope: AtlasIntegrationEnvelope,
+  opts?: ApplyEnvelopeOptions,
 ): ProjectionResult {
   const fixtureOnly = FIXTURE_CODES.has(envelope.clientCode);
 
@@ -64,7 +82,7 @@ export function applyEnvelopeToOverlay(
       observationOnly: true,
       source: 'agent-copilot',
       idempotencyKey,
-      recordedAt: new Date().toISOString(),
+      recordedAt: resolveRecordedAt(envelope, opts),
     };
     return {
       projected: true,
@@ -96,7 +114,7 @@ export function applyEnvelopeToOverlay(
         clientCode: envelope.clientCode,
       },
       idempotencyKey,
-      recordedAt: new Date().toISOString(),
+      recordedAt: resolveRecordedAt(envelope, opts),
     };
     return {
       projected: true,
@@ -141,7 +159,7 @@ export function applyEnvelopeToOverlay(
       clientCode: envelope.clientCode,
       signalType,
       summary: asString(envelope.payload.summary, 2000) || asString(envelope.payload.notes, 2000),
-      emittedAt: envelope.timestamp || new Date().toISOString(),
+      emittedAt: resolveRecordedAt(envelope, opts),
       copiesLedger: false,
       idempotencyKey,
     };
