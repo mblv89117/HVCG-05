@@ -78,7 +78,9 @@ export function renderForbiddenClientDesk(): string {
 </body></html>`;
 }
 
-type ClientDeskView = ReturnType<typeof buildClientWorkspaceView> | ReturnType<typeof buildOperatorClientDeskPreview>;
+type ClientDeskView =
+  | Awaited<ReturnType<typeof buildClientWorkspaceView>>
+  | Awaited<ReturnType<typeof buildOperatorClientDeskPreview>>;
 
 export function renderClientDeskHtml(
   view: ClientDeskView,

@@ -624,7 +624,7 @@ export async function bindClientVisibleCommercial(opts: {
 export function bindIsolatedGccWorkspace(opts: {
   workspaceKey: string;
   clientCode: string;
-  commercial: ReturnType<typeof bindClientVisibleCommercial>;
+  commercial: Awaited<ReturnType<typeof bindClientVisibleCommercial>>;
   gccAppOrigin?: string | null;
   hubSha?: string | null;
 }) {

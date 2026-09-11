@@ -57,6 +57,12 @@ export function CommercialContextPanel(props: {
               {line}
             </Caption1>
           ))}
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>What changed</Caption1>
+          {props.context.liveClientPilot.whatChanged.map((line) => (
+            <Caption1 key={line} style={{ display: 'block' }}>
+              {line}
+            </Caption1>
+          ))}
           <Caption1 style={{ display: 'block', marginTop: 8 }}>Known / unknown</Caption1>
           {props.context.liveClientPilot.known.map((line) => (
             <Caption1 key={`k-${line}`} style={{ display: 'block' }}>
