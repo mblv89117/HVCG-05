@@ -9,11 +9,16 @@
 
 ## Verdict
 
-`DEPLOYMENT_VERDICT=PASS` — Hub + Elite verified at target SHA; ancestry/lease/CI gates held; PDG01/HFD01 authenticated operator smoke PASS; durable hydrate from azure-table observed; signed recert PASS for GCC/PDG01 + Growth360/HFD01 fail-closed + happy-path; Website unsigned fail-closed PASS. MRI01 treated as existing fixture code (already in identity seed) — not a newly invented production mapping.
+`DEPLOYMENT_VERDICT=PASS` — Hub + Elite verified at target SHA; ancestry/lease/CI gates held; PDG01/HFD01 authenticated operator smoke PASS; durable hydrate from azure-table observed.
 
-`BUSINESS_USEFUL=PASS` — live operator commercial-context briefs for PDG01 and HFD01 rendered WHAT IS HAPPENING / WHY / CHANGED / KNOWN / UNKNOWN / NEXT / PROVENANCE / APPROVAL REQUIRED with hydrate-from azure-table and OBSERVE/RECOMMEND/PREPARE authority only.
+`PILOT_BUSINESS_USEFUL_PDG01_HFD01=PASS` — live operator commercial-context briefs for **PDG01 and HFD01 only** rendered WHAT IS HAPPENING / WHY / CHANGED / KNOWN / UNKNOWN / NEXT / PROVENANCE / APPROVAL REQUIRED with hydrate-from azure-table and OBSERVE/RECOMMEND/PREPARE authority only.
 
-`SIGNED_RECERT=PASS` — Key Vault–backed ephemeral HMAC matrix executed successfully (secrets never written to evidence).
+`ATLAS_GLOBAL_BUSINESS_USEFUL=PARTIAL` — this deployment evidence does **not** certify every Atlas client workspace as business-useful.
+
+`SIGNED_RECERT=PASS` — current-SHA Key Vault / Hub-secret ephemeral HMAC matrices cover GCC/PDG01, Growth360/HFD01, MRI01 synthetic fixture, and Website/EVA signed intake (secrets never written to evidence).
+
+`PASS_LANES`: `GCC_PDG01`, `GROWTH360_HFD01`, `MRI01_SYNTHETIC`, `WEBSITE_EVA`  
+`PENDING_LANES`: _(none)_
 
 `ROLLBACK_REQUIRED=no`
 
@@ -27,6 +32,7 @@
 | PRE_DEPLOY_ELITE_SHA | `b504e12245e57b016e2bab934ebb44e55747a7e8` |
 | POST_DEPLOY_ELITE_SHA | `d8a9574eb6af0c37e56bb6e955126086d1ce284e` |
 | HISTORICAL_FLOOR | `2d61fe65603b88d12d08456967c65dae8e5aec52` |
+| POST-RECERT REVERIFY (2026-09-11T08:52Z / 08:53Z) | Hub / Elite / `origin/production/atlas-core` still `d8a9574e…` |
 
 ## Azure account (no credentials)
 
@@ -46,7 +52,7 @@
 | Atlas CI | SUCCESS on `d8a9574e` |
 | HVCG OS Release validation | SUCCESS (validation only; not used to deploy) |
 | ANCESTRY_GUARD | PASS — live Hub `4a7e5f75…` ancestor of candidate |
-| DEPLOY_LEASE | PASS (flock) — Azure blob data-plane lease unavailable (missing Storage Blob Data role on `sthvcgwebintake`); flock fallback acquired/released |
+| DEPLOY_LEASE | **PASS_FLOCK / LOCAL_FLOCK_FALLBACK** — distributed Azure blob lease was **unavailable** (Owner session lacks Storage Blob Data-plane RBAC on `sthvcgwebintake`). Local flock fallback acquired/released. Distributed lease is **not** claimed healthy. Follow-up hardening: grant Storage Blob Data Contributor/Owner for deploy-control container. |
 | SHA equalize flag | NOT set |
 
 ## Deploy order
@@ -55,6 +61,8 @@
 2. Elite via `./scripts/deploy-swa-dev.sh` with production Vite locks → PASS after Rosetta install for x86_64 StaticSitesClient
 
 Elite env confirmed: `VITE_ATLAS_ENV=production`, `VITE_ALLOW_SAMPLE_FALLBACK=false`, `VITE_ALLOW_DEV_OWNER_LOGIN=false`, `VITE_BLOCK_LIVE_CLIENT_COMMS=true`, Hub `https://app-atlas-integration-hub.azurewebsites.net`, SWA `swa-atlas-elite-os-dev` / `zealous-rock-0090c7e1e.7.azurestaticapps.net`.
+
+**No redeploy** during this evidence remediation.
 
 ## Public smoke
 
@@ -114,28 +122,60 @@ Authenticated Hub Bearer via existing Azure CLI session (`api://99dd84b0-…/acc
 | Silent empty on auth failure | covered by unit blockers; live hydrate returned rows for entitled clients |
 | GET-time disk mutation | unit-proven persist:false default; not mutated in production for test |
 
-## Signed recertification
+## Signed recertification (current SHA `d8a9574e`)
 
-Secrets retrieved ephemerally from Key Vault `kv-atlas-hvcg-ebc84d85` (`AtlasModuleIngestKeyGcc`, `AtlasModuleIngestKeyGrowth360`, `AtlasModuleIngestKeyMri`, `AtlasModuleIngestKeysJson`). Never echoed, never written to evidence.
+Secrets retrieved ephemerally (Key Vault `kv-atlas-hvcg-ebc84d85` module keys; Hub app setting `INTEGRATION_WEBSITE_INTAKE_KEY` for Website). Never echoed, never written to evidence.
+
+### GCC / PDG01 (prior current-SHA run; preserved)
+
+| Case | Result | When |
+|------|--------|------|
+| valid OBSERVE | 201 azure-table | deploy-window ~2026-09-11T08:42Z |
+| replay | 200 replay=true | same |
+| cross-org mismatch | 403 `GCC_ORG_CLIENTCODE_MISMATCH` | same |
+| bad signature / expired / raw secret | 401 | same |
+
+### Growth360 / HFD01 (prior current-SHA run; preserved)
+
+| Case | Result | When |
+|------|--------|------|
+| valid OBSERVE | 201 azure-table | deploy-window ~2026-09-11T08:40–08:41Z |
+| replay | 200 replay=true | same |
+| canExecute=true | 400 `PAID_EXECUTE_FORBIDDEN` | same |
+| Hart slug wrong ClientCode | 403 `HART_CLIENTCODE_REQUIRED` | same |
+
+### MRI01 synthetic fixture (completed 2026-09-11T08:52:56Z)
+
+Pattern: `docs/evidence/accel-synthetic-mri-growth360-20260910.json`. Fixture seed only (`FIXTURE_CLIENT_IDENTITY_SEED`); **not** in production identity seed; no production entitlement invented.
 
 | Case | Result |
 |------|--------|
-| GCC/PDG01 valid OBSERVE | 201 azure-table |
-| GCC/PDG01 replay | 200 replay=true |
-| GCC cross-org mismatch | 403 `GCC_ORG_CLIENTCODE_MISMATCH` |
-| GCC bad signature / expired / raw secret | 401 |
-| Growth360/HFD01 valid OBSERVE | 201 azure-table |
-| Growth360/HFD01 replay | 200 replay=true |
-| Growth360 canExecute=true | 400 `PAID_EXECUTE_FORBIDDEN` |
-| Hart slug wrong ClientCode | 403 |
-| MRI01 fixture attempt | 201 azure-table on existing seed fixture code `MRI01` (not invented mapping) |
-| Website unsigned | 401 |
+| valid signed MRI01 | 201 azure-table |
+| replay | 200 replay=true |
+| bad signature | 401 |
+| unknown key | 401 |
+| expired timestamp | 401 |
+| raw secret header only | 401 |
+| unknown/unmapped ClientCode | 403 `CLIENTCODE_UNMAPPED` |
 
-`SIGNED_RECERT=PASS` with note: KeysJson contains `growth360`+`mri` only; GCC uses standalone secret + Hub `INTEGRATION_MODULE_INGEST_KEY_ID=gcc`.
+### Website / EVA (completed 2026-09-11T08:52:56Z)
+
+Pattern: `docs/evidence/accel-website-leads-recert-20260910.json`. Existing auth contract (`x-website-intake-key` + key-id `website` + timestamp + HMAC). Synthetic certification lead only; **PREPARE_ONLY**; no conversion; no communications; no real client.
+
+| Case | Result |
+|------|--------|
+| valid signed intake | 201 created=true list=`HVCG_Leads` itemId=`43` |
+| idempotent replay | 200 created=false same itemId |
+| bad signature | 401 |
+| bad key | 401 |
+| unknown key-id | 401 |
+| expired timestamp | 401 |
+
+`SIGNED_RECERT=PASS` — all four lanes complete on `d8a9574e`. Note: KeysJson contains `growth360`+`mri` only; GCC uses standalone secret + Hub `INTEGRATION_MODULE_INGEST_KEY_ID=gcc`; Website uses Hub `INTEGRATION_WEBSITE_INTAKE_KEY`.
 
 ## Defects / follow-ups (non-blocking)
 
-1. Azure blob deploy lease data-plane RBAC missing for Owner on `sthvcgwebintake` → flock fallback used.
+1. Azure blob **distributed** deploy lease data-plane RBAC missing for Owner on `sthvcgwebintake` → **LOCAL_FLOCK_FALLBACK** only (not a healthy distributed lease).
 2. StaticSitesClient is x86_64; required Rosetta on Apple Silicon host.
 3. Live HFD01 pilot brief does not echo Growth360 organization UUID (slug + canExecute honesty present; seed mapping intact).
 4. Governance registry writeback deferred pending independent review of this evidence.
@@ -144,6 +184,13 @@ Secrets retrieved ephemerally from Key Vault `kv-atlas-hvcg-ebc84d85` (`AtlasMod
 
 Not required. Pre-deploy Hub reference preserved: `4a7e5f75ca2c740e44de4854bdf4ac7343f0bce6`.
 
-## Timestamp
+## Timestamps
 
-Deployment window UTC: Hub start `2026-09-11T08:31:44Z` → Hub verified `2026-09-11T08:33:18Z`; Elite verified shortly after Rosetta repair; evidence stamped `2026-09-11T08:43Z` approx.
+| Event | UTC |
+|-------|-----|
+| Hub deploy start | 2026-09-11T08:31:44Z |
+| Hub verified | 2026-09-11T08:33:18Z |
+| Elite verified | shortly after Rosetta repair |
+| Initial evidence stamp | ~2026-09-11T08:43–08:45Z |
+| MRI01 + Website/EVA current-SHA matrix | 2026-09-11T08:52:56Z |
+| Evidence honesty remediation | 2026-09-11T08:53Z approx |

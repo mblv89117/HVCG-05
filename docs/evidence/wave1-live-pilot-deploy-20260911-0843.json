@@ -6,7 +6,6 @@
   "targetSha": "d8a9574eb6af0c37e56bb6e955126086d1ce284e",
   "pr": 222,
   "deploymentVerdict": "PASS",
-  "businessUseful": "PASS",
   "signedRecert": "PASS",
   "rollbackRequired": false,
   "governanceWriteback": false,
@@ -26,7 +25,10 @@
     "ancestry": "PASS",
     "deployLease": "PASS_FLOCK",
     "ciAtlas": "SUCCESS",
-    "ciHvcgOsRelease": "SUCCESS"
+    "ciHvcgOsRelease": "SUCCESS",
+    "deployLeaseClassification": "LOCAL_FLOCK_FALLBACK",
+    "deployLeaseDistributedHealthy": false,
+    "deployLeaseNote": "Azure blob data-plane lease unavailable (missing Storage Blob Data RBAC on sthvcgwebintake); local flock fallback used. Distributed lease not claimed healthy."
   },
   "signedCases": {
     "bad_signature": {
@@ -137,5 +139,171 @@
   },
   "interactiveEntraSmokeRequired": false,
   "ownerActionRequired": false,
-  "nextStep": "Independent review of evidence, then governance writeback of ATLAS_PRODUCTION_CURRENT."
+  "nextStep": "Independent review of evidence PR #223 (amended), then governance writeback of ATLAS_PRODUCTION_CURRENT.",
+  "pilotBusinessUseful": {
+    "status": "PASS",
+    "clientCodes": [
+      "PDG01",
+      "HFD01"
+    ]
+  },
+  "atlasGlobalBusinessUseful": "PARTIAL",
+  "signedRecertLanes": {
+    "PASS_LANES": [
+      "GCC_PDG01",
+      "GROWTH360_HFD01",
+      "MRI01_SYNTHETIC",
+      "WEBSITE_EVA"
+    ],
+    "PENDING_LANES": []
+  },
+  "currentShaSignedLanes": {
+    "targetSha": "d8a9574eb6af0c37e56bb6e955126086d1ce284e",
+    "gcc_pdg01": {
+      "status": "PASS",
+      "executedAt": "2026-09-11T08:42:05.069Z",
+      "preservedFromDeployWindow": true,
+      "cases": {
+        "valid": {
+          "status": 201,
+          "replay": false,
+          "backend": "azure-table"
+        },
+        "replay": {
+          "status": 200,
+          "replay": true,
+          "backend": "azure-table"
+        },
+        "crossOrg": {
+          "status": 403,
+          "error": "GCC_ORG_CLIENTCODE_MISMATCH"
+        },
+        "badSig": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "expired": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "rawSecret": {
+          "status": 401,
+          "error": "unauthorized"
+        }
+      }
+    },
+    "growth360_hfd01": {
+      "status": "PASS",
+      "executedAt": "2026-09-11T08:40:11.482Z",
+      "preservedFromDeployWindow": true,
+      "cases": {
+        "valid": {
+          "status": 201,
+          "replay": false,
+          "backend": "azure-table"
+        },
+        "replay": {
+          "status": 200,
+          "replay": true,
+          "backend": "azure-table"
+        },
+        "canExecuteTrueRejected": {
+          "status": 400,
+          "error": "PAID_EXECUTE_FORBIDDEN"
+        },
+        "hartSlugWrongClient": {
+          "status": 403,
+          "error": "HART_CLIENTCODE_REQUIRED"
+        }
+      }
+    },
+    "mri01_synthetic": {
+      "status": "PASS",
+      "executedAt": "2026-09-11T08:52:56.542Z",
+      "newExecution": true,
+      "patternRef": "docs/evidence/accel-synthetic-mri-growth360-20260910.json",
+      "fixtureCodeOnly": true,
+      "inProductionIdentitySeed": false,
+      "productionEntitlementClaimed": false,
+      "cases": {
+        "valid": {
+          "status": 201,
+          "replay": false,
+          "backend": "azure-table"
+        },
+        "replay": {
+          "status": 200,
+          "replay": true,
+          "backend": "azure-table"
+        },
+        "badSig": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "unknownKey": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "expiredTs": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "rawSecretHeader": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "unknownClientCode": {
+          "status": 403,
+          "error": "CLIENTCODE_UNMAPPED"
+        }
+      }
+    },
+    "website_eva": {
+      "status": "PASS",
+      "executedAt": "2026-09-11T08:52:56.542Z",
+      "newExecution": true,
+      "patternRef": "docs/evidence/accel-website-leads-recert-20260910.json",
+      "conversionBoundary": "PREPARE_ONLY",
+      "syntheticPayload": true,
+      "communicationsSent": false,
+      "clientCreated": false,
+      "cases": {
+        "valid": {
+          "status": 201,
+          "created": true,
+          "list": "HVCG_Leads",
+          "itemId": "43"
+        },
+        "idempotentReplay": {
+          "status": 200,
+          "created": false,
+          "itemId": "43",
+          "sameItem": true
+        },
+        "badSig": {
+          "status": 401
+        },
+        "badKey": {
+          "status": 401
+        },
+        "unknownKeyId": {
+          "status": 401
+        },
+        "expiredTs": {
+          "status": 401
+        }
+      }
+    }
+  },
+  "evidenceRemediatedAt": "2026-09-11T08:54:15.810Z",
+  "evidenceRemediation": {
+    "issues": [
+      "Completed MRI01 synthetic full matrix on current SHA",
+      "Completed Website/EVA signed happy-path + idempotency + fail-closed on current SHA",
+      "Scoped businessUseful to pilotBusinessUseful PDG01/HFD01; atlasGlobalBusinessUseful=PARTIAL",
+      "Clarified deploy lease as LOCAL_FLOCK_FALLBACK (distributed lease not healthy)"
+    ],
+    "redeployPerformed": false,
+    "governanceChanged": false
+  }
 }
