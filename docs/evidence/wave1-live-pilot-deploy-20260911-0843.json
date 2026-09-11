@@ -1,0 +1,309 @@
+{
+  "evidenceId": "wave1-live-pilot-deploy-20260911-0843",
+  "certifiedAt": "2026-09-11T08:45:41.587Z",
+  "constitution": "HVCG-CONSTITUTION-2026-09-04-v1.0",
+  "productionBranch": "production/atlas-core",
+  "targetSha": "d8a9574eb6af0c37e56bb6e955126086d1ce284e",
+  "pr": 222,
+  "deploymentVerdict": "PASS",
+  "signedRecert": "PASS",
+  "rollbackRequired": false,
+  "governanceWriteback": false,
+  "shas": {
+    "preDeployHub": "4a7e5f75ca2c740e44de4854bdf4ac7343f0bce6",
+    "postDeployHub": "d8a9574eb6af0c37e56bb6e955126086d1ce284e",
+    "preDeployElite": "b504e12245e57b016e2bab934ebb44e55747a7e8",
+    "postDeployElite": "d8a9574eb6af0c37e56bb6e955126086d1ce284e"
+  },
+  "azure": {
+    "subscriptionId": "ebc84d85-b5ff-4c4b-add1-b0a8de31b319",
+    "tenantId": "3df46563-86f3-4414-87fd-84ba967741ef",
+    "accountName": "HVCG Production",
+    "verified": true
+  },
+  "guards": {
+    "ancestry": "PASS",
+    "deployLease": "PASS_FLOCK",
+    "ciAtlas": "SUCCESS",
+    "ciHvcgOsRelease": "SUCCESS",
+    "deployLeaseClassification": "LOCAL_FLOCK_FALLBACK",
+    "deployLeaseDistributedHealthy": false,
+    "deployLeaseNote": "Azure blob data-plane lease unavailable (missing Storage Blob Data RBAC on sthvcgwebintake); local flock fallback used. Distributed lease not claimed healthy."
+  },
+  "signedCases": {
+    "bad_signature": {
+      "status": 401,
+      "error": "unauthorized"
+    },
+    "unknown_key_id": {
+      "status": 401,
+      "error": "unauthorized"
+    },
+    "expired_timestamp": {
+      "status": 401,
+      "error": "unauthorized"
+    },
+    "raw_secret_header": {
+      "status": 401,
+      "error": "unauthorized"
+    },
+    "pdg01_valid_observe": {
+      "status": 201,
+      "replay": false,
+      "backend": "azure-table"
+    },
+    "pdg01_replay": {
+      "status": 200,
+      "replay": true,
+      "backend": "azure-table"
+    },
+    "pdg01_cross_org_mismatch": {
+      "status": 403,
+      "error": "GCC_ORG_CLIENTCODE_MISMATCH"
+    },
+    "hfd01_valid_observe": {
+      "status": 201,
+      "replay": false,
+      "backend": "azure-table"
+    },
+    "hfd01_replay": {
+      "status": 200,
+      "replay": true,
+      "backend": "azure-table"
+    },
+    "hfd01_can_execute_true_rejected": {
+      "status": 400,
+      "error": "PAID_EXECUTE_FORBIDDEN"
+    },
+    "hfd_slug_wrong_client": {
+      "status": 403,
+      "error": "HART_CLIENTCODE_REQUIRED"
+    },
+    "mri01_fixture_attempt": {
+      "status": 201,
+      "replay": false,
+      "backend": "azure-table"
+    },
+    "website_unsigned": {
+      "status": 401,
+      "error": "unauthorized",
+      "code": "unauthorized"
+    },
+    "bad_signature_gcc": {
+      "status": 401,
+      "error": "unauthorized"
+    },
+    "expired_timestamp_gcc": {
+      "status": 401,
+      "error": "unauthorized"
+    },
+    "raw_secret_header_gcc": {
+      "status": 401,
+      "error": "unauthorized"
+    }
+  },
+  "resolvedKeyIds": {
+    "gcc": "gcc",
+    "growth360": "growth360",
+    "mri": "mri",
+    "gccSource": "AtlasModuleIngestKeyGcc"
+  },
+  "operatorSmoke": {
+    "PDG01": {
+      "hasLiveClientPilot": true,
+      "entitled": true,
+      "authorityClasses": [
+        "RECOMMEND",
+        "PREPARE"
+      ],
+      "gccSignals": 3,
+      "hydrateAzureTable": true,
+      "whatIsHappeningCount": 3,
+      "approvalRequiredCount": 2
+    },
+    "HFD01": {
+      "hasLiveClientPilot": true,
+      "entitled": true,
+      "authorityClasses": [
+        "PREPARE",
+        "OBSERVE"
+      ],
+      "mentionsHart": true,
+      "seedOrgIdConfirmed": true,
+      "liveOrgUuidEchoed": false,
+      "canExecuteTruePresent": false,
+      "hydrateAzureTable": true,
+      "whatIsHappeningCount": 7,
+      "approvalRequiredCount": 9
+    }
+  },
+  "interactiveEntraSmokeRequired": false,
+  "ownerActionRequired": false,
+  "nextStep": "Independent review of evidence PR #223 (amended), then governance writeback of ATLAS_PRODUCTION_CURRENT.",
+  "pilotBusinessUseful": {
+    "status": "PASS",
+    "clientCodes": [
+      "PDG01",
+      "HFD01"
+    ]
+  },
+  "atlasGlobalBusinessUseful": "PARTIAL",
+  "signedRecertLanes": {
+    "PASS_LANES": [
+      "GCC_PDG01",
+      "GROWTH360_HFD01",
+      "MRI01_SYNTHETIC",
+      "WEBSITE_EVA"
+    ],
+    "PENDING_LANES": []
+  },
+  "currentShaSignedLanes": {
+    "targetSha": "d8a9574eb6af0c37e56bb6e955126086d1ce284e",
+    "gcc_pdg01": {
+      "status": "PASS",
+      "executedAt": "2026-09-11T08:42:05.069Z",
+      "preservedFromDeployWindow": true,
+      "cases": {
+        "valid": {
+          "status": 201,
+          "replay": false,
+          "backend": "azure-table"
+        },
+        "replay": {
+          "status": 200,
+          "replay": true,
+          "backend": "azure-table"
+        },
+        "crossOrg": {
+          "status": 403,
+          "error": "GCC_ORG_CLIENTCODE_MISMATCH"
+        },
+        "badSig": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "expired": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "rawSecret": {
+          "status": 401,
+          "error": "unauthorized"
+        }
+      }
+    },
+    "growth360_hfd01": {
+      "status": "PASS",
+      "executedAt": "2026-09-11T08:40:11.482Z",
+      "preservedFromDeployWindow": true,
+      "cases": {
+        "valid": {
+          "status": 201,
+          "replay": false,
+          "backend": "azure-table"
+        },
+        "replay": {
+          "status": 200,
+          "replay": true,
+          "backend": "azure-table"
+        },
+        "canExecuteTrueRejected": {
+          "status": 400,
+          "error": "PAID_EXECUTE_FORBIDDEN"
+        },
+        "hartSlugWrongClient": {
+          "status": 403,
+          "error": "HART_CLIENTCODE_REQUIRED"
+        }
+      }
+    },
+    "mri01_synthetic": {
+      "status": "PASS",
+      "executedAt": "2026-09-11T08:52:56.542Z",
+      "newExecution": true,
+      "patternRef": "docs/evidence/accel-synthetic-mri-growth360-20260910.json",
+      "fixtureCodeOnly": true,
+      "inProductionIdentitySeed": false,
+      "productionEntitlementClaimed": false,
+      "cases": {
+        "valid": {
+          "status": 201,
+          "replay": false,
+          "backend": "azure-table"
+        },
+        "replay": {
+          "status": 200,
+          "replay": true,
+          "backend": "azure-table"
+        },
+        "badSig": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "unknownKey": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "expiredTs": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "rawSecretHeader": {
+          "status": 401,
+          "error": "unauthorized"
+        },
+        "unknownClientCode": {
+          "status": 403,
+          "error": "CLIENTCODE_UNMAPPED"
+        }
+      }
+    },
+    "website_eva": {
+      "status": "PASS",
+      "executedAt": "2026-09-11T08:52:56.542Z",
+      "newExecution": true,
+      "patternRef": "docs/evidence/accel-website-leads-recert-20260910.json",
+      "conversionBoundary": "PREPARE_ONLY",
+      "syntheticPayload": true,
+      "communicationsSent": false,
+      "clientCreated": false,
+      "cases": {
+        "valid": {
+          "status": 201,
+          "created": true,
+          "list": "HVCG_Leads",
+          "itemId": "43"
+        },
+        "idempotentReplay": {
+          "status": 200,
+          "created": false,
+          "itemId": "43",
+          "sameItem": true
+        },
+        "badSig": {
+          "status": 401
+        },
+        "badKey": {
+          "status": 401
+        },
+        "unknownKeyId": {
+          "status": 401
+        },
+        "expiredTs": {
+          "status": 401
+        }
+      }
+    }
+  },
+  "evidenceRemediatedAt": "2026-09-11T08:54:15.810Z",
+  "evidenceRemediation": {
+    "issues": [
+      "Completed MRI01 synthetic full matrix on current SHA",
+      "Completed Website/EVA signed happy-path + idempotency + fail-closed on current SHA",
+      "Scoped businessUseful to pilotBusinessUseful PDG01/HFD01; atlasGlobalBusinessUseful=PARTIAL",
+      "Clarified deploy lease as LOCAL_FLOCK_FALLBACK (distributed lease not healthy)"
+    ],
+    "redeployPerformed": false,
+    "governanceChanged": false
+  }
+}
