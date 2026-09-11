@@ -920,6 +920,26 @@ export interface DeskCommercialContext {
   }>;
 }
 
+export interface LiveClientPilotAction {
+  text: string;
+  authorityClass: 'OBSERVE' | 'RECOMMEND' | 'PREPARE';
+  approvalRequired: boolean;
+  source: string;
+  why: string;
+}
+
+export interface LiveClientPilotBrief {
+  clientCode: string;
+  whatIsHappening: string[];
+  whyItMatters: string[];
+  whatChanged: string[];
+  known: string[];
+  unknown: string[];
+  nextActions: LiveClientPilotAction[];
+  provenance: Array<{ source: string; detail: string }>;
+  approvalRequired: string[];
+}
+
 export interface OperatorCommercialContext {
   contractVersion: 'atlas-operator-commercial-context.v1';
   entitled: true;
@@ -958,6 +978,7 @@ export interface OperatorCommercialContext {
     capitalHandoffStatus?: string;
     estimatedValue?: number;
   }>;
+  liveClientPilot?: LiveClientPilotBrief;
 }
 
 export interface MyWork {

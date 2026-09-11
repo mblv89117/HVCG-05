@@ -54,7 +54,7 @@ import {
 import type { KnowledgeOperatingPicture } from '../pm/sharepoint/knowledgeOperating.ts';
 import { isHvsRecoveredKind } from '../pm/sharepoint/hvsRecoveredDocuments.ts';
 import { hvsAccessMissingData, resolveHvsDataAccess } from '../pm/sharepoint/hvsRecoveryInventory.ts';
-import { readCommercialContext } from '../pm/commercialContext/handle.ts';
+import { readCommercialContext, readCommercialContextAsync } from '../pm/commercialContext/handle.ts';
 import { EMPTY_REASON, type OperatorCommercialContext } from '../pm/commercialContext/types.ts';
 import { resolveHubCommit } from '../http/hubCommit.ts';
 import {
@@ -458,7 +458,7 @@ function overlayAttention(dataDir: string, clientCode: string): DocumentRequestR
   return listDocumentRequests(dataDir, clientCode).filter((row) => row.status === 'requested');
 }
 
-export function buildClientWorkspaceView(opts: {
+export async function buildClientWorkspaceView(opts: {
   dataDir: string;
   principal: AtlasPrincipal;
   clientCode?: string;
@@ -507,7 +507,7 @@ export function buildClientWorkspaceView(opts: {
     seen.add(key);
     return true;
   });
-  const commercial = bindClientVisibleCommercial({
+  const commercial = await bindClientVisibleCommercial({
     dataDir: opts.dataDir,
     principal: opts.principal,
     clientCode: requested,
@@ -566,12 +566,12 @@ export function buildClientWorkspaceView(opts: {
   };
 }
 
-export function bindClientVisibleCommercial(opts: {
+export async function bindClientVisibleCommercial(opts: {
   dataDir: string;
   principal: AtlasPrincipal;
   clientCode: string;
 }) {
-  const ctx = readCommercialContext({
+  const ctx = await readCommercialContextAsync({
     dataDir: opts.dataDir,
     principal: opts.principal,
     clientCode: opts.clientCode,
@@ -624,7 +624,7 @@ export function bindClientVisibleCommercial(opts: {
 export function bindIsolatedGccWorkspace(opts: {
   workspaceKey: string;
   clientCode: string;
-  commercial: ReturnType<typeof bindClientVisibleCommercial>;
+  commercial: Awaited<ReturnType<typeof bindClientVisibleCommercial>>;
   gccAppOrigin?: string | null;
   hubSha?: string | null;
 }) {

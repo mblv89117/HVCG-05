@@ -78,7 +78,9 @@ export function renderForbiddenClientDesk(): string {
 </body></html>`;
 }
 
-type ClientDeskView = ReturnType<typeof buildClientWorkspaceView> | ReturnType<typeof buildOperatorClientDeskPreview>;
+type ClientDeskView =
+  | Awaited<ReturnType<typeof buildClientWorkspaceView>>
+  | Awaited<ReturnType<typeof buildOperatorClientDeskPreview>>;
 
 export function renderClientDeskHtml(
   view: ClientDeskView,
@@ -290,7 +292,7 @@ export async function handleClientDesk(opts: {
   }
 
   try {
-    const view = buildClientWorkspaceView({
+    const view = await buildClientWorkspaceView({
       dataDir: opts.cfg.dataDir,
       principal,
       gccAppOrigin: opts.cfg.gccAppOrigin,

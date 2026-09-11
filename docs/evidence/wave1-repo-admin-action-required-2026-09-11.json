@@ -1,0 +1,42 @@
+{
+  "schema": "atlas_wave1_repo_admin_action_required.v1",
+  "asOf": "2026-09-11T05:15:00Z",
+  "status": "REPO_ADMIN_ACTION_REQUIRED",
+  "constitutionalOwnerGate": false,
+  "repositories": [
+    {
+      "repo": "mblv89117/HVCG-05",
+      "branch": "production/atlas-core",
+      "rulesetsApi": { "count": 0, "http": 200 },
+      "classicBranchProtectionApi": { "http": 403, "message": "Resource not accessible by integration" },
+      "risk": "Autonomous multi-agent development can force-push or direct-push without enforced PR/CI gates."
+    },
+    {
+      "repo": "mblv89117/hvcg-platform-governance",
+      "branch": "main",
+      "rulesetsApi": { "http": 403, "message": "Upgrade to GitHub Pro or make this repository public to enable this feature." },
+      "classicBranchProtectionApi": { "http": 403, "message": "Resource not accessible by integration" },
+      "risk": "Canonical governance tip may lack enforceable change-control."
+    }
+  ],
+  "smallestAdminChange": {
+    "HVCG-05": [
+      "Settings → Rules → New ruleset targeting refs/heads/production/atlas-core",
+      "Require a pull request before merging (1 approval optional initially to avoid deadlock; prefer 1 independent review for material changes via process)",
+      "Block force pushes",
+      "Block deletions",
+      "Require status checks to pass (select existing CI workflows once green)",
+      "Do not require admin bypass lockout without documented emergency recovery owners",
+      "Keep an emergency recovery path: repository admin can temporarily bypass with audit"
+    ],
+    "hvcg-platform-governance": [
+      "Same pattern for refs/heads/main",
+      "If private repo lacks Rulesets (plan limit), enable classic branch protection for main with the same constraints, or upgrade plan"
+    ]
+  },
+  "agentCapability": "Cloud Agent GitHub token lacks repo administration / ruleset write. Do not request broad privilege expansion; perform the UI change above.",
+  "stalePrCloseAlsoBlocked": {
+    "http": 403,
+    "note": "gh cannot close superseded drafts; salvage report lists safe closes for admin/manual action."
+  }
+}

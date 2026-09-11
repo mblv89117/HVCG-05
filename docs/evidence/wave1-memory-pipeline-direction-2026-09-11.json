@@ -1,0 +1,59 @@
+{
+  "schema": "atlas_wave1_evidence.v1",
+  "lane": "E",
+  "title": "memory pipeline direction",
+  "asOf": "2026-09-11T04:30:00Z",
+  "status": "DIRECTION_LOCKED",
+  "constitutionVersion": "HVCG-CONSTITUTION-2026-09-04-v1.0",
+  "principle": {
+    "reuse": [
+      "businessMemory",
+      "fabric",
+      "commercial_overlay"
+    ],
+    "newStorageProduct": false,
+    "summary": "Reuse existing businessMemory / fabric / commercial overlay. Do not invent a new storage product in Wave 1."
+  },
+  "wave1ThinSlice": {
+    "name": "hydrate_on_read_pilot",
+    "steps": [
+      "hydrate-on-read from Azure Table durable ingest",
+      "local ingest into commercial overlay",
+      "Live Client pilot brief"
+    ],
+    "pilotPattern": "pilot_hydrate + pilot_brief",
+    "moduleIngestBackend": "azure-table",
+    "authorityClassDefault": "OBSERVE"
+  },
+  "reusableAbstractionDirection": {
+    "pipeline": [
+      "continuous_ingest",
+      "normalize",
+      "ClientCode_resolve",
+      "dedupe",
+      "timeline",
+      "entity_document_communication_decision_task_linkage",
+      "freshness",
+      "provenance",
+      "human_correction"
+    ],
+    "evolution": "Evolves from Wave 1 pilot hydrate + pilot brief pattern; not a greenfield memory store.",
+    "failClosed": {
+      "unknownClientCode": true,
+      "inventHistory": false,
+      "crossClientLeakage": 0
+    }
+  },
+  "nonGoalsWave1": [
+    "New durable memory product or second SoR",
+    "Autonomous write-back of inferred memory without Owner gate",
+    "Replacing fabric index or SharePoint HVCG_* as authority"
+  ],
+  "relatedSurfaces": {
+    "businessMemory": "apps/atlas-integration-api/src/pm/operatorDesk/businessMemoryState.ts",
+    "commercialOverlay": "apps/atlas-integration-api/src/pm/commercialContext/",
+    "moduleIngest": "apps/atlas-integration-api/src/modules/ingest/"
+  },
+  "wave": 1,
+  "GLOBAL_AUTO_RESPOND": false
+}
