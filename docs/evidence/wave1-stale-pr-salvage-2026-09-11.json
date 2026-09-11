@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T04:49:16Z",
+  "generatedAt": "2026-09-11T04:49:55Z",
   "baselineSha": "4a7e5f75ca2c740e44de4854bdf4ac7343f0bce6",
   "baselineRef": "production/atlas-core",
   "repository": "mblv89117/HVCG-05",
@@ -46,12 +46,38 @@
       185
     ],
     "closed": [],
-    "closeBlockers": [],
+    "closeBlockers": [
+      {
+        "numbers": [
+          204,
+          203,
+          202,
+          201,
+          193,
+          192,
+          191,
+          190,
+          189,
+          188,
+          186,
+          185
+        ],
+        "error": "Resource not accessible by integration (HTTP 403)",
+        "operationsAttempted": [
+          "gh pr close --comment",
+          "gh pr close",
+          "gh api PATCH pulls state=closed"
+        ],
+        "impact": "No PRs closed. Manual close of selected SUPERSEDED drafts recommended by a principal with write access."
+      }
+    ],
     "notes": [
       "No open PRs currently target production/atlas-core.",
       "Large KEEP_DRAFT stacked chains are historical SharePoint-era / pre-Wave-0 lineage; do not merge.",
-      "Auto-close intentionally limited to a small clearly-superseded draft subset even though more PRs are marked safeToClose."
-    ]
+      "Auto-close intentionally limited to a small clearly-superseded draft subset even though more PRs are marked safeToClose.",
+      "Autonomous close blocked by GitHub App/token permissions (403). Selected safe subset left open: 204,203,202,201,193,192,191,190,189,188,186,185"
+    ],
+    "closedCount": 0
   },
   "prs": [
     {

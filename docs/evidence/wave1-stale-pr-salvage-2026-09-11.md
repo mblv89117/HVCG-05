@@ -67,6 +67,10 @@ Enumerated all open PRs via gh; compared each head to production/atlas-core usin
 
 ## Close actions
 
-Autonomous close attempted only for selected SUPERSEDED drafts with `uniqueValueUnresolved=false` and `safeToClose=true`. Results recorded in JSON `summary.closed` / `summary.closeBlockers`.
+Autonomous close attempted for selected SUPERSEDED drafts (`uniqueValueUnresolved=false`, `safeToClose=true`): #204, #203, #202, #201, #193, #192, #191, #190, #189, #188, #186, #185.
+
+**Blocker:** `gh` token lacks PR mutation permission (`403 Resource not accessible by integration` on `closePullRequest` / `addComment`). **Closed: 0.** Manual close of the selected subset is recommended.
+
+Results recorded in JSON `summary.closed` / `summary.closeBlockers`.
 
 Machine-readable report: `docs/evidence/wave1-stale-pr-salvage-2026-09-11.json`
