@@ -141,7 +141,7 @@
       "id": "integration_api_test_suite",
       "result": "PASS",
       "mode": "local_fixture",
-      "detail": "npm run test -w @hvcg/atlas-integration-api → # tests 754 / # pass 754 / # fail 0"
+      "detail": "npm run test -w @hvcg/atlas-integration-api → # tests 768 / # pass 768 / # fail 0"
     }
   ],
   "defects": [],
