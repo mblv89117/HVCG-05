@@ -39,6 +39,7 @@ import {
   matchCommercialContextPath,
   observeCommercialContext,
   readCommercialContext,
+  readCommercialContextAsync,
   readDeskCommercialContext,
 } from '../commercialContext/handle.ts';
 import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from './token.ts';
@@ -413,7 +414,7 @@ export async function handleSharePointPmRoutes(opts: {
           res,
           200,
           {
-            commercialContext: readCommercialContext({
+            commercialContext: await readCommercialContextAsync({
               dataDir,
               principal,
               opportunities,
@@ -436,7 +437,7 @@ export async function handleSharePointPmRoutes(opts: {
           res,
           200,
           {
-            commercialContext: readCommercialContext({
+            commercialContext: await readCommercialContextAsync({
               dataDir,
               principal,
               opportunities: [opportunity],

@@ -42,7 +42,53 @@ export function CommercialContextPanel(props: {
             )}
           </div>
         ))}
-        {copy.rows.length ? (
+        {props.context && 'liveClientPilot' in props.context && props.context.liveClientPilot ? (
+        <div>
+          <Text weight="semibold">Live Client operating brief</Text>
+          <Caption1 style={{ display: 'block' }}>What is happening</Caption1>
+          {props.context.liveClientPilot.whatIsHappening.map((line) => (
+            <Caption1 key={line} style={{ display: 'block' }}>
+              {line}
+            </Caption1>
+          ))}
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>Why it matters</Caption1>
+          {props.context.liveClientPilot.whyItMatters.map((line) => (
+            <Caption1 key={line} style={{ display: 'block' }}>
+              {line}
+            </Caption1>
+          ))}
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>Known / unknown</Caption1>
+          {props.context.liveClientPilot.known.map((line) => (
+            <Caption1 key={`k-${line}`} style={{ display: 'block' }}>
+              Known: {line}
+            </Caption1>
+          ))}
+          {props.context.liveClientPilot.unknown.map((line) => (
+            <Caption1 key={`u-${line}`} style={{ display: 'block' }}>
+              Unknown: {line}
+            </Caption1>
+          ))}
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>Next (OBSERVE / RECOMMEND / PREPARE)</Caption1>
+          {props.context.liveClientPilot.nextActions.map((action) => (
+            <Caption1 key={action.text} style={{ display: 'block' }}>
+              [{action.authorityClass}{action.approvalRequired ? ' · approval' : ''}] {action.text}
+            </Caption1>
+          ))}
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>Provenance</Caption1>
+          {props.context.liveClientPilot.provenance.map((p) => (
+            <Caption1 key={`${p.source}-${p.detail}`} style={{ display: 'block' }}>
+              {p.source}: {p.detail}
+            </Caption1>
+          ))}
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>Approval required</Caption1>
+          {props.context.liveClientPilot.approvalRequired.map((line) => (
+            <Caption1 key={line} style={{ display: 'block' }}>
+              {line}
+            </Caption1>
+          ))}
+        </div>
+      ) : null}
+      {copy.rows.length ? (
           <div>
             <Text weight="semibold">Recorded clients</Text>
             {copy.rows.slice(0, 8).map((row) => (

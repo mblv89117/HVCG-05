@@ -28,7 +28,7 @@ import {
 import { handleClientDesk, renderClientDeskHtml } from './desk.ts';
 import { canAccessOperatorDesk, isInternalStaff } from '../pm/sharepoint/authz.ts';
 import { resolveHubCommit } from '../http/hubCommit.ts';
-import { readCommercialContext } from '../pm/commercialContext/handle.ts';
+import { readCommercialContext, readCommercialContextAsync } from '../pm/commercialContext/handle.ts';
 import { buildKnowledgeOperatingPicture } from '../pm/sharepoint/knowledgeOperating.ts';
 
 function send(res: ServerResponse, status: number, body: unknown, origin?: string | null) {
@@ -212,7 +212,7 @@ export async function handleClientExperience(opts: {
           }),
         ]);
         view = attachOperatorDeskOperatingPicture(view, {
-          commercial: readCommercialContext({
+          commercial: await readCommercialContextAsync({
             dataDir: opts.cfg.dataDir,
             principal,
             opportunities,
@@ -369,7 +369,7 @@ export async function handleClientExperience(opts: {
     }
 
     if (opts.method === 'GET' && (opts.path === '/api/client/workspace' || opts.path === '/api/client/me')) {
-      send(opts.res, 200, { workspace: buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal }) }, opts.origin);
+      send(opts.res, 200, { workspace: await buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal }) }, opts.origin);
       return true;
     }
 
@@ -378,20 +378,20 @@ export async function handleClientExperience(opts: {
       send(
         opts.res,
         200,
-        { workspace: buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal, clientCode: workspaceCode }) },
+        { workspace: await buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal, clientCode: workspaceCode }) },
         opts.origin,
       );
       return true;
     }
 
     if (opts.method === 'GET' && opts.path === '/api/client/portal') {
-      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      const view = await buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
       send(opts.res, 200, { portal: view.portal }, opts.origin);
       return true;
     }
 
     if (opts.method === 'GET' && opts.path === '/api/client/documents') {
-      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      const view = await buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
       send(
         opts.res,
         200,
@@ -409,7 +409,7 @@ export async function handleClientExperience(opts: {
     }
 
     if (opts.method === 'GET' && opts.path === '/api/client/document-exchange') {
-      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      const view = await buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
       send(
         opts.res,
         200,
@@ -427,7 +427,7 @@ export async function handleClientExperience(opts: {
 
     if (opts.method === 'POST' && opts.path === '/api/client/documents') {
       const body = await readJson(opts.req);
-      const view = buildClientWorkspaceView({
+      const view = await buildClientWorkspaceView({
         dataDir: opts.cfg.dataDir,
         principal,
         clientCode: typeof body.clientCode === 'string' ? body.clientCode : undefined,
@@ -480,7 +480,7 @@ export async function handleClientExperience(opts: {
     }
 
     if (opts.method === 'GET' && opts.path === '/api/client/attention') {
-      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      const view = await buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
       send(
         opts.res,
         200,
@@ -496,7 +496,7 @@ export async function handleClientExperience(opts: {
     }
 
     if (opts.method === 'GET' && (opts.path === '/api/client/requests' || opts.path === '/api/client/document-requests')) {
-      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      const view = await buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
       send(
         opts.res,
         200,
@@ -517,7 +517,7 @@ export async function handleClientExperience(opts: {
     }
 
     if (opts.method === 'GET' && opts.path === '/api/client/decisions') {
-      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      const view = await buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
       send(
         opts.res,
         200,
@@ -551,7 +551,7 @@ export async function handleClientExperience(opts: {
     }
 
     if (opts.method === 'GET' && opts.path === '/api/client/projects') {
-      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      const view = await buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
       send(
         opts.res,
         200,
@@ -567,7 +567,7 @@ export async function handleClientExperience(opts: {
     }
 
     if (opts.method === 'GET' && opts.path === '/api/client/operating-picture') {
-      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      const view = await buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
       send(
         opts.res,
         200,
@@ -584,13 +584,13 @@ export async function handleClientExperience(opts: {
     }
 
     if (opts.method === 'GET' && opts.path === '/api/client/commercial-context') {
-      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      const view = await buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
       send(opts.res, 200, { commercial: view.commercial, clientCode: view.clientCode }, opts.origin);
       return true;
     }
 
     if (opts.method === 'GET' && opts.path === '/api/client/gcc') {
-      const view = buildClientWorkspaceView({
+      const view = await buildClientWorkspaceView({
         dataDir: opts.cfg.dataDir,
         principal,
         gccAppOrigin: opts.cfg.gccAppOrigin,

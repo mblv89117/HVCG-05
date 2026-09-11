@@ -1,0 +1,85 @@
+{
+  "schema": "atlas_wave1_business_useful_acceptance.v1",
+  "asOf": "2026-09-11T05:00:00Z",
+  "baselineSha": "4a7e5f75ca2c740e44de4854bdf4ac7343f0bce6",
+  "package": "PKG-02A LIVE-CLIENT-PILOT-PDG-HFD",
+  "implementationBranch": "cursor/live-client-pilot-pdg-hfd-2200",
+  "method": "Behavioral acceptance via unit/integration tests of hydrate-on-read + Live Client pilot brief composition. Live signed production OBSERVE re-proof remains PARTIAL/BLOCKED pending HMAC secrets (see wave1-recert).",
+  "clients": {
+    "PDG01": {
+      "path": "GCC OBSERVE → durable ingest → hydrateCommercialOverlayForClient → buildOperatorCommercialContext → buildLiveClientPilotBrief → CommercialContextPanel",
+      "questions": {
+        "whatIsHappening": {
+          "answerableFromAtlas": true,
+          "evidence": "Pilot brief whatIsHappening includes GCC signal summary when durable gcc.value_signal.v1 ingest exists; honest empty when absent."
+        },
+        "whyItMatters": {
+          "answerableFromAtlas": true,
+          "evidence": "whyItMatters states GCC observation available without opening GCC for routine status."
+        },
+        "whatShouldHappenNext": {
+          "answerableFromAtlas": true,
+          "evidence": "nextActions limited to RECOMMEND/PREPARE/OBSERVE; PREPARE internal note is approvalRequired=true; no EXECUTE."
+        },
+        "whereDidAtlasGetThis": {
+          "answerableFromAtlas": true,
+          "evidence": "provenance includes gcc-module-ingest + hydrate sources (local-json/azure-table/overlay-only)."
+        },
+        "whatIsMissing": {
+          "answerableFromAtlas": true,
+          "evidence": "unknown[] populated from honesty emptyReason and missing lanes; no invented financials."
+        },
+        "whatRequiresApproval": {
+          "answerableFromAtlas": true,
+          "evidence": "approvalRequired always includes GLOBAL_AUTO_RESPOND=false, money/contracts/lender never autonomous."
+        }
+      },
+      "verdict": "PASS_WITH_CAVEAT",
+      "caveat": "PASS for composition/honesty once durable GCC ingest is present on the Hub read path. Production current-SHA signed OBSERVE recert remains BLOCKED without HMAC secrets in this environment; do not claim signed-current for a newer tip without re-cert."
+    },
+    "HFD01": {
+      "path": "Growth360 OBSERVE → durable ingest → project/hydrate → pilot brief → CommercialContextPanel",
+      "questions": {
+        "whatIsHappening": {
+          "answerableFromAtlas": true,
+          "evidence": "whatIsHappening includes Growth360 attribution when 360.campaign_approval.v1 projected."
+        },
+        "whyItMatters": {
+          "answerableFromAtlas": true,
+          "evidence": "whyItMatters states Growth360 observation available without opening Growth360 for routine status."
+        },
+        "whatShouldHappenNext": {
+          "answerableFromAtlas": true,
+          "evidence": "PREPARE growth follow-up checklist with approvalRequired=true; OBSERVE canExecute=false check."
+        },
+        "whereDidAtlasGetThis": {
+          "answerableFromAtlas": true,
+          "evidence": "provenance growth360-module-ingest with idempotencyKey + campaignId."
+        },
+        "whatIsMissing": {
+          "answerableFromAtlas": true,
+          "evidence": "unknown[] for missing GCC/Copilot/SharePoint lanes; no invented financial context."
+        },
+        "whatRequiresApproval": {
+          "answerableFromAtlas": true,
+          "evidence": "Material paid campaign launch listed in approvalRequired; canExecute remains false."
+        }
+      },
+      "verdict": "PASS_WITH_CAVEAT",
+      "caveat": "Same hydrate/recert caveat as PDG01. Identity map HFD01↔Growth360 UUID is already on production tip; this PR surfaces it in Live Client operating brief."
+    }
+  },
+  "overallBusinessUseful": "CONDITIONAL_PASS",
+  "overallRationale": "Operator questions 1–6 are answerable from Atlas Live Client commercial context after hydrate-on-read when durable module observations exist. Without durable observations, honest empty states remain. Do not mark unconditional PASS until independent review + current-runtime signed recert for any tip that changes ingest/HMAC/commercial projection.",
+  "securityInvariantsPreserved": [
+    "GLOBAL_AUTO_RESPOND=false",
+    "canExecute=false for Growth360",
+    "no fabricated financials",
+    "OBSERVE/RECOMMEND/PREPARE only",
+    "ClientCode fail-closed entitlement on commercial read",
+    "fixture/production separation for MRI"
+  ],
+  "tests": [
+    "apps/atlas-integration-api/tests/live-client-pilot-pdg-hfd.test.ts"
+  ]
+}

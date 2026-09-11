@@ -6,7 +6,13 @@
  * Observation-only. Never invents ledger numbers. Never sets liveDispatch.
  * Fixtures (MRI01, SYN01) are recorded but must not become production entitlements.
  */
-import type { AtlasIntegrationEnvelope } from '@hvcg/atlas-integration-contracts';
+import {
+  EVENT_360_CAMPAIGN_APPROVAL,
+  EVENT_GCC_SYN01_OBSERVATION,
+  EVENT_GCC_VALUE_SIGNAL,
+  EVENT_MRI_FINDINGS,
+  type AtlasIntegrationEnvelope,
+} from '@hvcg/atlas-integration-contracts';
 import type {
   CommercialOverlay,
   CopilotAssessment,
@@ -17,11 +23,6 @@ import { loadOverlay, saveOverlay } from '../../pm/commercialContext/store.ts';
 
 const FIXTURE_CODES = new Set(['MRI01', 'SYN01', 'T360A']);
 
-const EVENT_GCC_VALUE_SIGNAL = 'gcc.value_signal.v1';
-const EVENT_GCC_SYN01_OBSERVATION = 'gcc.syn01_observation.v1';
-const EVENT_360_CAMPAIGN_APPROVAL = '360.campaign_approval.v1';
-const EVENT_MRI_FINDINGS = 'mri.findings.v1';
-
 function asString(raw: unknown, max = 2000): string | undefined {
   if (typeof raw !== 'string') return undefined;
   const trimmed = raw.trim();
@@ -29,18 +30,26 @@ function asString(raw: unknown, max = 2000): string | undefined {
   return trimmed.slice(0, max);
 }
 
-export function projectModuleEnvelopeToOverlay(
-  dataDir: string,
+export type ProjectionResult = {
+  projected: boolean;
+  kind?: string;
+  replay?: boolean;
+  fixtureOnly?: boolean;
+  overlay: CommercialOverlay;
+};
+
+/** Pure merge — used by ingest projection and durable hydrate-on-read. */
+export function applyEnvelopeToOverlay(
+  overlay: CommercialOverlay,
   envelope: AtlasIntegrationEnvelope,
-): { projected: boolean; kind?: string; replay?: boolean; fixtureOnly?: boolean } {
-  const overlay = loadOverlay(dataDir);
+): ProjectionResult {
   const fixtureOnly = FIXTURE_CODES.has(envelope.clientCode);
 
   if (envelope.eventType === EVENT_MRI_FINDINGS) {
     const idempotencyKey = envelope.idempotencyKey;
     const existing = overlay.copilotAssessments.find((a) => a.idempotencyKey === idempotencyKey);
     if (existing) {
-      return { projected: true, kind: 'atlas-lead-handoff.v1', replay: true, fixtureOnly };
+      return { projected: true, kind: 'atlas-lead-handoff.v1', replay: true, fixtureOnly, overlay };
     }
     const summary =
       asString(envelope.payload.findingsSummary) ||
@@ -57,22 +66,23 @@ export function projectModuleEnvelopeToOverlay(
       idempotencyKey,
       recordedAt: new Date().toISOString(),
     };
-    const nextOverlay: CommercialOverlay = {
-      ...overlay,
-      copilotAssessments: [...overlay.copilotAssessments, next],
+    return {
+      projected: true,
+      kind: 'atlas-lead-handoff.v1',
+      replay: false,
+      fixtureOnly,
+      overlay: { ...overlay, copilotAssessments: [...overlay.copilotAssessments, next] },
     };
-    saveOverlay(dataDir, nextOverlay);
-    return { projected: true, kind: 'atlas-lead-handoff.v1', replay: false, fixtureOnly };
   }
 
   if (envelope.eventType === EVENT_360_CAMPAIGN_APPROVAL) {
     const idempotencyKey = envelope.idempotencyKey;
     const existing = overlay.attributions.find((a) => a.idempotencyKey === idempotencyKey);
     if (existing) {
-      return { projected: true, kind: 'attribution-lineage.v1', replay: true, fixtureOnly };
+      return { projected: true, kind: 'attribution-lineage.v1', replay: true, fixtureOnly, overlay };
     }
     if (fixtureOnly) {
-      return { projected: false, kind: 'attribution-lineage.v1', fixtureOnly };
+      return { projected: false, kind: 'attribution-lineage.v1', fixtureOnly, overlay };
     }
     const slug = asString(envelope.payload.organizationSlug, 255);
     const campaignId = asString(envelope.payload.campaignId, 255);
@@ -88,11 +98,13 @@ export function projectModuleEnvelopeToOverlay(
       idempotencyKey,
       recordedAt: new Date().toISOString(),
     };
-    saveOverlay(dataDir, {
-      ...overlay,
-      attributions: [...overlay.attributions, next],
-    });
-    return { projected: true, kind: 'attribution-lineage.v1', replay: false, fixtureOnly };
+    return {
+      projected: true,
+      kind: 'attribution-lineage.v1',
+      replay: false,
+      fixtureOnly,
+      overlay: { ...overlay, attributions: [...overlay.attributions, next] },
+    };
   }
 
   if (
@@ -102,10 +114,10 @@ export function projectModuleEnvelopeToOverlay(
     const idempotencyKey = envelope.idempotencyKey;
     const existing = overlay.gccSignals.find((s) => s.idempotencyKey === idempotencyKey);
     if (existing) {
-      return { projected: true, kind: 'gcc-value-signal.v1', replay: true, fixtureOnly };
+      return { projected: true, kind: 'gcc-value-signal.v1', replay: true, fixtureOnly, overlay };
     }
     if (fixtureOnly) {
-      return { projected: false, kind: 'gcc-value-signal.v1', fixtureOnly };
+      return { projected: false, kind: 'gcc-value-signal.v1', fixtureOnly, overlay };
     }
     const signalTypeRaw = asString(envelope.payload.signalType, 64) || 'engagement_health';
     const allowed = new Set([
@@ -133,12 +145,31 @@ export function projectModuleEnvelopeToOverlay(
       copiesLedger: false,
       idempotencyKey,
     };
-    saveOverlay(dataDir, {
-      ...overlay,
-      gccSignals: [...overlay.gccSignals, next],
-    });
-    return { projected: true, kind: 'gcc-value-signal.v1', replay: false, fixtureOnly };
+    return {
+      projected: true,
+      kind: 'gcc-value-signal.v1',
+      replay: false,
+      fixtureOnly,
+      overlay: { ...overlay, gccSignals: [...overlay.gccSignals, next] },
+    };
   }
 
-  return { projected: false };
+  return { projected: false, overlay };
+}
+
+export function projectModuleEnvelopeToOverlay(
+  dataDir: string,
+  envelope: AtlasIntegrationEnvelope,
+): { projected: boolean; kind?: string; replay?: boolean; fixtureOnly?: boolean } {
+  const current = loadOverlay(dataDir);
+  const result = applyEnvelopeToOverlay(current, envelope);
+  if (result.projected && !result.replay) {
+    saveOverlay(dataDir, result.overlay);
+  }
+  return {
+    projected: result.projected,
+    kind: result.kind,
+    replay: result.replay,
+    fixtureOnly: result.fixtureOnly,
+  };
 }

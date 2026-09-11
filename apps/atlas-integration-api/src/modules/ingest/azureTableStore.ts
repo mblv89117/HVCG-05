@@ -136,6 +136,39 @@ export async function upsertIngestAzureTable(opts: {
   throw new Error(`MODULE_INGEST_DURABLE_WRITE_FAILED:${insert.status}`);
 }
 
+
+export async function listIngestsByClientCode(opts: {
+  cfg: AzureTableIngestConfig;
+  clientCode: string;
+  maxItems?: number;
+}): Promise<StoredIngest[]> {
+  const maxItems = Math.min(Math.max(opts.maxItems ?? 50, 1), 200);
+  const filter = encodeURIComponent(`PartitionKey eq '${opts.clientCode.replace(/'/g, "''")}'`);
+  const resourcePath = `${opts.cfg.tableName}?$filter=${filter}&$top=${maxItems}`;
+  const listed = await tableRequest(opts.cfg, 'GET', resourcePath);
+  if (listed.status !== 200 || !listed.json || typeof listed.json !== 'object') {
+    return [];
+  }
+  const value = (listed.json as { value?: unknown }).value;
+  if (!Array.isArray(value)) return [];
+  const out: StoredIngest[] = [];
+  for (const row of value) {
+    if (!row || typeof row !== 'object') continue;
+    const rec = row as Record<string, unknown>;
+    if (!rec.envelopeJson) continue;
+    try {
+      out.push({
+        receivedAt: String(rec.receivedAt || ''),
+        keyId: String(rec.keyId || ''),
+        envelope: JSON.parse(String(rec.envelopeJson)) as AtlasIntegrationEnvelope,
+      });
+    } catch {
+      // skip corrupt durable rows; fail closed for that row only
+    }
+  }
+  return out;
+}
+
 export function resolveAzureTableIngestConfig(
   env: NodeJS.Dict<string> = process.env,
 ): AzureTableIngestConfig | null {

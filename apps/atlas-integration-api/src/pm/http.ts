@@ -25,6 +25,7 @@ import {
   matchCommercialContextPath,
   observeCommercialContext,
   readCommercialContext,
+  readCommercialContextAsync,
   readDeskCommercialContext,
 } from './commercialContext/handle.ts';
 import type { SharePointPmService } from './sharepoint/repository.ts';
@@ -172,7 +173,7 @@ export async function handlePmRoutes(opts: {
           send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
           return true;
         }
-        send(res, 200, { commercialContext: readCommercialContext({ dataDir: cfg.dataDir, principal, clientCode: code }) }, origin);
+        send(res, 200, { commercialContext: await readCommercialContextAsync({ dataDir: cfg.dataDir, principal, clientCode: code }) }, origin);
         return true;
       }
       if (commercial.kind === 'opportunity') {

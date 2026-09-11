@@ -1,0 +1,185 @@
+{
+  "schema": "atlas_wave1_lane_b_recert_discovery.v1",
+  "lane": "B_CURRENT_RUNTIME_RECERTIFICATION_DISCOVERY",
+  "asOf": "2026-09-11T04:37:25Z",
+  "baselineSha": "4a7e5f75ca2c740e44de4854bdf4ac7343f0bce6",
+  "healthCommit": "4a7e5f75ca2c740e44de4854bdf4ac7343f0bce6",
+  "healthEndpoint": "GET https://app-atlas-integration-hub.azurewebsites.net/health",
+  "healthOk": true,
+  "healthMatchesBaseline": true,
+  "status": "PARTIAL",
+  "secretsPresent": false,
+  "secretsMechanismsChecked": {
+    "envVars": [
+      "INTEGRATION_MODULE_INGEST_KEYS_JSON",
+      "INTEGRATION_MODULE_INGEST_KEY",
+      "INTEGRATION_MODULE_INGEST_KEY_ID",
+      "INTEGRATION_MODULE_INGEST_STORAGE_KEY",
+      "AZURE_CLIENT_ID",
+      "AZURE_CLIENT_SECRET",
+      "AZURE_TENANT_ID",
+      "AZURE_SUBSCRIPTION_ID",
+      "KEY_VAULT_URL",
+      "AZURE_KEY_VAULT_URL"
+    ],
+    "keyVaultSecretNamesDocumented": [
+      "AtlasModuleIngestKeyGcc",
+      "AtlasModuleIngestKeyMri",
+      "AtlasModuleIngestKeyGrowth360",
+      "AtlasModuleIngestKeysJson"
+    ],
+    "hubAppSettingDocumented": "INTEGRATION_MODULE_INGEST_KEYS_JSON",
+    "azCliLoggedIn": false,
+    "localEnvFilesPresent": false,
+    "result": "NO_APPROVED_SECRET_MATERIAL_AVAILABLE_IN_THIS_ENVIRONMENT"
+  },
+  "modules": {
+    "gcc_pdg01": {
+      "scope": "GCC → Atlas OBSERVE for verified real client PDG01",
+      "signedLiveRecert": "BLOCKED_NO_SECRETS",
+      "priorSignedEvidence": "docs/evidence/wave10-hmac-durable-cert-20260909.json",
+      "note": "Prior PDG01 OBSERVE cert remains tied to its recorded Hub SHA; not re-asserted as current-SHA signed PASS."
+    },
+    "growth360_hfd01": {
+      "scope": "Growth360 → Atlas OBSERVE for HFD01; canExecute remains false",
+      "signedLiveRecert": "BLOCKED_NO_SECRETS",
+      "priorSignedEvidence": "docs/evidence/accel-hfd01-growth360-real-client-20260910.json",
+      "note": "Not business-certified; signed live path blocked without growth360 HMAC secret."
+    },
+    "mri_fixture_only": {
+      "scope": "Copilot MRI → Atlas",
+      "productionMapping": "NOT_INVENTED",
+      "fixtureClientCode": "MRI01",
+      "signedLiveRecert": "BLOCKED_NO_SECRETS",
+      "localFixtureProjection": "PASS",
+      "priorSignedEvidence": "docs/evidence/accel-synthetic-mri-growth360-20260910.json",
+      "note": "No verified production real-client MRI map. Fixture-only posture preserved."
+    },
+    "website_eva_prepare_only": {
+      "scope": "Website/EVA lead ingest",
+      "conversionBoundary": "PREPARE_ONLY",
+      "signedLiveRecert": "BLOCKED_NO_SECRETS",
+      "liveUnsignedFailClosed": "PASS",
+      "priorSignedEvidence": "docs/evidence/accel-website-leads-recert-20260910.json",
+      "note": "Conversion remains PREPARE-only; not business-certified on this run."
+    }
+  },
+  "matrixResults": [
+    {
+      "id": "health_commit_matches_baseline",
+      "result": "PASS",
+      "mode": "live_public",
+      "detail": "health.commit == baselineSha 4a7e5f75"
+    },
+    {
+      "id": "valid_signed",
+      "result": "BLOCKED",
+      "mode": "live_signed",
+      "reason": "HMAC secrets unavailable; cannot exercise valid signed happy-path without inventing or leaking secrets"
+    },
+    {
+      "id": "replay",
+      "result": "PARTIAL",
+      "mode": "local_fixture",
+      "detail": "Local idempotent upsert + commercial projection replay PASS in unit tests; live azure-table replay BLOCKED_NO_SECRETS"
+    },
+    {
+      "id": "bad_signature",
+      "result": "PASS",
+      "mode": "live_unsigned_probe",
+      "detail": "POST key-id=gcc|mri|growth360 + invalid signature → 401 Module signature invalid."
+    },
+    {
+      "id": "unknown_key",
+      "result": "PASS",
+      "mode": "live_unsigned_probe",
+      "detail": "POST key-id=unknown-lane-b → 401 Unknown module key id."
+    },
+    {
+      "id": "expired_timestamp",
+      "result": "PASS",
+      "mode": "live_unsigned_probe",
+      "detail": "POST key-id=gcc + timestamp skew >5m → 401 Module timestamp invalid or skewed."
+    },
+    {
+      "id": "raw_secret_rejection",
+      "result": "PASS",
+      "mode": "live_unsigned_probe",
+      "detail": "POST with x-atlas-module-secret / x-shared-secret only → 401 Module key id required. Raw secret does not authenticate."
+    },
+    {
+      "id": "cross_client",
+      "result": "PARTIAL",
+      "mode": "local_fixture",
+      "detail": "Local handler fail-closed unknown ClientCode + Hart/HFD01 enforcement covered by unit tests; live signed cross-client (GCC PDG01 mismatch / Growth360 Hart) BLOCKED_NO_SECRETS"
+    },
+    {
+      "id": "durable_persistence",
+      "result": "PARTIAL",
+      "mode": "local_fixture",
+      "detail": "Backend mode unit tests assert production defaults to azure-table and fail-closes development-json; live durable write/read of signed envelopes BLOCKED_NO_SECRETS"
+    },
+    {
+      "id": "provenance",
+      "result": "PARTIAL",
+      "mode": "local_fixture",
+      "detail": "Local envelopes require provenance fields; commercial projection preserves lineage.source; live signed provenance cert BLOCKED_NO_SECRETS"
+    },
+    {
+      "id": "commercial_projection",
+      "result": "PASS",
+      "mode": "local_fixture",
+      "detail": "module-ingest-commercial-projection.test.ts: 360→attributions, MRI fixtureOnly without production ClientCode entitlement, idempotent replay"
+    },
+    {
+      "id": "local_hmac_unit_matrix",
+      "result": "PASS",
+      "mode": "local_fixture",
+      "detail": "hub-module-ingest.test.ts: valid verify, unknown key-id, skewed timestamp, ClientCode fail-closed, GCC SYN01 observe, idempotent store"
+    },
+    {
+      "id": "integration_api_test_suite",
+      "result": "PASS",
+      "mode": "local_fixture",
+      "detail": "npm run test -w @hvcg/atlas-integration-api → # tests 754 / # pass 754 / # fail 0"
+    }
+  ],
+  "defects": [],
+  "blockers": [
+    {
+      "id": "NO_HMAC_SECRETS",
+      "severity": "BLOCKING_SIGNED_RECERT",
+      "detail": "Approved Key Vault / App Setting secret material is documented but not available via env vars, local .env, or az CLI in this Cloud Agent environment. Full signed matrix (valid, live replay, durable row proof, signed cross-client, website signed PREPARE) cannot run without weakening tests."
+    },
+    {
+      "id": "NO_COMMITTED_LIVE_HMAC_CERT_HARNESS",
+      "severity": "DISCOVERY",
+      "detail": "Prior live HMAC cert evidence exists (wave10 / accel JSON) but no reusable committed Invoke-*ModuleIngestHmac* harness script was found. Live probes were issued ad hoc against public fail-closed paths only."
+    }
+  ],
+  "harnessPaths": [
+    "apps/atlas-integration-api/tests/hub-module-ingest.test.ts",
+    "apps/atlas-integration-api/tests/hub-module-ingest-backend.test.ts",
+    "apps/atlas-integration-api/tests/module-ingest-commercial-projection.test.ts",
+    "apps/atlas-integration-api/tests/hub-website-leads.test.ts",
+    "apps/atlas-integration-api/src/modules/ingest/hmac.ts",
+    "apps/atlas-integration-api/src/modules/ingest/http.ts",
+    "apps/atlas-integration-api/src/modules/ingest/projectToCommercialOverlay.ts",
+    "docs/evidence/wave10-hmac-durable-cert-20260909.json",
+    "docs/evidence/accel-synthetic-mri-growth360-20260910.json",
+    "docs/evidence/accel-hfd01-growth360-real-client-20260910.json",
+    "docs/evidence/accel-website-leads-recert-20260910.json",
+    "docs/evidence/accel-independent-validator-20260910.json",
+    "docs/evidence/contract-freeze-20260910.json"
+  ],
+  "priorSignedCertificationSha": "f3c9e5149596d7bccec0f245ec51caf46c2b3b59",
+  "recertificationOnCurrentSha": "PENDING",
+  "testsWeakened": false,
+  "notes": [
+    "Lane B discovery only: current Hub runtime SHA matches production/atlas-core tip; signed ingest recertification on 4a7e5f75 remains PENDING.",
+    "Live fail-closed probes confirm key ring is configured for gcc, mri, and growth360 (bad signature returns 'Module signature invalid' rather than unknown key / unavailable).",
+    "MRI production ClientCode mapping was not invented; MRI01 remains fixture-only.",
+    "Website/EVA conversion boundary remains PREPARE-only.",
+    "Do not treat PARTIAL as Wave 10 / Accel signed PASS on current SHA."
+  ]
+}

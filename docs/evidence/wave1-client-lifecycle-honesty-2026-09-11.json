@@ -1,0 +1,66 @@
+{
+  "schema": "atlas_wave1_evidence.v1",
+  "lane": "CLIENT_LIFECYCLE_HONESTY",
+  "title": "client priority and lifecycle honesty",
+  "asOf": "2026-09-11T04:30:00Z",
+  "status": "HONESTY_LOCKED",
+  "constitutionVersion": "HVCG-CONSTITUTION-2026-09-04-v1.0",
+  "rules": [
+    {
+      "id": "CCB01_LIEN01_STATUS",
+      "clients": ["CCB01", "LIEN01"],
+      "mustRemain": ["UNKNOWN", "ENTITLED"],
+      "unless": "authorized_commercial_evidence_found",
+      "forbidden": [
+        "Promote to Active without authorized commercial evidence",
+        "Infer Active from identity verification alone",
+        "Invent engagement history to justify priority"
+      ]
+    },
+    {
+      "id": "KAVA01_CPL01_PRIORITY",
+      "clients": ["KAVA01", "CPL01"],
+      "rule": "NOT_PERMANENTLY_P3_FROM_SHALLOW_WORKSPACES",
+      "detail": "Shallow entitled workspaces do not permanently lock KAVA01/CPL01 at P3. Priority may rise when authorized commercial evidence and Hub-visible operating depth exist."
+    },
+    {
+      "id": "IDENTITY_VERIFIED_NE_ACTIVE",
+      "rule": "IDENTITY_VERIFIED_IS_NOT_ACTIVE",
+      "detail": "Identity VERIFIED confirms ClientCode/entity mapping only. It does not imply Active Client stage, active engagement, or business-useful workspace depth."
+    }
+  ],
+  "clients": {
+    "CCB01": {
+      "name": "Colorado Craft Beef",
+      "lifecycleHonesty": "UNKNOWN_OR_ENTITLED",
+      "identity": "VERIFIED_DOES_NOT_EQUAL_ACTIVE",
+      "activeClaim": "FORBIDDEN_WITHOUT_AUTHORIZED_COMMERCIAL_EVIDENCE"
+    },
+    "LIEN01": {
+      "name": "Lien Partners",
+      "lifecycleHonesty": "UNKNOWN_OR_ENTITLED",
+      "identity": "VERIFIED_DOES_NOT_EQUAL_ACTIVE",
+      "activeClaim": "FORBIDDEN_WITHOUT_AUTHORIZED_COMMERCIAL_EVIDENCE"
+    },
+    "KAVA01": {
+      "name": "That's Kava LLC",
+      "lifecycleHonesty": "ENTITLED_SHALLOW_OK",
+      "priorityHonesty": "NOT_PERMANENTLY_P3_MERELY_FROM_SHALLOW_WORKSPACE",
+      "identity": "VERIFIED_DOES_NOT_EQUAL_ACTIVE"
+    },
+    "CPL01": {
+      "name": "Christie's Place LLC",
+      "lifecycleHonesty": "ENTITLED_SHALLOW_OK",
+      "priorityHonesty": "NOT_PERMANENTLY_P3_MERELY_FROM_SHALLOW_WORKSPACE",
+      "identity": "VERIFIED_DOES_NOT_EQUAL_ACTIVE",
+      "boundary": "christiesplace remains CLIENT_ASSET — do not merge into Atlas core"
+    }
+  },
+  "alignedEvidence": [
+    "docs/evidence/accel-client-recon-dossiers-20260910.json",
+    "docs/evidence/accel-business-useful-scorecard-20260910.json",
+    "docs/knowledge/ENTITY_BOUNDARIES.md"
+  ],
+  "wave": 1,
+  "GLOBAL_AUTO_RESPOND": false
+}

@@ -2,7 +2,9 @@ import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { entitledClientCodes } from '../sharepoint/authz.ts';
 import type { SharePointLead, SharePointOpportunity } from '../sharepoint/repository.ts';
+import { hydrateCommercialOverlayForClient } from '../../modules/ingest/hydrateCommercialOverlay.ts';
 import { buildOperatorCommercialContext, toDeskCommercialContext } from './build.ts';
+import { buildLiveClientPilotBrief } from './liveClientPilot.ts';
 import { ObserveError, persistObservation } from './observe.ts';
 import { loadOverlay, saveOverlay } from './store.ts';
 
@@ -28,14 +30,48 @@ export function readCommercialContext(opts: {
   opportunities?: SharePointOpportunity[];
   leads?: SharePointLead[];
   clientCode?: string;
+  hydratedFrom?: string[];
 }) {
   const overlay = loadOverlay(opts.dataDir);
-  return buildOperatorCommercialContext({
+  const ctx = buildOperatorCommercialContext({
     principal: opts.principal,
     overlay,
     opportunities: opts.opportunities,
     leads: opts.leads,
     clientCode: opts.clientCode,
+  });
+  if (opts.clientCode) {
+    ctx.liveClientPilot = buildLiveClientPilotBrief(ctx, { hydratedFrom: opts.hydratedFrom });
+  }
+  return ctx;
+}
+
+/** Client commercial read with durable ingest hydrate-on-read. */
+export async function readCommercialContextAsync(opts: {
+  dataDir: string;
+  principal: AtlasPrincipal;
+  opportunities?: SharePointOpportunity[];
+  leads?: SharePointLead[];
+  clientCode?: string;
+  env?: NodeJS.Dict<string>;
+}) {
+  let hydratedFrom: string[] | undefined;
+  if (opts.clientCode) {
+    const hydrated = await hydrateCommercialOverlayForClient({
+      dataDir: opts.dataDir,
+      clientCode: opts.clientCode,
+      env: opts.env,
+      persist: true,
+    });
+    hydratedFrom = hydrated.hydratedFrom;
+  }
+  return readCommercialContext({
+    dataDir: opts.dataDir,
+    principal: opts.principal,
+    opportunities: opts.opportunities,
+    leads: opts.leads,
+    clientCode: opts.clientCode,
+    hydratedFrom,
   });
 }
 
@@ -46,6 +82,17 @@ export function readDeskCommercialContext(opts: {
   leads?: SharePointLead[];
 }) {
   const ctx = readCommercialContext(opts);
+  return toDeskCommercialContext(ctx, entitledClientCodes(opts.principal).length);
+}
+
+export async function readDeskCommercialContextAsync(opts: {
+  dataDir: string;
+  principal: AtlasPrincipal;
+  opportunities?: SharePointOpportunity[];
+  leads?: SharePointLead[];
+  env?: NodeJS.Dict<string>;
+}) {
+  const ctx = await readCommercialContextAsync(opts);
   return toDeskCommercialContext(ctx, entitledClientCodes(opts.principal).length);
 }
 

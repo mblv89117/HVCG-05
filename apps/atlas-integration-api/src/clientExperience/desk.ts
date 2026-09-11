@@ -290,7 +290,7 @@ export async function handleClientDesk(opts: {
   }
 
   try {
-    const view = buildClientWorkspaceView({
+    const view = await buildClientWorkspaceView({
       dataDir: opts.cfg.dataDir,
       principal,
       gccAppOrigin: opts.cfg.gccAppOrigin,
