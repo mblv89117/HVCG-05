@@ -1,0 +1,3638 @@
+{
+  "generatedAt": "2026-09-11T04:49:16Z",
+  "baselineSha": "4a7e5f75ca2c740e44de4854bdf4ac7343f0bce6",
+  "baselineRef": "production/atlas-core",
+  "repository": "mblv89117/HVCG-05",
+  "lane": "C",
+  "wave": "Wave 1",
+  "method": {
+    "description": "Enumerated all open PRs via gh; compared each head to production/atlas-core using ancestry (merge-base --is-ancestor) and limited git cherry (baseline head base) for patch-equivalence of base..head commits. Classified KEEP|SALVAGE|SUPERSEDED|CLOSE|RETIRE_LATER. Did not merge any draft chains. Auto-close limited to a small subset of draft SUPERSEDED PRs with fullyContainedInBaseline=true.",
+    "tools": [
+      "gh pr list",
+      "git merge-base --is-ancestor",
+      "git cherry <baseline> <head> <base>",
+      "git log base..head"
+    ],
+    "openPrCountExamined": 179,
+    "targetingProductionAtlasCore": 0,
+    "targetingMain": 1,
+    "draftCount": 177,
+    "nonDraftCount": 2,
+    "staleNote": "All open PRs last updated on or before 2026-08-26; none target production/atlas-core."
+  },
+  "summary": {
+    "total": 179,
+    "byClassification": {
+      "RETIRE_LATER": 67,
+      "SALVAGE": 6,
+      "SUPERSEDED": 104,
+      "KEEP": 1,
+      "CLOSE": 1
+    },
+    "uniqueValueUnresolved": 74,
+    "safeToCloseMarked": 102,
+    "autoCloseSelected": [
+      204,
+      203,
+      202,
+      201,
+      193,
+      192,
+      191,
+      190,
+      189,
+      188,
+      186,
+      185
+    ],
+    "closed": [],
+    "closeBlockers": [],
+    "notes": [
+      "No open PRs currently target production/atlas-core.",
+      "Large KEEP_DRAFT stacked chains are historical SharePoint-era / pre-Wave-0 lineage; do not merge.",
+      "Auto-close intentionally limited to a small clearly-superseded draft subset even though more PRs are marked safeToClose."
+    ]
+  },
+  "prs": [
+    {
+      "number": 1,
+      "title": "feat(ui): Atlas Elite Experience Design Sprint",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-integration-release",
+      "head": "cursor/elite-experience-design-sprint-d632",
+      "headSha": "2c4cde63c525ae9de1fff2110e2d5f8dc3e66ee6",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-integration-release with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 3,
+      "title": "DRAFT \u2014 DO NOT MERGE OR DEPLOY: Atlas Local AI Operations (Phases 1\u20135A + 6A/6B Website Studio)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "main",
+      "head": "feature/atlas-local-ai-operations",
+      "headSha": "a0dc06bbf995252846dae7e2f695e0d975b91b3a",
+      "classification": "SALVAGE",
+      "rationale": "Open PR retains 29 commit(s) not patch-equivalent to production/atlas-core (base=main). Evaluate selective cherry-pick onto production/atlas-core; do not merge obsolete draft/SharePoint-era chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 29,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 29,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 4,
+      "title": "Phase 5G governed Opportunity operations",
+      "state": "OPEN",
+      "draft": true,
+      "base": "feature/atlas-lead-opportunity-conversion",
+      "head": "cursor/phase-5g-opportunity-ops-27ef",
+      "headSha": "d116a6bda6f3d9c4914becfc83bd0a5303696e26",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 9,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 9,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 5,
+      "title": "Fix Atlas Hub reproducibility gates",
+      "state": "OPEN",
+      "draft": true,
+      "base": "feature/atlas-lead-opportunity-conversion",
+      "head": "cursor/platform-completion-7241",
+      "headSha": "955f6fd9b3492ddad7de162001e9eaeff0302e42",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 18,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 18,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 6,
+      "title": "Atlas: live cert complete \u2014 Premium PASS, MSAL auth, Capital attested",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/platform-completion-7241",
+      "head": "cursor/atlas-hv-completion-52d1",
+      "headSha": "2a5a6050fc9d7e5a144df72c613a72d93b9595d5",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 10,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 10,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 7,
+      "title": "docs(red-team): Independent platform security findings 2026-08-20",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/platform-red-team-866c",
+      "headSha": "68ac84ebaa89e3beb277e3848fe430e04000639a",
+      "classification": "SALVAGE",
+      "rationale": "Open PR retains 80 commit(s) not patch-equivalent to production/atlas-core (base=cursor/v1.1.0-intelligence-ai-ops). Evaluate selective cherry-pick onto production/atlas-core; do not merge obsolete draft/SharePoint-era chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 80,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 80,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 8,
+      "title": "Platform integration contracts: directive 8 icp-studio.v1 + outbound-dispatch.v1",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-hv-completion-52d1",
+      "head": "cursor/platform-integration-contracts",
+      "headSha": "30964bbf437ef0f43708a0e308d554b84ce4c1d7",
+      "classification": "SALVAGE",
+      "rationale": "Open PR retains 21 commit(s) not patch-equivalent to production/atlas-core (base=cursor/atlas-hv-completion-52d1). Evaluate selective cherry-pick onto production/atlas-core; do not merge obsolete draft/SharePoint-era chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 21,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 21,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 9,
+      "title": "perf(atlas): Search/Command-K latency P2 + date/Draft polish",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-hv-completion-52d1",
+      "head": "cursor/atlas-search-performance-p2",
+      "headSha": "ca3406a6384dcefe08de9f078b7a9f2b269b5086",
+      "classification": "SALVAGE",
+      "rationale": "Open PR retains 22 commit(s) not patch-equivalent to production/atlas-core (base=cursor/atlas-hv-completion-52d1). Evaluate selective cherry-pick onto production/atlas-core; do not merge obsolete draft/SharePoint-era chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 22,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 22,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 10,
+      "title": "Revenue OS D7 certification (synthetic + Premium)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-hv-completion-52d1",
+      "head": "cursor/atlas-revenue-engagement-os",
+      "headSha": "85def0ef30eb7adc4bcf096f4fabd569c6817535",
+      "classification": "SALVAGE",
+      "rationale": "Open PR retains 17 commit(s) not patch-equivalent to production/atlas-core (base=cursor/atlas-hv-completion-52d1). Evaluate selective cherry-pick onto production/atlas-core; do not merge obsolete draft/SharePoint-era chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 17,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 17,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 11,
+      "title": "OD-005 candidate: Atlas security patch (ATLAS-01/02/03 + XSYS-01/02) \u2014 DO NOT DEPLOY",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-hv-completion-52d1",
+      "head": "cursor/atlas-security-patch-od005",
+      "headSha": "9e5d10a20639bbeb659fbacd6362cd9f13adb08b",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 5,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 5,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 12,
+      "title": "feat(hub): public SHA marker for inherit-free live cert",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-security-patch-od005",
+      "head": "cursor/hub-public-sha-marker-7a6b",
+      "headSha": "64b56dcb73caae1cfcd71743bcedfd8cd64c2b26",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 13,
+      "title": "feat(hub): directoryObjects checkMemberGroups for SP entitlement",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/hub-public-sha-marker-7a6b",
+      "head": "cursor/hub-directory-objects-entitle-7a6b",
+      "headSha": "1ac62572e2f0d4206f78539c25041fb7f69430f8",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 14,
+      "title": "fix(hub): fail-closed empty-scope Search skips SharePoint fan-out",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/hub-directory-objects-entitle-7a6b",
+      "head": "cursor/hub-search-empty-shortcircuit-7a6b",
+      "headSha": "ed34f2f86fa1a0ce0c4c6ff6ab255d6eff32aa3a",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 15,
+      "title": "fix(hub): resolve SP entitlement via GroupMember.Read.All members",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/hub-search-empty-shortcircuit-7a6b",
+      "head": "cursor/hub-entitlement-group-members-7a6b",
+      "headSha": "4b9631a0a50e06591dd9100fb48b07e5aea7d008",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 16,
+      "title": "fix(hub): entitled Search hot-path (cache + parallel catalogs + 400ms extras)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/hub-entitlement-group-members-7a6b",
+      "head": "cursor/hub-search-entitled-hotpath-7a6b",
+      "headSha": "070e0936914b0e87c908e06a95b743f6f1daa9aa",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 17,
+      "title": "Read-only GCC / Copilot / GTM commercial context on the Atlas desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/hub-search-entitled-hotpath-7a6b",
+      "head": "cursor/atlas-commercial-handoff-7a6b",
+      "headSha": "46dc70ef121b1b38c7036e60069801204ce38f64",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 18,
+      "title": "feat(hub): isolated client experience after governed activation",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-commercial-handoff-7a6b",
+      "head": "cursor/client-experience-journey-bedd",
+      "headSha": "297b9dde668123a5af8bb42577998841c8388449",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-commercial-handoff-7a6b with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 19,
+      "title": "Client knowledge operationalization (BU-P1) \u2014 ledger + Atlas metadata",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/client-knowledge-operationalization-bedd",
+      "headSha": "405001382cba2993b0c43f8ba37e1239f1309522",
+      "classification": "SALVAGE",
+      "rationale": "Open PR retains 163 commit(s) not patch-equivalent to production/atlas-core (base=cursor/v1.1.0-intelligence-ai-ops). Evaluate selective cherry-pick onto production/atlas-core; do not merge obsolete draft/SharePoint-era chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 163,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 163,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 20,
+      "title": "feat(hub): fail-closed my-work, governed client path, knowledge ledger",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-commercial-handoff-7a6b",
+      "head": "cursor/hub-my-work-failclosed-7a6b",
+      "headSha": "b707049c5cfaac1b0643327359a91200ac72879e",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 21,
+      "title": "feat(hub): thin knowledge operating picture on live e63279a8",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/hub-my-work-failclosed-7a6b",
+      "head": "cursor/client-knowledge-ledger-e632",
+      "headSha": "12d7ca99e0d1a5bd46272f53d70b7d509f04324b",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 4,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 4,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 22,
+      "title": "feat(hub): bind client journey to live portal paths",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/hub-my-work-failclosed-7a6b",
+      "head": "cursor/client-experience-b707049",
+      "headSha": "14ac7d601b96c13b47e6a98bf2950b4d9a6ac5c5",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 23,
+      "title": "feat(hub): persist verify-replay Hub path flags",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/hub-cx-ck-stack-7a6b",
+      "head": "cursor/cx-verify-replay-976bea59",
+      "headSha": "a8a33bfdf98eed1f8a6f9bc7c5cdfe7282b87078",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 24,
+      "title": "feat(hub): entitled document-request attention queues",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/cx-verify-replay-976bea59",
+      "head": "cursor/cx-attention-queues-a8a33bf",
+      "headSha": "0712c90c93f7fe9009af66df75102a7f8352bc77",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 26,
+      "title": "feat(hub): entitle document-request receive/cancel",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/cx-attention-queues-a8a33bf",
+      "head": "cursor/cx-docreq-fulfill-0712c90",
+      "headSha": "8fe71fa8fff5bff57566a7688c58cd2299191444",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 27,
+      "title": "feat(hub): entitled operator preview of isolated client desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/cx-docreq-fulfill-0712c90",
+      "head": "cursor/cx-client-desk-8fe71fa",
+      "headSha": "05b46dbfb5eb4f4a00cc843f76ab4d11138b4d62",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 28,
+      "title": "feat(hub): entitled operating picture on isolated client desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/cx-client-desk-8fe71fa",
+      "head": "cursor/cx-desk-ops-picture-05b46db",
+      "headSha": "40118d5853b553412818f5cc6da54f805f094723",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 29,
+      "title": "feat(hub): entitled operating picture on daily operator desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/cx-desk-ops-picture-05b46db",
+      "head": "cursor/cx-operator-ops-picture-40118d5",
+      "headSha": "49d38443024496dd80c5251fc2c38f3787398eca",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 30,
+      "title": "feat(hub): labeled SYNQA exception queues on daily operator desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/cx-operator-ops-picture-40118d5",
+      "head": "cursor/cx-operator-attention-49d3844",
+      "headSha": "6cc1a10efc51e0aae3d4e183ffb21e79e4ad7c3d",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 31,
+      "title": "feat(hub): entitled client journey status on daily operator desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/cx-operator-attention-49d3844",
+      "head": "cursor/cx-journey-status-6cc1a10",
+      "headSha": "8b3eadba142432280b93719f0dbdd53204ecb31d",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 32,
+      "title": "feat(hub): entitle SYNQA workspace staging from the operator desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/cx-journey-status-6cc1a10",
+      "head": "cursor/cx-workspace-stage-8b3eadb",
+      "headSha": "80e0bdb480cb94b0e857ab78f86bf5446970f6b3",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 33,
+      "title": "feat(hub): entitle SYNQA invitation reissue from the operator desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/cx-workspace-stage-8b3eadb",
+      "head": "cursor/cx-invite-redeem-80e0bdb",
+      "headSha": "b548eb9b87ca7d78b115977926edebec8c2c64c7",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 34,
+      "title": "feat(hub): issue isolated SYNQA client sessions from invitation redeem",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/cx-synqa-session-b548eb9",
+      "headSha": "526a1004f6b963df066ce0eef2226229cabc8a87",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 183,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 183,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 35,
+      "title": "feat(hub): rotate SYNQA client sessions after redeem",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/cx-synqa-rotate-526a100",
+      "headSha": "101b1a7d2409d13e3b96b96e7fe29ffc9d8dce5b",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 184,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 184,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 36,
+      "title": "fix(hub): make SYNQA invitation redeem one-time",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/cx-synqa-onetime-101b1a7",
+      "headSha": "4c57e3657defa19ca882f97dc04c7fb766febd31",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 185,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 185,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 37,
+      "title": "feat(hub): entitle isolated GCC workspace on signed client desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/cx-client-gcc-4c57e36",
+      "headSha": "c41af09b28234068e6fde1faeac031a49db4b50c",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 186,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 186,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 38,
+      "title": "feat(hub): fail-close foreign GCC workspace keys on signed sessions",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/cx-gcc-bind-c41af09",
+      "headSha": "16b61a86a92bf9fd1cd31978c859f984b2142590",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 187,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 187,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 39,
+      "title": "feat(hub): entitle client-visible operating picture on signed desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/cx-client-ops-picture-16b61a8",
+      "headSha": "21f2c54c3148e8361cd3988e9ef2e6ad3012b511",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 188,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 188,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 40,
+      "title": "feat(hub): entitle requested-document honesty on signed client desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/cx-client-docs-21f2c54",
+      "headSha": "ebee641c79d5d36e9400b8eb817cca794d31136f",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 190,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 190,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 41,
+      "title": "feat(hub): HVS_DATA_ACCESS=PARTIAL with provenance recovery ledger",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/platform-business-usefulness-6ef8",
+      "headSha": "7fc2f5bc76ffb1d0739d1910e01a284afc5b1abc",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 191,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 191,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 42,
+      "title": "feat(hub): surface recovered HVS clients on the operator desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/ck-hvs-recovered-desk-7fc2f5b",
+      "headSha": "21c0f0117e26af798139ea0fcd6743f27a80feb5",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 193,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 193,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 43,
+      "title": "feat(hub): recovered HVS second-level projects on the operator desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/ck-hvs-l2-projects-21c0f01",
+      "headSha": "7b4b4cb4d5234864a3c4e5f703f5ea1e8bd3f023",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 194,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 194,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 44,
+      "title": "feat(hub): stitch recovered HVS clients into operator operating records",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/ck-hvs-client-records-7b4b4cb",
+      "headSha": "c6ebd8a5b78c7a00878f6742e81fa42f06b760e3",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 195,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 195,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 45,
+      "title": "feat(hub): real SharePoint client document persistence",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/real-document-persistence-proof-d83c",
+      "headSha": "47c4c129b9a1657138966e36622d65a43775a96f",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 196,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 196,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 46,
+      "title": "feat(hub): actionable recovered-client knowledge on operator desk",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/real-document-persistence-proof-d83c",
+      "head": "cursor/real-document-persistence-proof-67fb",
+      "headSha": "86c8511df0557fb6ef4e7f66ecb972e073100c1f",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 7,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 7,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 48,
+      "title": "feat(hub): surface recovered past-due invoices on the Overdue queue",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/real-document-persistence-proof-67fb",
+      "head": "cursor/real-document-persistence-proof-e3fb",
+      "headSha": "87c8f20aa618a7205bad34d1c6d4b6b79adcbbd0",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 49,
+      "title": "feat(hub): surface recovered capital packets on the Capital queue",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/real-document-persistence-proof-e3fb",
+      "head": "cursor/real-document-persistence-proof-e58f",
+      "headSha": "b5d984ddd2e4676d446bd0590f3652b552347ba2",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 50,
+      "title": "feat(hub): recovered exception counts and At Risk queue",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/real-document-persistence-proof-e58f",
+      "head": "cursor/real-document-persistence-proof-8854",
+      "headSha": "31d30159c59bee866b11d353db537e0d83877619",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 51,
+      "title": "Add Atlas agentic operations foundation",
+      "state": "OPEN",
+      "draft": false,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/atlas-agentic-ops-6efb",
+      "headSha": "b87705b7b2df3a4676b8ce972d848fc16401c5f1",
+      "classification": "KEEP",
+      "rationale": "Non-draft PR with unresolved commits vs production/atlas-core on obsolete base cursor/v1.1.0-intelligence-ai-ops. Keep open for explicit salvage/close decision; do not merge onto SharePoint-era base.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 53,
+      "title": "feat(hub): Ask Atlas attention answer on live operator picture",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/real-document-persistence-proof-8854",
+      "head": "cursor/atlas-ask-attention-001",
+      "headSha": "bf8724779d1832ac42844004fd338e6cc739b7e1",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 54,
+      "title": "feat(elite): signed Ask Atlas attention surface from live Hub operator.json",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-ask-attention-001",
+      "head": "cursor/atlas-ask-attention-004",
+      "headSha": "94ab9ad6638a963fe889474bcfe16d8fd929d66b",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-ask-attention-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 55,
+      "title": "feat(hub): durable Ask Atlas Agent Activity Ledger",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-ask-attention-001",
+      "head": "cursor/atlas-agent-activity-ledger-001",
+      "headSha": "0eff2a45b05411b2860ca4e6e78b6d75ad7bfe46",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 56,
+      "title": "feat(hub): Ask Atlas READ_AUTO runtime + get_attention_items gateway",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-agent-activity-ledger-001",
+      "head": "cursor/atlas-agent-runtime-001",
+      "headSha": "80f7e4f799e2f0c39b6bd3ff98737551bfe58983",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 57,
+      "title": "REPO_COMPLETE: ATLAS-AGENTIC-OPS-EVENT-001 event processing (do not deploy, do not merge to v1.1.0)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-agent-runtime-001",
+      "head": "cursor/atlas-agent-event-001",
+      "headSha": "d2d92f81281bb653c602109776c77bd852e8a141",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 58,
+      "title": "REPO_COMPLETE: ATLAS-AGENTIC-OPS-PII-001 Product Improvement Intelligence (do not deploy, do not merge to v1.1.0)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-agent-event-001",
+      "head": "cursor/atlas-agent-pii-001",
+      "headSha": "454dae8e3d474cb5c08907b583a04daf69335636",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 59,
+      "title": "REPO_COMPLETE ATLAS-AGENTIC-OPS-LOOP-001 \u2014 do not deploy, do not merge to v1.1.0",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-agent-pii-001",
+      "head": "cursor/atlas-agent-loop-001",
+      "headSha": "35bcc77ededc2498feb2caa5e6497f74815b1973",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 60,
+      "title": "REPO_COMPLETE: ATLAS-AGENTIC-OPS-CLIENTCTX-001 get_client_context (do not deploy, do not merge to v1.1.0)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-agent-loop-001",
+      "head": "cursor/atlas-agent-clientctx-001",
+      "headSha": "d0a0f06b3d68540f1276c99f16e8b07714d6a481",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 61,
+      "title": "REPO_COMPLETE: ATLAS-AGENTIC-OPS-SEARCH-001 search_authorized_knowledge (do not deploy, do not merge to v1.1.0)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-agent-clientctx-001",
+      "head": "cursor/atlas-agent-search-001",
+      "headSha": "4eb6615e3062ff43a389a573b0abb75f4efb8651",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 62,
+      "title": "REPO_COMPLETE: ATLAS-AGENTIC-OPS-SEARCH-002 compose entitled picture search (do not deploy, do not merge to v1.1.0)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-agent-search-001",
+      "head": "cursor/atlas-agent-search-002",
+      "headSha": "70d2ef8e6649ba115b5889e7b3d281b903b94a28",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 63,
+      "title": "REPO_COMPLETE / do not deploy / do not merge to v1.1.0 \u2014 ATLAS-AGENTIC-OPS-RECOVERED-001",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-agent-search-002",
+      "head": "cursor/atlas-agent-recovered-001",
+      "headSha": "1739a2a744dee20c66277a541d048f3837b7f863",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 64,
+      "title": "REPO_COMPLETE: ATTENTION-NL-001 native state questions \u2014 do not deploy / do not merge to v1.1.0",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-agent-recovered-001",
+      "head": "cursor/atlas-agent-attention-nl-001",
+      "headSha": "2edad3df74bbc168be2c4787d5535e35b364cd9e",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 65,
+      "title": "DO NOT MERGE to v1.1.0 / DO NOT MERGE Hub overlay PRs \u2014 Elite Ask Atlas native runtime (ATLAS-ELITE-RUNTIME-001)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-ask-attention-004",
+      "head": "cursor/atlas-elite-runtime-001",
+      "headSha": "95d7fb753809469eea75647da702d63285615ccf",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-ask-attention-004 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 66,
+      "title": "Fix signed Atlas documents and agent activity",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-ask-attention-001",
+      "head": "cursor/atlas-owner-operability-6efb",
+      "headSha": "62b311b9282ca9f9e89bf57bc35604908911603e",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft unique-range commits are patch-equivalent to production/atlas-core (4 equiv). Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 4,
+        "patchEquivalentCount": 4,
+        "cherryUniqueCount": 0,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 67,
+      "title": "DO NOT MERGE to v1.1.0 / DO NOT Hub-deploy \u2014 Elite documents normalize on live SHA",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-elite-runtime-001",
+      "head": "cursor/atlas-owner-operability-elite-live",
+      "headSha": "b2456735a55ce1730a439df1036d32d882eb2b29",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-elite-runtime-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 68,
+      "title": "Add M365 mailbox delta checkpointing for Atlas fabric sync",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-agent-attention-nl-001",
+      "head": "cursor/atlas-m365-sync-6efb",
+      "headSha": "5b503092efc3445446243d87a7ba19e8b6333e0b",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 10,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 10,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 69,
+      "title": "ATLAS-SEARCH-ACTIONABILITY-001: attach existing queue state to Hub search",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-sync-6efb",
+      "head": "cursor/atlas-search-actionability-001",
+      "headSha": "a307690c65d3b51c22a3505717c7fe897293e7ef",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 70,
+      "title": "ATLAS-M365-SYNC-PROVE-001: checkpoint sweep and honest fabric status",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-search-actionability-001",
+      "head": "cursor/atlas-m365-sync-prove-001",
+      "headSha": "a12d9235ba00b86017e9840ef3cb03daf9f561d2",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 71,
+      "title": "KEEP_DRAFT: ATLAS product research + client support agents on live Hub stack",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-sync-prove-001",
+      "head": "cursor/atlas-m365-sync-graph-repair-001",
+      "headSha": "a1774d54726b62224809ff9c44faaa6eb128d6a1",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 21,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 21,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 72,
+      "title": "KEEP_DRAFT / ATLAS-M365-CHANGE-NOTIFICATIONS-001 Graph notifications trigger fabric delta",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-sync-graph-repair-001",
+      "head": "cursor/atlas-m365-change-notifications-001",
+      "headSha": "99a5b273365277a2fabb466b852bfa7f52b02a46",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 73,
+      "title": "KEEP_DRAFT / ATLAS-M365-CALENDAR-CHANGE-NOTIFICATIONS-001 Outlook calendar Graph notifications",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-change-notifications-001",
+      "head": "cursor/atlas-m365-calendar-notifications-001",
+      "headSha": "78d2c5e6432b643ac555c581b606350464bcd21c",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 74,
+      "title": "KEEP_DRAFT / ATLAS-REALTIME-DOCUMENTS-SECURE-PREVIEW-001 Hub Graph driveItem preview",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-calendar-notifications-001",
+      "head": "cursor/atlas-realtime-documents-preview-001",
+      "headSha": "16bcd2cc90d2238e5742048f2b1ec6a8e1fe78c3",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 75,
+      "title": "KEEP_DRAFT / ATLAS-REALTIME-DOCUMENTS-RELATED-CONTEXT-001 Hub document related context",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-realtime-documents-preview-001",
+      "head": "cursor/atlas-realtime-documents-related-context-001",
+      "headSha": "2c714f81687c58f51c9a45796fa1aee43ab2fa2c",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 76,
+      "title": "KEEP_DRAFT / ATLAS-M365-MAIL-ATTACHMENTS-001 index mail attachment metadata on fabric delta",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-realtime-documents-related-context-001",
+      "head": "cursor/atlas-m365-mail-attachments-001",
+      "headSha": "c8b19966e7eb6e0bb610945458ff9a2208a8c2ba",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 77,
+      "title": "KEEP_DRAFT / ATLAS-REALTIME-DOCUMENTS-ATTACHMENT-LINK-001 entitled document attachment metadata links",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-mail-attachments-001",
+      "head": "cursor/atlas-realtime-documents-attachment-link-001",
+      "headSha": "a7f112f28d01ef7fdbeb40c1f936e08a48147a49",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 78,
+      "title": "KEEP_DRAFT / ATLAS-M365-CONTACTS-HONEST-001 honest Outlook contacts fabric status",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-realtime-documents-attachment-link-001",
+      "head": "cursor/atlas-m365-contacts-honest-001",
+      "headSha": "161e277bbecf14c45382e0788011e4ba8cc6212d",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 79,
+      "title": "KEEP_DRAFT / ATLAS-M365-FILE-SEARCH-HONEST-001 honest Graph file-search fabric status",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-contacts-honest-001",
+      "head": "cursor/atlas-m365-file-search-honest-001",
+      "headSha": "eff4e5244f0119e122ea3f0ef89f27ada391e0d6",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-contacts-honest-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 81,
+      "title": "KEEP_DRAFT / ATLAS-M365-MAIL-ATTACHMENTS-PROVE-001 index attachment metadata on Graph 200",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-file-search-honest-001",
+      "head": "cursor/atlas-m365-mail-attachments-prove-001",
+      "headSha": "5c5acc98a87b343f8b20a0e27473255de4ada545",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-file-search-honest-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 82,
+      "title": "KEEP_DRAFT / ATLAS-M365-MAIL-ATTACHMENT-SEARCH-001 entitled attachment search + backfill skip",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-mail-attachments-prove-001",
+      "head": "cursor/atlas-m365-mail-attachment-search-001",
+      "headSha": "bbd3a8baa39c4108998fcfb42fc091a9c8683a77",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-mail-attachments-prove-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 83,
+      "title": "KEEP_DRAFT / ATLAS-REALTIME-DOCUMENTS-VERSION-001 Graph driveItem version context",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-mail-attachment-search-001",
+      "head": "cursor/atlas-realtime-documents-version-001",
+      "headSha": "2805ae785066bdd8289f47131468d9381974baaa",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-mail-attachment-search-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 84,
+      "title": "KEEP_DRAFT / ATLAS-REALTIME-DOCUMENTS-RELATED-MEETINGS-001 entitled document related meetings",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-realtime-documents-version-001",
+      "head": "cursor/atlas-realtime-documents-related-meetings-001",
+      "headSha": "1074f460fd503ed7e12d1824eea2985023d1da1b",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-realtime-documents-version-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 85,
+      "title": "KEEP_DRAFT / ATLAS-M365-MEETING-OPERATING-RECORD-001 entitled meeting operating records",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-realtime-documents-related-meetings-001",
+      "head": "cursor/atlas-m365-meeting-operating-record-001",
+      "headSha": "e650f9ce3ef7f9ad62e5220970dd3e109cc12e41",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-realtime-documents-related-meetings-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 87,
+      "title": "KEEP_DRAFT / ATLAS-M365-MEETING-RELATED-CONTEXT-001 entitled meeting related context",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-meeting-operating-record-001",
+      "head": "cursor/atlas-m365-meeting-related-context-001",
+      "headSha": "2538f476ae8c6a6f3a909d98753d3043f9113e6b",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-meeting-operating-record-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 89,
+      "title": "KEEP_DRAFT / ATLAS-M365-PROJECT-RELATED-MEETINGS-001 entitled project related meetings",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-meeting-related-context-001",
+      "head": "cursor/atlas-m365-project-related-meetings-001",
+      "headSha": "3ce27d1f7624a212c0fc69882b0933a16d60f69c",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-meeting-related-context-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 91,
+      "title": "KEEP_DRAFT / ATLAS-M365-THREAD-RELATED-MEETINGS-001 entitled mail-thread related meetings",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-project-related-meetings-001",
+      "head": "cursor/atlas-m365-thread-related-meetings-001",
+      "headSha": "01f954896e60324a237dde12fd3e647a9a73d582",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-project-related-meetings-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 92,
+      "title": "KEEP_DRAFT / ATLAS-M365-CAPITAL-RELATED-MEETINGS-001 entitled capital related meetings",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-thread-related-meetings-001",
+      "head": "cursor/atlas-m365-capital-related-meetings-001",
+      "headSha": "242af051b971864bbe8171117ddcfcc1f48b22d4",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-thread-related-meetings-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 94,
+      "title": "KEEP_DRAFT / ATLAS-M365-MEETING-ATTENTION-001 entitled queued meeting attention",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-capital-related-meetings-001",
+      "head": "cursor/atlas-m365-meeting-attention-001",
+      "headSha": "42c1df6729db338a7a19107bfac002208f72eddd",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-capital-related-meetings-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 96,
+      "title": "KEEP_DRAFT / ATLAS-M365-FABRIC-CLIENT-HINTS-TIMEOUT-001 share 15s MSI timeout for listClientHints",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-meeting-attention-001",
+      "head": "cursor/atlas-m365-fabric-client-hints-timeout-001",
+      "headSha": "8737fc0ccff167ed3dbd9145fee5d252b3773435",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-meeting-attention-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 97,
+      "title": "KEEP_DRAFT / ATLAS-M365-FABRIC-CLIENT-HINTS-HEALTH-001 honest clientHints count on /health",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-fabric-client-hints-timeout-001",
+      "head": "cursor/atlas-m365-fabric-client-hints-health-001",
+      "headSha": "d1109d4a55754aab1f08da2e646277577be606a8",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-fabric-client-hints-timeout-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 98,
+      "title": "KEEP_DRAFT / ATLAS-CLIENT-SUPPORT-RELATED-MEETINGS-001 entitled same-scope relatedMeetings",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-fabric-client-hints-health-001",
+      "head": "cursor/atlas-client-support-related-meetings-001",
+      "headSha": "99092d172b6025bc9d888aeb0d155d3161c395e9",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-m365-fabric-client-hints-health-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 100,
+      "title": "KEEP_DRAFT / ATLAS-ONBOARDING-RELATED-MEETINGS-001 entitled same-scope relatedMeetings",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-client-support-related-meetings-001",
+      "head": "cursor/atlas-onboarding-related-meetings-001",
+      "headSha": "131236d1facdc44f1c7ebcfd90727a23767034a8",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-client-support-related-meetings-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 101,
+      "title": "KEEP_DRAFT / ATLAS-PRODUCT-RESEARCH-CLIENT-HINTS-001 count-only fabric hints in product research",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-related-meetings-001",
+      "head": "cursor/atlas-product-research-client-hints-001",
+      "headSha": "c28278fdd8f245dead243ba8faefe98868919cb0",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-onboarding-related-meetings-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 102,
+      "title": "KEEP_DRAFT / ATLAS-ASK-ATLAS-CLIENT-HINTS-001 count-only fabric hints on Ask Atlas extras",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-product-research-client-hints-001",
+      "head": "cursor/atlas-ask-atlas-client-hints-001",
+      "headSha": "3e1df566b3b68c7d6a7951a3a4562c88cc394ac7",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-product-research-client-hints-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 103,
+      "title": "KEEP_DRAFT / ATLAS-RESEARCH-INTELLIGENCE-RELATED-MEETINGS-001 entitled same-scope meeting refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-ask-atlas-client-hints-001",
+      "head": "cursor/atlas-research-intelligence-related-meetings-001",
+      "headSha": "62ccdad6bc9031cb83ad37a5382fa6aa9cbee637",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-ask-atlas-client-hints-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 104,
+      "title": "KEEP_DRAFT / ATLAS-MEETING-RESEARCH-RELATIONSHIP-001 entitled same-scope research refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-research-intelligence-related-meetings-001",
+      "head": "cursor/atlas-meeting-research-relationship-001",
+      "headSha": "88cdb52873ea2eee0783f60e282e1379041261e4",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-research-intelligence-related-meetings-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 105,
+      "title": "KEEP_DRAFT / ATLAS-ONBOARDING-RESEARCH-RELATIONSHIP-001 entitled same-scope research refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-meeting-research-relationship-001",
+      "head": "cursor/atlas-onboarding-research-relationship-001",
+      "headSha": "12c3d720b0055c0d0248a8117098984fc40c6f05",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-meeting-research-relationship-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 106,
+      "title": "KEEP_DRAFT / ATLAS-CLIENT-SUPPORT-RESEARCH-RELATIONSHIP-001 entitled same-scope research refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-research-relationship-001",
+      "head": "cursor/atlas-client-support-research-relationship-001",
+      "headSha": "f3aaec9de42e802876fdebf11d8f27958326a04d",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-onboarding-research-relationship-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 107,
+      "title": "KEEP_DRAFT / ATLAS-CAPITAL-RESEARCH-RELATIONSHIP-001 entitled same-scope research refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-client-support-research-relationship-001",
+      "head": "cursor/atlas-capital-research-relationship-001",
+      "headSha": "ae82da65604e53b6a9579e40a237ff71a5732181",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-client-support-research-relationship-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 108,
+      "title": "KEEP_DRAFT / ATLAS-DOCUMENT-RESEARCH-RELATIONSHIP-001 entitled same-scope research refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-capital-research-relationship-001",
+      "head": "cursor/atlas-document-research-relationship-001",
+      "headSha": "d2043dad3071e5c82388835a7cab472a5d76837a",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-capital-research-relationship-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 109,
+      "title": "KEEP_DRAFT / ATLAS-PROJECT-RESEARCH-RELATIONSHIP-001 entitled same-scope research refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-document-research-relationship-001",
+      "head": "cursor/atlas-project-research-relationship-001",
+      "headSha": "2c9c7a2c6933d107353f8d41629541d0e6955097",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-document-research-relationship-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 110,
+      "title": "KEEP_DRAFT / ATLAS-THREAD-RESEARCH-RELATIONSHIP-001 entitled same-scope research refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-project-research-relationship-001",
+      "head": "cursor/atlas-thread-research-relationship-001",
+      "headSha": "a6d0bf81542f744c7f664e6cf8064f5116d5e18f",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-project-research-relationship-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 111,
+      "title": "KEEP_DRAFT / ATLAS-RESEARCH-INTELLIGENCE-RELATED-DOCUMENTS-001 entitled same-scope document refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-thread-research-relationship-001",
+      "head": "cursor/atlas-research-intelligence-related-documents-001",
+      "headSha": "ca3192fd851f2897772a9da650218fe07c884b2e",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-thread-research-relationship-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 112,
+      "title": "KEEP_DRAFT / ATLAS-RESEARCH-INTELLIGENCE-RELATED-PROJECTS-001 entitled same-scope project refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-research-intelligence-related-documents-001",
+      "head": "cursor/atlas-research-intelligence-related-projects-001",
+      "headSha": "cc1161aa5d4ce968881a036d51a0d2351b62a804",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-research-intelligence-related-documents-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 114,
+      "title": "KEEP_DRAFT / ATLAS-RESEARCH-INTELLIGENCE-RELATED-THREADS-001 entitled same-scope thread refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-research-intelligence-related-projects-001",
+      "head": "cursor/atlas-research-intelligence-related-threads-001",
+      "headSha": "82a244e356de64e777c8ee9815cbf87256c2d004",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-research-intelligence-related-projects-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 115,
+      "title": "KEEP_DRAFT / ATLAS-RESEARCH-INTELLIGENCE-RELATED-CAPITAL-001 entitled same-scope capital refs",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-research-intelligence-related-threads-001",
+      "head": "cursor/atlas-research-intelligence-related-capital-001",
+      "headSha": "c832a14dc6a4ca9d16adc75bba36415a2d7b1157",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-research-intelligence-related-threads-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 116,
+      "title": "Atlas: honest file-index operating-index search (not Graph LIVE)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-research-intelligence-related-capital-001",
+      "head": "cursor/atlas-file-index-search-honesty-001",
+      "headSha": "c262c64c09dddde4df8bde65634496086c708b12",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-research-intelligence-related-capital-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 117,
+      "title": "Atlas: project relatedDocuments (inverse of document.relatedProject)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-file-index-search-honesty-001",
+      "head": "cursor/atlas-project-related-documents-001",
+      "headSha": "e6b38c39ef93c6d5ecd05e4249bf08b8cfae7115",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-file-index-search-honesty-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 118,
+      "title": "Atlas: thread relatedDocuments (inverse of document.relatedEmail)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-project-related-documents-001",
+      "head": "cursor/atlas-thread-related-documents-001",
+      "headSha": "2d5af6958487de228cc6fdf06fa871afce12f874",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-project-related-documents-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 120,
+      "title": "Atlas: capital relatedDocuments (inverse of document.capitalRelationship)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-thread-related-documents-001",
+      "head": "cursor/atlas-capital-related-documents-001",
+      "headSha": "6f05d3537b5b0bae0a069dc90ca7af35805b9fe9",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-thread-related-documents-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 121,
+      "title": "Atlas: onboarding relatedDocuments (same-scope entitled document refs)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-capital-related-documents-001",
+      "head": "cursor/atlas-onboarding-related-documents-001",
+      "headSha": "0ea8a5ce4094bfe26bdca60f114a428f908d263a",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-capital-related-documents-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 122,
+      "title": "Atlas: client-support relatedDocuments (same-scope entitled document refs)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-related-documents-001",
+      "head": "cursor/atlas-client-support-related-documents-001",
+      "headSha": "8afd582fd33ff55474b420c68f2462250ea396f6",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-onboarding-related-documents-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 124,
+      "title": "Atlas: onboarding relatedProjects (inverse of document.relatedProject)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-client-support-related-documents-001",
+      "head": "cursor/atlas-onboarding-related-projects-001",
+      "headSha": "60b964ec73663db28781d5cdcea964ccec1ab263",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-client-support-related-documents-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 125,
+      "title": "Atlas: client-support relatedProjects (inverse of document.relatedProject)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-related-projects-001",
+      "head": "cursor/atlas-client-support-related-projects-001",
+      "headSha": "a6ff6aa7669f19a8e610318e3bb8b6aa8f0e02f1",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-onboarding-related-projects-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 126,
+      "title": "Atlas: onboarding relatedThreads (inverse of document.relatedEmail)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-client-support-related-projects-001",
+      "head": "cursor/atlas-onboarding-related-threads-001",
+      "headSha": "4de555bb26b43948de8dc1a8bf21a375ea8f0f0c",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-client-support-related-projects-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 127,
+      "title": "Atlas: client-support relatedThreads (inverse of document.relatedEmail)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-related-threads-001",
+      "head": "cursor/atlas-client-support-related-threads-001",
+      "headSha": "6a8a01313f071bc06951b0b256c2b6143288a321",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-onboarding-related-threads-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 128,
+      "title": "Atlas: onboarding relatedCapital (inverse of document.capitalRelationship)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-client-support-related-threads-001",
+      "head": "cursor/atlas-onboarding-related-capital-001",
+      "headSha": "ead58016113348fc1d07b84b2e6771a7d17e1c67",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-client-support-related-threads-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 129,
+      "title": "Atlas: client-support relatedCapital (inverse of document.capitalRelationship)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-related-capital-001",
+      "head": "cursor/atlas-client-support-related-capital-001",
+      "headSha": "405c397362eea582c168da4bad331aaa87fce93e",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-onboarding-related-capital-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 130,
+      "title": "Atlas: onboarding relatedAttachments (mail-attachment metadata refs)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-client-support-related-capital-001",
+      "head": "cursor/atlas-onboarding-related-attachments-001",
+      "headSha": "5d5293749e539e96b61430feb07555c89715a190",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-client-support-related-capital-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 131,
+      "title": "Atlas: client-support relatedAttachments (mail-attachment metadata refs)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-related-attachments-001",
+      "head": "cursor/atlas-client-support-related-attachments-001",
+      "headSha": "825a638cb2cf0006b6d93b9ec81277e9934d61ec",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-onboarding-related-attachments-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 133,
+      "title": "KEEP_DRAFT / ATLAS-CHANGE-NOTIFICATIONS-RENEW-TEST-001 pin Graph renew fixture clock",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-client-support-related-attachments-001",
+      "head": "cursor/atlas-change-notifications-renew-test-001",
+      "headSha": "c00ec4f7d0507ad9774606846fc8311c62aec18b",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-client-support-related-attachments-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 134,
+      "title": "Atlas: retry SharePoint meeting index write on Graph HTTP 0",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-client-support-related-attachments-001",
+      "head": "cursor/atlas-fabric-meeting-index-http0-retry-001",
+      "headSha": "6db03cfda174e47e31fe46546e27e27f3c266135",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-client-support-related-attachments-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 135,
+      "title": "Atlas: skip rejected Graph fileSearch on later fabric sweeps",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-fabric-meeting-index-http0-retry-001",
+      "head": "cursor/atlas-fabric-filesearch-skip-shortcircuit-001",
+      "headSha": "6732ef42418ebaa00fc768b80819f803a2ebf623",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-fabric-meeting-index-http0-retry-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 137,
+      "title": "Atlas: AI communications suggestedAttachments on draft replies",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-fabric-filesearch-skip-shortcircuit-001",
+      "head": "cursor/atlas-ai-comms-suggested-attachments-001",
+      "headSha": "beb61ea999064e47970621938399aa3e5d854a76",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-fabric-filesearch-skip-shortcircuit-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 139,
+      "title": "Atlas: AI communications suggestedProjects on draft replies",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-ai-comms-suggested-attachments-001",
+      "head": "cursor/atlas-ai-comms-suggested-projects-001",
+      "headSha": "9be47fb9d9079b4191b913561a7b64bb241ce97a",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-ai-comms-suggested-attachments-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 141,
+      "title": "Atlas: AI communications draft routing target",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-ai-comms-suggested-projects-001",
+      "head": "cursor/atlas-ai-comms-draft-routing-001",
+      "headSha": "e4b0213290a84a369c9ac56034ddc5c5f5e3e5f8",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-ai-comms-suggested-projects-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 142,
+      "title": "Atlas: AI communications draft escalation",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-ai-comms-draft-routing-001",
+      "head": "cursor/atlas-ai-comms-draft-escalation-001",
+      "headSha": "e48df25047a4b88ea7483911c656498a00b612da",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-ai-comms-draft-routing-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 143,
+      "title": "Atlas: capital prepare relatedAttachments",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-ai-comms-draft-escalation-001",
+      "head": "cursor/atlas-capital-prepare-related-attachments-001",
+      "headSha": "ee4ac634a18604c81e0904494b31935fe4ec464a",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-ai-comms-draft-escalation-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 144,
+      "title": "Atlas: capital prepare relatedProjects",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-capital-prepare-related-attachments-001",
+      "head": "cursor/atlas-capital-prepare-related-projects-001",
+      "headSha": "86d8ddccd7a08926bf8d3aaa13ee4d2ed5a238c0",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-capital-prepare-related-attachments-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 145,
+      "title": "Atlas: capital prepare relatedThreads",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-capital-prepare-related-projects-001",
+      "head": "cursor/atlas-capital-prepare-related-threads-001",
+      "headSha": "69997b17a80f29eac308e196819a69aa2697adc3",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-capital-prepare-related-projects-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 146,
+      "title": "Atlas: capital prepare relatedCapital",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-capital-prepare-related-threads-001",
+      "head": "cursor/atlas-capital-prepare-related-capital-001",
+      "headSha": "730afcd8c21530fd05b7e3f3cafb18232fc68b74",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-capital-prepare-related-threads-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 147,
+      "title": "Atlas: project operating record relatedProjects (peer)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-capital-prepare-related-capital-001",
+      "head": "cursor/atlas-project-related-projects-001",
+      "headSha": "a070b0497a5d254a70a7c78ed55f24044ef6abe0",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-capital-prepare-related-capital-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 148,
+      "title": "Atlas: project operating record relatedThreads",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-project-related-projects-001",
+      "head": "cursor/atlas-project-related-threads-001",
+      "headSha": "b65abc53e273daa355c21bb9f0639e3d55cd8758",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-project-related-projects-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 149,
+      "title": "Atlas: project operating record relatedAttachments",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-project-related-threads-001",
+      "head": "cursor/atlas-project-related-attachments-001",
+      "headSha": "acdd7f021886b35cb4785a19e7189fe79b41aea5",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-project-related-threads-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 150,
+      "title": "Atlas: project operating record relatedCapital",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-project-related-attachments-001",
+      "head": "cursor/atlas-project-related-capital-001",
+      "headSha": "336b4df8236ccb5b33ffb4e1667f975d68d33fa1",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-project-related-attachments-001 with 5 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 5,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 5,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 155,
+      "title": "Deployment lease guard + client onboarding automation",
+      "state": "OPEN",
+      "draft": false,
+      "base": "cursor/atlas-workflow-templates-6efb",
+      "head": "cursor/atlas-deploy-concurrency-onboarding-6efb",
+      "headSha": "c493ea69c48bf2f6c739c930ed0e263b1a2deb25",
+      "classification": "CLOSE",
+      "rationale": "Non-draft PR content already present in production/atlas-core; administrative close candidate (not auto-closed).",
+      "uniqueValueUnresolved": false,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 156,
+      "title": "Ask Atlas onboarding status: ACCG prefix + overlay-miss honest answer",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-deploy-concurrency-onboarding-6efb",
+      "head": "cursor/atlas-onboarding-ask-atlas-001",
+      "headSha": "9f968e60186a183482b4b1f646047792186d26b0",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-deploy-concurrency-onboarding-6efb with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 1,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 157,
+      "title": "Restack Ask Atlas ACCG prefix onto Approval Center 426065a0",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-approval-center-6efb",
+      "head": "cursor/atlas-onboarding-ask-atlas-002",
+      "headSha": "18ec076349f05252a53739e862c8d5e8f14c8c43",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 158,
+      "title": "KEEP_DRAFT: Atlas Approval Center on lease/onboarding floor",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-deploy-concurrency-onboarding-6efb",
+      "head": "cursor/atlas-approval-center-6efb",
+      "headSha": "426065a0506c3af6bdf92ce0fb7fdb716cd9e677",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 159,
+      "title": "Ask Atlas can execute entitled Client Onboarding (no duplicate / no invented codes)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-ask-atlas-002",
+      "head": "cursor/atlas-onboarding-ask-atlas-003",
+      "headSha": "db4d527804883a096aada999ace57fddef3ae0b5",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 160,
+      "title": "KEEP_DRAFT: Communication Policy Center (ATLAS-COMMUNICATION-POLICY-CENTER-001)",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-ask-atlas-003",
+      "head": "cursor/atlas-communication-policy-center-001",
+      "headSha": "b504e12245e57b016e2bab934ebb44e55747a7e8",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 161,
+      "title": "KEEP_DRAFT: Restack project relatedCapital onto b504e12",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-communication-policy-center-001",
+      "head": "cursor/atlas-project-related-capital-restack-001",
+      "headSha": "de834d55a3f7e4e06cd6c99735347bccbf9e72d4",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 162,
+      "title": "KEEP_DRAFT: Restack onboarding relatedCapital onto de834d5",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-project-related-capital-restack-001",
+      "head": "cursor/atlas-onboarding-related-capital-restack-001",
+      "headSha": "6b680e61f1bc49b143e8160521d3af5decc76dca",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 163,
+      "title": "KEEP_DRAFT: Onboarding operations handoff on 6b680e6",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-related-capital-restack-001",
+      "head": "cursor/atlas-onboarding-operations-handoff-001",
+      "headSha": "e936b8faa0db233d6bbc4de862a7b5fcf9738d27",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 164,
+      "title": "KEEP_DRAFT: Onboarding handoff communication context LIVE on 2213e87",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-operations-handoff-001",
+      "head": "cursor/atlas-onboarding-handoff-comms-001",
+      "headSha": "2213e87daf677ffd32456787b659f2fe5eb5168c",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 165,
+      "title": "KEEP_DRAFT: Onboarding kickoff package on 2213e87",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-handoff-comms-001",
+      "head": "cursor/atlas-onboarding-kickoff-001",
+      "headSha": "abdfc01323bf6ed08fea3e1e4e787958511fe6f0",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 166,
+      "title": "KEEP_DRAFT: Onboarding blocker review package on abdfc01",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-kickoff-001",
+      "head": "cursor/atlas-onboarding-blocker-review-001",
+      "headSha": "48a2b5f4b18604051176b7d31b02a6cc0807849b",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 167,
+      "title": "KEEP_DRAFT: Onboarding owner attention package on 48a2b5f",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-blocker-review-001",
+      "head": "cursor/atlas-onboarding-owner-attention-001",
+      "headSha": "661441a32ea18c496812eb547faba0b630f48403",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 168,
+      "title": "KEEP_DRAFT: Onboarding milestone review package on 661441a",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-owner-attention-001",
+      "head": "cursor/atlas-onboarding-milestone-review-001",
+      "headSha": "a8c1a4e9fb0a2ccdeec507c68e7bf61abe8366b5",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 169,
+      "title": "KEEP_DRAFT: Onboarding completion rollup on a8c1a4e",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-milestone-review-001",
+      "head": "cursor/atlas-onboarding-completion-001",
+      "headSha": "fa5c200d2086d7ead5f9f895f9766ddf56acd542",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 170,
+      "title": "KEEP_DRAFT: Onboarding document review on fa5c200",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/atlas-onboarding-document-review-001",
+      "headSha": "302b7ec9ea009ad224f281518a146306dab9e11c",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 299,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 299,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 171,
+      "title": "KEEP_DRAFT: Onboarding identity review on 302b7ec",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/atlas-onboarding-identity-review-001",
+      "headSha": "5f20f419d17558746301b99671dc3a1aa5091c99",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 300,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 300,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 172,
+      "title": "KEEP_DRAFT: Onboarding workspace review on 5f20f41",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/atlas-onboarding-workspace-review-001",
+      "headSha": "71d2416bf5468bea529367086c9e9361e7a80cae",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 301,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 301,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 173,
+      "title": "KEEP_DRAFT: Onboarding project review on 71d2416",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/atlas-onboarding-project-review-001",
+      "headSha": "d54c420a5a63bde7eb9ae01312ffeebc54e8ff25",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 302,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 302,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 174,
+      "title": "KEEP_DRAFT: Onboarding task review on d54c420",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/atlas-onboarding-task-review-001",
+      "headSha": "cb8cea5a9ebdf08ef02260132e80d55b988fb476",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 303,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 303,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 175,
+      "title": "KEEP_DRAFT: Onboarding agent assignment review on cb8cea5",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/atlas-onboarding-agent-assignment-001",
+      "headSha": "ac00f42f388e3e5b546740cce21924d58dfe70d8",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 304,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 304,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 176,
+      "title": "KEEP_DRAFT: Realtime documents honesty on ac00f42",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/atlas-realtime-documents-honesty-001",
+      "headSha": "2d14ec1e220704fb2281519ec63c6f179b362b75",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 305,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 305,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 177,
+      "title": "KEEP_DRAFT: Historical reconstruction honesty on 2d14ec1",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/v1.1.0-intelligence-ai-ops",
+      "head": "cursor/atlas-historical-reconstruction-honesty-001",
+      "headSha": "406b11370aa106878f2ef51a0f89bfd585ee26dc",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 306,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 306,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 178,
+      "title": "KEEP_DRAFT: ATLAS-RESEARCH-INTELLIGENCE-HONESTY-001 Ask Atlas research honesty",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-historical-reconstruction-honesty-001",
+      "head": "cursor/atlas-research-intelligence-honesty-001",
+      "headSha": "0db3d1681c300b686ed8ff02286943e584ad671d",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 179,
+      "title": "KEEP_DRAFT: ATLAS-CAPITAL-SUBMISSION-HONESTY-001 Ask Atlas capital submission honesty",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-research-intelligence-honesty-001",
+      "head": "cursor/atlas-capital-submission-honesty-001",
+      "headSha": "1a15681d52acfcb16511291a2c7d07687cd0f63d",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 180,
+      "title": "KEEP_DRAFT: ATLAS-HUB-JOSE-ESM-DEPLOY-GUARD-001 alias jose ESM in guarded zipdeploy",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-capital-submission-honesty-001",
+      "head": "cursor/atlas-hub-jose-esm-deploy-guard-001",
+      "headSha": "1327b82cd82c80aebdc4b7490680e7a166133831",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-capital-submission-honesty-001 with 1 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 181,
+      "title": "KEEP_DRAFT: ATLAS-APPROVAL-CENTER-HONESTY-001 Ask Atlas approval honesty",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-capital-submission-honesty-001",
+      "head": "cursor/atlas-approval-center-honesty-001",
+      "headSha": "cd710289163013e7fe03f7222562ca9a53022d1f",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 182,
+      "title": "KEEP_DRAFT: ATLAS-COMMUNICATION-POLICY-HONESTY-001 Ask Atlas communication policy honesty",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-approval-center-honesty-001",
+      "head": "cursor/atlas-communication-policy-honesty-001",
+      "headSha": "abcfc7c0453ef185ac957f6c34b9b474174f4b7c",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 183,
+      "title": "KEEP_DRAFT: ATLAS-CLIENT-SUPPORT-HONESTY-001 Ask Atlas client support honesty",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-communication-policy-honesty-001",
+      "head": "cursor/atlas-client-support-honesty-001",
+      "headSha": "210ad73cba41e9df48dc75e6f31a54850c7ede89",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 184,
+      "title": "KEEP_DRAFT: ATLAS-ONBOARDING-EXECUTE-HONESTY-001 Ask Atlas onboarding execute honesty",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-client-support-honesty-001",
+      "head": "cursor/atlas-onboarding-execute-honesty-001",
+      "headSha": "19dec5c2855d48746c63e01d7ce3d36d3d61d4b4",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 185,
+      "title": "KEEP_DRAFT: ATLAS-ONBOARDING-EXECUTE-FAIL-CLOSED-IDENTITY-001 entitled execute blocks project create until HVCG_Clients identity",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-execute-honesty-001",
+      "head": "cursor/atlas-onboarding-execute-fail-closed-identity-001",
+      "headSha": "33f3002d12581aa8a462ad98058d391a44a6c9ce",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 186,
+      "title": "KEEP_DRAFT: ATLAS-ONBOARDING-WORKSPACE-RECONCILE-001 workspaceReconciled only after reuse or successful create",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-execute-fail-closed-identity-001",
+      "head": "cursor/atlas-onboarding-workspace-reconcile-001",
+      "headSha": "21945b48691c91a1719b0f082413a8be325032a2",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 188,
+      "title": "KEEP_DRAFT: ATLAS-ONBOARDING-DOCUMENT-RECONCILE-001 documentsReconciled only after reuse or successful create",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-workspace-reconcile-001",
+      "head": "cursor/atlas-onboarding-document-reconcile-001",
+      "headSha": "7b2a58ab14f5d92519e70ceba5b364d22e051657",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 189,
+      "title": "KEEP_DRAFT: create onboarding tasks only when entitled projectId exists",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-document-reconcile-001",
+      "head": "cursor/atlas-onboarding-task-reconcile-001",
+      "headSha": "97ab8380697936201690d2dd7456549a6741a815",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 190,
+      "title": "KEEP_DRAFT: record onboarding agent assignment only after assign returns an id",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-task-reconcile-001",
+      "head": "cursor/atlas-onboarding-agent-assign-reconcile-001",
+      "headSha": "abbbcd0ac960f896a788f84a2a9a5e945a19638e",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 191,
+      "title": "KEEP_DRAFT: record onboarding milestones only after reuse or create returns an id",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-agent-assign-reconcile-001",
+      "head": "cursor/atlas-onboarding-milestone-reconcile-001",
+      "headSha": "c666585865b519c8e3953fd5eab47495a78e2851",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 192,
+      "title": "KEEP_DRAFT: record onboarding comms only after entitled reuse returns ids",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-milestone-reconcile-001",
+      "head": "cursor/atlas-onboarding-comms-reconcile-001",
+      "headSha": "376fb537c3b073d2f30de199b4e04beed2c9137d",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 1,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 1,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 193,
+      "title": "KEEP_DRAFT: record onboarding capital only after entitled reuse returns ids",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-comms-reconcile-001",
+      "head": "cursor/atlas-onboarding-capital-reconcile-001",
+      "headSha": "e0f19d05e53e2a35dc4353dfea743afc6b9f77cb",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 196,
+      "title": "KEEP_DRAFT: record onboarding kickoff only after entitled reuse or create returns an id",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-capital-reconcile-001",
+      "head": "cursor/atlas-onboarding-kickoff-reconcile-001",
+      "headSha": "7f669dcedb6fcaeb77e4332704d11ba51169e226",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-onboarding-capital-reconcile-001 with 3 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 5,
+        "patchEquivalentCount": 2,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 197,
+      "title": "KEEP_DRAFT: record onboarding blockers only after entitled reuse or create returns an id",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-kickoff-reconcile-001",
+      "head": "cursor/atlas-onboarding-blocker-reconcile-001",
+      "headSha": "af701db3373585e9ff1b214c1ad540a1450efb37",
+      "classification": "RETIRE_LATER",
+      "rationale": "Stale draft on obsolete/non-production base=cursor/atlas-onboarding-kickoff-reconcile-001 with 2 cherry-+ commit(s). Likely mid-chain SharePoint-era work; preserve briefly for tip/rollback reference, then retire after salvage pass. Do not merge draft chains.",
+      "uniqueValueUnresolved": true,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 5,
+        "patchEquivalentCount": 3,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 198,
+      "title": "feat(hub): auto-run business memory backfill after fabric sweep",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-workspace-reconcile-001",
+      "head": "cursor/atlas-m365-client-backfill-6efb",
+      "headSha": "5ea291aa13207f5fd9194e60521beaeb9bfc41ee",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 9,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 9,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 199,
+      "title": "KEEP_DRAFT: Restack onboarding kickoff reconcile onto 5ea291aa",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-client-backfill-6efb",
+      "head": "cursor/atlas-onboarding-kickoff-restack-001",
+      "headSha": "8722ad1e2420a352c8d16aeacf631300a2d6ed0c",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft unique-range commits are patch-equivalent to production/atlas-core (2 equiv). Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": false,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 2,
+        "cherryUniqueCount": 0,
+        "fullyContainedInBaseline": false,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 200,
+      "title": "Atlas business memory hardening + communication policy center",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-m365-client-backfill-6efb",
+      "head": "cursor/atlas-business-memory-comms-6efb",
+      "headSha": "36bfea3feb4cccd45c7593318ceeb683a56b00e7",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 201,
+      "title": "KEEP_DRAFT: Restack onboarding kickoff reconcile onto 36bfea3",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-business-memory-comms-6efb",
+      "head": "cursor/atlas-onboarding-kickoff-restack-002",
+      "headSha": "fa35b1c07e573ef0ae5759af9d18584317a774a7",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 202,
+      "title": "KEEP_DRAFT: Restack onboarding blocker reconcile onto fa35b1c",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-kickoff-restack-002",
+      "head": "cursor/atlas-onboarding-blocker-restack-001",
+      "headSha": "64eee4d60a4f2f37510a2c70ee808f047175227f",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 3,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 3,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 203,
+      "title": "KEEP_DRAFT: record onboarding owner attention only after entitled reuse or create returns an id",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-blocker-restack-001",
+      "head": "cursor/atlas-onboarding-owner-attention-reconcile-001",
+      "headSha": "e02c34e8235bb255f3b47b3c6ff999ebf0d02136",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    },
+    {
+      "number": 204,
+      "title": "KEEP_DRAFT: onboarding operations-handoff reconcile after entitled reuse or create",
+      "state": "OPEN",
+      "draft": true,
+      "base": "cursor/atlas-onboarding-owner-attention-reconcile-001",
+      "head": "cursor/atlas-onboarding-handoff-reconcile-001",
+      "headSha": "2d61fe65603b88d12d08456967c65dae8e5aec52",
+      "classification": "SUPERSEDED",
+      "rationale": "Draft head is already contained in production/atlas-core ancestry Historical pre-production/draft-stack PR; do not merge draft chains.",
+      "uniqueValueUnresolved": false,
+      "safeToClose": true,
+      "analysis": {
+        "commitCountInRange": 2,
+        "patchEquivalentCount": 0,
+        "cherryUniqueCount": 2,
+        "fullyContainedInBaseline": true,
+        "baseResolveStatus": "ok"
+      }
+    }
+  ]
+}
