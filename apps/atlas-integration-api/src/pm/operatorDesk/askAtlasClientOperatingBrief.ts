@@ -21,6 +21,19 @@ import { isReservedOperatingStateToken } from './types.ts';
 
 export const CLIENT_OPERATING_BRIEF_MISSION_KEY = CLIENT_TRUTH_MISSION_KEY;
 export const CLIENT_OPERATING_BRIEF_KIND = 'client_operating_brief_honesty_v1' as const;
+export const WORKSPACE_TRUTH_SOURCE_UNAVAILABLE = 'SOURCE_UNAVAILABLE' as const;
+
+/** Current-operating-truth answer when the entitled live workspace cannot be loaded. */
+export function currentWorkspaceUnavailableAnswer(clientCode: string): string {
+  const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
+  return [
+    `Atlas cannot load the current ${code} workspace right now.`,
+    `Current workspace truth is ${WORKSPACE_TRUTH_SOURCE_UNAVAILABLE}.`,
+    'Atlas will not substitute recovered or portfolio data for a current operating answer.',
+    'financialContext remains NOT_CERTIFIED; growthContext remains NOT_CERTIFIED.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
 
 export type ClientOperatingBriefTopic =
   | 'operating_brief'

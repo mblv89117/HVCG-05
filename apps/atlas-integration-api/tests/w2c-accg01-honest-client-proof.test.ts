@@ -7,7 +7,9 @@ import { buildOperatorCommercialContext } from '../src/pm/commercialContext/buil
 import { emptyOverlay } from '../src/pm/commercialContext/store.ts';
 import {
   answerClientOperatingBrief,
+  currentWorkspaceUnavailableAnswer,
   mapsToClientOperatingBriefIntent,
+  WORKSPACE_TRUTH_SOURCE_UNAVAILABLE,
 } from '../src/pm/operatorDesk/askAtlasClientOperatingBrief.ts';
 import { extractClientScopedAttentionQuery, resolveAskAtlasScope } from '../src/pm/operatorDesk/askAtlasScope.ts';
 import {
@@ -275,5 +277,16 @@ describe('W2C ACCG01 honest real-client operator proof', () => {
     assert.equal(mapsToClientOperatingBriefIntent('Summarize Capital'), false);
     assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), false);
     assert.equal(mapsToSearchAuthorizedKnowledge('What documents do we have for ACCG?'), true);
+  });
+
+  it('current workspace unavailable copy does not substitute recovered or portfolio truth', () => {
+    const text = currentWorkspaceUnavailableAnswer('ACCG01');
+    assert.match(text, new RegExp(WORKSPACE_TRUTH_SOURCE_UNAVAILABLE));
+    assert.match(text, /will not substitute recovered or portfolio data/i);
+    assert.match(text, /NOT_CERTIFIED/);
+    assert.match(text, /GLOBAL_AUTO_RESPOND=false/);
+    assert.match(text, /capitalSubmit=false/);
+    assert.match(text, /canExecute=false/);
+    assert.equal(/PDG01|HFD01|weekly operating file|01_Intake Docs/.test(text), false);
   });
 });

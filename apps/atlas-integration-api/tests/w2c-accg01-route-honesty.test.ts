@@ -105,8 +105,10 @@ async function verify(token: string): Promise<Record<string, unknown>> {
   throw err;
 }
 
-function seedAccgWorkspace(graph: MemoryGraph) {
-  graph.seed(CLIENTS, { Title: 'ACCG Inc.', ClientCode: 'ACCG01' }, '1');
+function seedAccgWorkspace(graph: MemoryGraph, opts?: { includeAccgClient?: boolean }) {
+  if (opts?.includeAccgClient !== false) {
+    graph.seed(CLIENTS, { Title: 'ACCG Inc.', ClientCode: 'ACCG01' }, '1');
+  }
   graph.seed(CLIENTS, { Title: 'PDG', ClientCode: 'PDG01' }, '2');
   graph.seed(CLIENTS, { Title: 'Hart Family', ClientCode: 'HFD01' }, '3');
   graph.seed(
@@ -194,10 +196,11 @@ function seedAccgWorkspace(graph: MemoryGraph) {
 async function withW2cHub(
   entitlements: (oid: string | undefined) => string[],
   fn: (ctx: { base: string }) => Promise<void>,
+  opts?: { includeAccgClient?: boolean; authorizeClientError?: number },
 ) {
   const dir = mkdtempSync(join(tmpdir(), 'atlas-w2c-route-'));
   const graph = new MemoryGraph();
-  seedAccgWorkspace(graph);
+  seedAccgWorkspace(graph, { includeAccgClient: opts?.includeAccgClient });
   const prev = { ...process.env };
   process.env.NODE_ENV = 'production';
   process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
@@ -224,6 +227,16 @@ async function withW2cHub(
   };
   const sharepoint = createSharePointPmService(cfg);
   assert.ok(sharepoint);
+  if (opts?.authorizeClientError) {
+    const status = opts.authorizeClientError;
+    sharepoint.authorizeClient = async () => {
+      throw new PmHttpError(
+        status,
+        status >= 500 ? 'PM_BACKEND_UNAVAILABLE' : 'not_found',
+        'SharePoint workspace retrieval failed.',
+      );
+    };
+  }
   assert.equal(createAuthorizedPmRepository(cfg), null);
   const repo = new IntegrationRepository(dir, cfg.tokenEncryptionKeyB64);
   const app = buildRegistry(cfg, repo);
@@ -255,7 +268,13 @@ async function askAtlas(base: string, question: string, token = 'staff', client?
   const res = await fetch(url, { headers: auth(token) });
   const body = (await res.json()) as {
     workflowAnswer?: string;
-    runtime?: { policyClass?: string; autoSend?: boolean; missionKey?: string };
+    runtime?: {
+      policyClass?: string;
+      autoSend?: boolean;
+      missionKey?: string;
+      workspaceTruth?: string;
+      portfolioFallback?: boolean;
+    };
     error?: string;
     code?: string;
   };
@@ -382,5 +401,47 @@ describe('W2C ACCG01 route-level honest workspace truth', () => {
       const client = await askAtlas(base, 'What are we working on for ACCG?', 'client');
       assert.equal(client.status, 403);
     });
+  });
+
+  it('entitled ACCG01 with missing SharePoint workspace is SOURCE_UNAVAILABLE, not recovered-as-current', async () => {
+    await withW2cHub(
+      (oid) => (oid === USER_STAFF ? STAFF_CODES : ['ACCG01']),
+      async ({ base }) => {
+        const working = await askAtlas(base, 'What are we working on for ACCG?');
+        assert.equal(working.status, 200);
+        const text = working.body.workflowAnswer || '';
+        assert.match(text, /SOURCE_UNAVAILABLE/);
+        assert.match(text, /will not substitute recovered or portfolio data/i);
+        assert.equal(working.body.runtime?.policyClass, 'READ_AUTO');
+        assert.equal(working.body.runtime?.autoSend, false);
+        assert.equal(working.body.runtime?.workspaceTruth, 'SOURCE_UNAVAILABLE');
+        assert.equal(working.body.runtime?.portfolioFallback, false);
+        assert.equal(/weekly operating file|PDG secret|Hart Family secret|PDG01|HFD01|01_Intake Docs/.test(text), false);
+        assert.equal(/\$[0-9]{4,}|TargetAmount|lender approval/.test(text), false);
+      },
+      { includeAccgClient: false },
+    );
+  });
+
+  it('Graph/server workspace errors are SOURCE_UNAVAILABLE without silent workspace-less composition', async () => {
+    await withW2cHub(
+      (oid) => (oid === USER_STAFF ? STAFF_CODES : ['ACCG01']),
+      async ({ base }) => {
+        const brief = await askAtlas(base, 'Give me the current ACCG operating brief.');
+        assert.equal(brief.status, 200);
+        const text = brief.body.workflowAnswer || '';
+        assert.match(text, /SOURCE_UNAVAILABLE/);
+        assert.match(text, /will not substitute recovered or portfolio data/i);
+        assert.match(text, /NOT_CERTIFIED/);
+        assert.match(text, /GLOBAL_AUTO_RESPOND=false/);
+        assert.equal(brief.body.runtime?.policyClass, 'READ_AUTO');
+        assert.equal(brief.body.runtime?.autoSend, false);
+        assert.equal(brief.body.runtime?.workspaceTruth, 'SOURCE_UNAVAILABLE');
+        assert.equal(brief.body.runtime?.portfolioFallback, false);
+        assert.equal(/weekly operating file|PDG secret|Hart Family secret|Graph 503|stack|token|secret/.test(text), false);
+        assert.equal(/\$[0-9]{4,}|TargetAmount|lender approval/.test(text), false);
+      },
+      { authorizeClientError: 503 },
+    );
   });
 });

@@ -181,7 +181,9 @@ import {
   answerClientOperatingBrief,
   CLIENT_OPERATING_BRIEF_MISSION_KEY,
   clientOperatingBriefClientCode,
+  currentWorkspaceUnavailableAnswer,
   mapsToClientOperatingBriefIntent,
+  WORKSPACE_TRUTH_SOURCE_UNAVAILABLE,
 } from './askAtlasClientOperatingBrief.ts';
 import {
   answerResearchIntelligenceHonesty,
@@ -1167,34 +1169,59 @@ export async function handleOperatorDesk(opts: {
       });
       let commercial: Awaited<ReturnType<typeof readCommercialContextAsync>> | undefined;
       let workspace: WorkspaceTruthSnapshot | undefined;
-      if (scoped) {
-        if (opts.cfg.pmBackend.mode === 'sharepoint' && opts.sharepoint) {
+      if (scoped && opts.cfg.pmBackend.mode === 'sharepoint') {
+        let loaded:
+          | Awaited<ReturnType<typeof loadEntitledClientWorkspaceTruth>>
+          | undefined;
+        if (opts.sharepoint) {
           try {
-            const loaded = await loadEntitledClientWorkspaceTruth({
+            loaded = await loadEntitledClientWorkspaceTruth({
               service: opts.sharepoint,
               principal,
               clientCode: scoped,
               dataDir: opts.cfg.dataDir,
             });
-            commercial = loaded.commercial;
-            workspace = loaded.snapshot;
-          } catch (err) {
-            const status = (err as { status?: number }).status;
-            if (status !== 404) {
-              commercial = await readCommercialContextAsync({
-                dataDir: opts.cfg.dataDir,
-                principal,
-                clientCode: scoped,
-              });
-            }
+          } catch {
+            loaded = undefined;
           }
-        } else {
-          commercial = await readCommercialContextAsync({
-            dataDir: opts.cfg.dataDir,
-            principal,
+        }
+        if (!loaded?.snapshot || loaded.snapshot.clientCode !== scoped) {
+          const briefAnswer = currentWorkspaceUnavailableAnswer(scoped);
+          const askAtlas = buildConversationalAskAtlasAnswer({
+            question,
+            previewText: briefAnswer,
+            workflowId: 'client-operating-brief-honesty',
+            workflowName: `Operating brief — ${scoped}`,
             clientCode: scoped,
           });
+          sendJson(
+            opts.res,
+            200,
+            {
+              operatorDesk: { askAtlas },
+              workflowAnswer: briefAnswer,
+              runtime: {
+                agent: ASK_ATLAS_RUNTIME_AGENT,
+                toolsInvoked: ['client_operating_brief_honesty'],
+                policyClass: 'READ_AUTO',
+                missionKey: CLIENT_OPERATING_BRIEF_MISSION_KEY,
+                autoSend: false,
+                workspaceTruth: WORKSPACE_TRUTH_SOURCE_UNAVAILABLE,
+                portfolioFallback: false,
+              },
+            },
+            opts.origin,
+          );
+          return true;
         }
+        commercial = loaded.commercial;
+        workspace = loaded.snapshot;
+      } else if (scoped) {
+        commercial = await readCommercialContextAsync({
+          dataDir: opts.cfg.dataDir,
+          principal,
+          clientCode: scoped,
+        });
       }
       const briefAnswer = answerClientOperatingBrief(question, {
         entitledCodes: entitled,
