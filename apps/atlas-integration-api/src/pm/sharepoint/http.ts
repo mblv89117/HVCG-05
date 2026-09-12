@@ -32,17 +32,16 @@ import {
   type SharePointTask,
 } from './repository.ts';
 import { searchSharePointPm } from './search.ts';
-import { buildSharePointClientWorkspace } from './workspace.ts';
 import {
   ObserveError,
   assertEntitledClient,
+  loadEntitledClientWorkspaceTruth,
   matchCommercialContextPath,
   observeCommercialContext,
   readCommercialContext,
   readCommercialContextAsync,
   readDeskCommercialContext,
 } from '../commercialContext/handle.ts';
-import { workspaceSnapshotFromPayload } from '../commercialContext/clientTruth.ts';
 import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from './token.ts';
 import { createFabricGraphClient } from './fabric/graph.ts';
 import { runFabricSync } from './fabric/sync.ts';
@@ -738,22 +737,20 @@ export async function handleSharePointPmRoutes(opts: {
     const clientWorkspace = path.match(/^\/api\/pm\/clients\/([^/]+)\/(workspace|brief)$/);
     if ((method === 'GET' || method === 'POST') && clientWorkspace) {
       const rawCode = decodeURIComponent(clientWorkspace[1]);
-      const workspace = await buildSharePointClientWorkspace(service, principal, rawCode);
-      const snapshot = workspaceSnapshotFromPayload(workspace);
-      const commercial = await readCommercialContextAsync({
-        dataDir,
+      const loaded = await loadEntitledClientWorkspaceTruth({
+        service,
         principal,
-        clientCode: workspace.client.clientCode,
-        workspace: snapshot,
+        clientCode: rawCode,
+        dataDir,
       });
       send(
         res,
         200,
         {
           workspace: {
-            ...workspace,
-            writePolicy: entityBoundaryFor(workspace.client.clientCode)?.writePolicy || 'normal',
-            liveClientPilot: commercial.liveClientPilot,
+            ...loaded.workspace,
+            writePolicy: entityBoundaryFor(loaded.workspace.client.clientCode)?.writePolicy || 'normal',
+            liveClientPilot: loaded.commercial.liveClientPilot,
             attention: listClientAttention(dataDir, rawCode),
           },
         },

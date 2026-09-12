@@ -11,7 +11,12 @@ import { inspectFabricSyncHealth, isFabricSweepEnabled } from '../sharepoint/fab
 import type { IntegrationRepository } from '../../store/repository.ts';
 import type { PmRepository } from '../repository.ts';
 import { buildCommandCenter } from '../commandCenter.ts';
-import { readCommercialContext, readDeskCommercialContext } from '../commercialContext/handle.ts';
+import {
+  loadEntitledClientWorkspaceTruth,
+  readCommercialContextAsync,
+  readDeskCommercialContext,
+} from '../commercialContext/handle.ts';
+import type { WorkspaceTruthSnapshot } from '../commercialContext/clientTruth.ts';
 import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
 import { requestIndexedDocumentPreview } from '../sharepoint/fabric/documentPreview.ts';
 import { createFabricGraphClient } from '../sharepoint/fabric/graph.ts';
@@ -1160,17 +1165,42 @@ export async function handleOperatorDesk(opts: {
         entitledCodes: entitled,
         explicitClientCode,
       });
-      const commercial = scoped
-        ? readCommercialContext({
+      let commercial: Awaited<ReturnType<typeof readCommercialContextAsync>> | undefined;
+      let workspace: WorkspaceTruthSnapshot | undefined;
+      if (scoped) {
+        if (opts.cfg.pmBackend.mode === 'sharepoint' && opts.sharepoint) {
+          try {
+            const loaded = await loadEntitledClientWorkspaceTruth({
+              service: opts.sharepoint,
+              principal,
+              clientCode: scoped,
+              dataDir: opts.cfg.dataDir,
+            });
+            commercial = loaded.commercial;
+            workspace = loaded.snapshot;
+          } catch (err) {
+            const status = (err as { status?: number }).status;
+            if (status !== 404) {
+              commercial = await readCommercialContextAsync({
+                dataDir: opts.cfg.dataDir,
+                principal,
+                clientCode: scoped,
+              });
+            }
+          }
+        } else {
+          commercial = await readCommercialContextAsync({
             dataDir: opts.cfg.dataDir,
             principal,
             clientCode: scoped,
-          })
-        : undefined;
+          });
+        }
+      }
       const briefAnswer = answerClientOperatingBrief(question, {
         entitledCodes: entitled,
         explicitClientCode,
         commercial,
+        workspace,
         picture: model.operatingPicture,
       });
       const askAtlas = buildConversationalAskAtlasAnswer({

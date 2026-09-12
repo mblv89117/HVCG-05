@@ -285,8 +285,8 @@ function queueFromTasks(
 }
 
 function mergeQueues(a: TruthQueues, b: TruthQueues): TruthQueues {
-  const seen = new Set<string>();
   const merge = (left: TruthQueueItem[], right: TruthQueueItem[]) => {
+    const seen = new Set<string>();
     const out: TruthQueueItem[] = [];
     for (const row of [...left, ...right]) {
       const key = `${row.source}:${row.id}`;

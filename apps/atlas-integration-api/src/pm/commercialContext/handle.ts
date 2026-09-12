@@ -1,13 +1,16 @@
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { entitledClientCodes } from '../sharepoint/authz.ts';
-import type { SharePointLead, SharePointOpportunity } from '../sharepoint/repository.ts';
+import { PmHttpError } from '../sharepoint/errors.ts';
+import type { SharePointLead, SharePointOpportunity, SharePointPmService } from '../sharepoint/repository.ts';
+import { buildSharePointClientWorkspace, type ClientWorkspacePayload } from '../sharepoint/workspace.ts';
 import { hydrateCommercialOverlayForClient } from '../../modules/ingest/hydrateCommercialOverlay.ts';
 import { buildOperatorCommercialContext, toDeskCommercialContext } from './build.ts';
 import { buildLiveClientPilotBrief } from './liveClientPilot.ts';
 import { ObserveError, persistObservation } from './observe.ts';
 import { loadOverlay, saveOverlay } from './store.ts';
-import type { WorkspaceTruthSnapshot } from './clientTruth.ts';
+import { workspaceSnapshotFromPayload, type WorkspaceTruthSnapshot } from './clientTruth.ts';
+import type { OperatorCommercialContext } from './types.ts';
 
 export type CommercialMatch =
   | { kind: 'desk' }
@@ -99,6 +102,49 @@ export async function readCommercialContextAsync(opts: {
     truncated: hydrated.truncated,
     workspace: opts.workspace,
   });
+}
+
+/**
+ * Same entitled SharePoint workspace + commercial hydrate used by Live Client GET
+ * and W2C Ask Atlas. Never substitutes another ClientCode's workspace.
+ */
+export async function loadEntitledClientWorkspaceTruth(opts: {
+  service: SharePointPmService;
+  principal: AtlasPrincipal;
+  clientCode: string;
+  dataDir: string;
+  env?: NodeJS.Dict<string>;
+}): Promise<{
+  workspace: ClientWorkspacePayload;
+  snapshot: WorkspaceTruthSnapshot | undefined;
+  commercial: OperatorCommercialContext;
+}> {
+  const requested = (opts.clientCode || '').trim().toUpperCase();
+  if (!isCanonicalClientCode(requested) || requested === '*') {
+    throw new PmHttpError(404, 'not_found', 'not_found');
+  }
+  if (!entitledClientCodes(opts.principal).includes(requested)) {
+    throw new PmHttpError(404, 'not_found', 'not_found');
+  }
+  const workspace = await buildSharePointClientWorkspace(opts.service, opts.principal, requested);
+  if (workspace.client.clientCode !== requested) {
+    throw new PmHttpError(404, 'not_found', 'not_found');
+  }
+  const snapshot = workspaceSnapshotFromPayload(workspace);
+  if (snapshot && snapshot.clientCode !== requested) {
+    throw new PmHttpError(404, 'not_found', 'not_found');
+  }
+  const commercial = await readCommercialContextAsync({
+    dataDir: opts.dataDir,
+    principal: opts.principal,
+    clientCode: requested,
+    env: opts.env,
+    workspace: snapshot,
+  });
+  if (commercial.clientCode && commercial.clientCode !== requested) {
+    throw new PmHttpError(404, 'not_found', 'not_found');
+  }
+  return { workspace, snapshot, commercial };
 }
 
 export function readDeskCommercialContext(opts: {

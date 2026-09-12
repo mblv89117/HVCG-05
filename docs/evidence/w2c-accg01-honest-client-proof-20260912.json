@@ -1,21 +1,27 @@
 {
   "schema": "atlas_w2c_accg01_honest_client_proof.v1",
   "missionKey": "ATLAS-W2C-ACCG01-HONEST-REAL-CLIENT-PROOF",
-  "asOf": "2026-09-12T18:45:00Z",
+  "asOf": "2026-09-12T19:20:00Z",
   "baselineSha": "88066f65e3635c6da5fca0c624330d00f4297795",
+  "reviewedHead": "47a23fec0550d7e73ead85c0ebef169e87e2269d",
   "liveHubShaObserved": "d8a9574eb6af0c37e56bb6e955126086d1ce284e",
   "liveEliteShaObserved": "d8a9574eb6af0c37e56bb6e955126086d1ce284e",
   "ancestry": "live Hub SHA is ancestor of git tip; tip is docs-only ahead of live",
   "deploymentPlanned": false,
   "governanceWriteback": false,
-  "method": "Code-level composition + isolation tests. Not a live authenticated ACCG01 operator certification.",
+  "method": "Code-level composition + isolation tests + SharePoint/operator HTTP route tests. Not a live authenticated ACCG01 operator certification.",
   "verdict": "PARTIAL",
   "whyNotPass": [
-    "Independent review not yet complete",
+    "Independent review not yet complete after remediation",
     "Not merged",
     "Not deployed",
     "Live ACCG01 authenticated operator proof not run"
   ],
+  "remediation": {
+    "blocker1SameWorkspaceTruth": "Ask Atlas W2C path now loads the same entitled SharePoint workspace snapshot used by Live Client GET via loadEntitledClientWorkspaceTruth.",
+    "blocker2MultiQueueSemantics": "mergeQueues dedupes only within each queue; overdue+blocked and overdue+decisionRequired can coexist.",
+    "unscopedIntentRegression": "Only unscoped operating-brief questions remain W2C-mapped (fail-closed). Other unscoped intents stay with pre-existing Ask Atlas handlers."
+  },
   "client": {
     "clientCode": "ACCG01",
     "name": "ACCG Inc.",
@@ -39,6 +45,7 @@
     "GLOBAL_AUTO_RESPOND": false,
     "capitalSubmit": false,
     "canExecute": false,
+    "liveGtmOutbound": false,
     "inventedContacts": false,
     "inventedFinance": false,
     "inventedGrowth": false,
@@ -46,9 +53,21 @@
   },
   "tests": {
     "hubW2cAndRelated": "pass",
-    "hubFullSuite": { "tests": 777, "fail": 0 },
+    "hubRouteHonesty": "pass",
+    "hubFullSuite": { "tests": 782, "fail": 0 },
     "integrationCore": { "tests": 21, "fail": 0 },
-    "eliteCopy": "pass",
-    "eliteProductionBuild": "pass"
+    "eliteTests": "pass",
+    "eliteProductionBuild": "pass",
+    "hubTypecheckGate": "NEW_TYPE_ERRORS: none",
+    "eliteHooksLint": "pass"
+  },
+  "status": {
+    "W2C_VERDICT": "PARTIAL",
+    "ACCG01_BUSINESS_USEFUL": "PARTIAL",
+    "INDEPENDENT_REVIEW": "BLOCKED",
+    "MERGE_STATUS": "BLOCKED",
+    "DEPLOY_STATUS": "BLOCKED",
+    "LIVE_CERT_STATUS": "BLOCKED",
+    "GOVERNANCE_WRITEBACK": "BLOCKED"
   }
 }

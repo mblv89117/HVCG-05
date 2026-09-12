@@ -10,7 +10,12 @@ import {
   mapsToClientOperatingBriefIntent,
 } from '../src/pm/operatorDesk/askAtlasClientOperatingBrief.ts';
 import { extractClientScopedAttentionQuery, resolveAskAtlasScope } from '../src/pm/operatorDesk/askAtlasScope.ts';
-import { runAtlasHubRuntime } from '../src/pm/operatorDesk/agentRuntime.ts';
+import {
+  mapsToGetAttentionItems,
+  mapsToGetClientContext,
+  mapsToSearchAuthorizedKnowledge,
+  runAtlasHubRuntime,
+} from '../src/pm/operatorDesk/agentRuntime.ts';
 import { buildOperatorDeskModel, emptyHonestDesk } from '../src/pm/operatorDesk/model.ts';
 import { buildAskAtlasAnswer } from '../src/pm/operatorDesk/askAtlas.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
@@ -211,5 +216,64 @@ describe('W2C ACCG01 honest real-client operator proof', () => {
     const accgItems = full.items.filter((item) => item.clientCode === 'ACCG01');
     const foreign = accgItems.filter((item) => item.clientCode && item.clientCode !== 'ACCG01');
     assert.equal(foreign.length, 0);
+  });
+
+  it('lets one entitled task occupy overdue and blocked (or overdue and decisionRequired) at once', () => {
+    const accg = composeClientTruth({
+      clientCode: 'ACCG01',
+      now: '2026-09-12T18:00:00.000Z',
+      workspace: {
+        clientCode: 'ACCG01',
+        tasks: [
+          { id: 't-overdue-blocked', title: 'ACCG overdue blocked follow-up', status: 'blocked', dueDate: '2020-01-01' },
+          { id: 't-overdue-blocked', title: 'ACCG overdue blocked follow-up', status: 'blocked', dueDate: '2020-01-01' },
+          { id: 't-overdue-decision', title: 'ACCG overdue owner review', status: 'needs_review', dueDate: '2020-01-01', requiresApproval: true },
+        ],
+      },
+    });
+    assert.equal('failClosed' in accg, false);
+    if ('failClosed' in accg) return;
+    assert.equal(accg.queues.overdue.filter((q) => q.id === 't-overdue-blocked').length, 1);
+    assert.equal(accg.queues.blocked.filter((q) => q.id === 't-overdue-blocked').length, 1);
+    assert.equal(accg.queues.overdue.filter((q) => q.id === 't-overdue-decision').length, 1);
+    assert.equal(accg.queues.decisionRequired.filter((q) => q.id === 't-overdue-decision').length, 1);
+  });
+
+  it('Ask Atlas working-on uses the supplied workspace snapshot, not a foreign client', () => {
+    const answer = answerClientOperatingBrief('What are we working on for ACCG?', {
+      entitledCodes: STAFF.allowedClientIds,
+      workspace: {
+        clientCode: 'ACCG01',
+        displayName: 'ACCG Inc.',
+        projects: [{ id: 'p-accg-op', name: 'ACCG weekly operating file' }],
+      },
+    });
+    assert.match(answer, /ACCG weekly operating file/);
+    assert.equal(/PDG01|HFD01|Prodigy|Hart Family/.test(answer), false);
+  });
+
+  it('does not steal pre-existing unscoped Ask Atlas intents', () => {
+    assert.equal(mapsToClientOperatingBriefIntent('Give me the current operating brief.'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('What is overdue?'), false);
+    assert.equal(mapsToGetAttentionItems('What is overdue?'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('What is blocked?'), false);
+    assert.equal(mapsToGetAttentionItems('What is blocked?'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('What are we waiting on?'), false);
+    assert.equal(mapsToGetAttentionItems('What are we waiting on?'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('What needs my attention?'), false);
+    assert.equal(mapsToGetAttentionItems('What needs my attention?'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('What documents are missing?'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('What documents are missing for ACCG?'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('What does Atlas know about financials?'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('What does Atlas know about ACCG financials?'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('What are we working on?'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('What are we working on for ACCG?'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('Search authorized knowledge for ACCG'), false);
+    assert.equal(mapsToSearchAuthorizedKnowledge('Search authorized knowledge for ACCG'), true);
+    assert.equal(mapsToGetAttentionItems('Summarize Capital'), true);
+    assert.equal(mapsToGetClientContext('Summarize Capital'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('Summarize Capital'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), false);
+    assert.equal(mapsToSearchAuthorizedKnowledge('What documents do we have for ACCG?'), true);
   });
 });

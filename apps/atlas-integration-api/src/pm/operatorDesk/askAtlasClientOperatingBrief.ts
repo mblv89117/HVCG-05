@@ -13,6 +13,7 @@ import {
   CLIENT_TRUTH_MISSION_KEY,
   composeClientTruth,
   type ClientTruthModel,
+  type WorkspaceTruthSnapshot,
 } from '../commercialContext/clientTruth.ts';
 import type { OperatorCommercialContext } from '../commercialContext/types.ts';
 import type { OperatorOperatingPicture } from './types.ts';
@@ -77,17 +78,10 @@ export function mapsToClientOperatingBriefIntent(
   const match = resolveEntitledClientCodeFromQuestion(question, entitled);
   const hasClient =
     Boolean((explicitClientCode || '').trim()) || match.kind === 'exact' || match.kind === 'unique_prefix';
-  if (
-    topic === 'blocked' ||
-    topic === 'waiting' ||
-    topic === 'changed' ||
-    topic === 'owner_decisions' ||
-    topic === 'capital' ||
-    topic === 'provenance'
-  ) {
-    return hasClient;
-  }
-  return true;
+  // Unscoped "current operating brief" fail-closes later. Other unscoped
+  // questions must not steal pre-existing portfolio/global Ask Atlas intents.
+  if (topic === 'operating_brief') return true;
+  return hasClient;
 }
 
 function rosterEntitled(entitledCodes: readonly string[]): string[] {
@@ -186,6 +180,7 @@ export function answerClientOperatingBrief(
     explicitClientCode?: string;
     commercial?: OperatorCommercialContext;
     picture?: OperatorOperatingPicture;
+    workspace?: WorkspaceTruthSnapshot;
   },
 ): string {
   const topic = detectTopic(question);
@@ -206,11 +201,15 @@ export function answerClientOperatingBrief(
   if (opts.commercial?.clientCode && opts.commercial.clientCode !== scope.clientCode) {
     return 'Commercial context ClientCode does not match the asked client. Fail closed.';
   }
+  if (opts.workspace?.clientCode && opts.workspace.clientCode !== scope.clientCode) {
+    return 'Workspace snapshot ClientCode does not match the asked client. Fail closed.';
+  }
 
   const composed = composeClientTruth({
     clientCode: scope.clientCode,
     commercial: opts.commercial,
     picture: opts.picture,
+    workspace: opts.workspace,
   });
   if ('failClosed' in composed) {
     return 'Unknown or unentitled ClientCode. Fail closed.';
