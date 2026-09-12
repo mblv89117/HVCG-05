@@ -11,7 +11,7 @@ import {
 } from '../src/pm/operatorDesk/askAtlasClientOperatingBrief.ts';
 import { extractClientScopedAttentionQuery, resolveAskAtlasScope } from '../src/pm/operatorDesk/askAtlasScope.ts';
 import { runAtlasHubRuntime } from '../src/pm/operatorDesk/agentRuntime.ts';
-import { buildOperatorDeskModel } from '../src/pm/operatorDesk/model.ts';
+import { buildOperatorDeskModel, emptyHonestDesk } from '../src/pm/operatorDesk/model.ts';
 import { buildAskAtlasAnswer } from '../src/pm/operatorDesk/askAtlas.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 
@@ -37,18 +37,7 @@ function picture() {
     hubSha: 'w2c-test',
     entitledClients: ['ACCG01', 'PDG01', 'HFD01', 'CCB01', 'LIEN01'],
     commandCenter: {},
-    commercialContext: {
-      schemaVersion: 1,
-      clients: [],
-      opportunities: [],
-      engagements: [],
-      invoices: [],
-      payments: [],
-      capital: [],
-      procurement: [],
-      risks: [],
-      growth: [],
-    },
+    commercialContext: emptyHonestDesk(5),
   }).operatingPicture;
 }
 
@@ -159,7 +148,11 @@ describe('W2C ACCG01 honest real-client operator proof', () => {
     assert.match(blob, /ACCG|document|project/i);
     assert.equal(/Prodigy|Hart Family|PDG01|HFD01/.test(blob), false);
     assert.ok(brief.approvalRequired.some((line) => /GLOBAL_AUTO_RESPOND=false/i.test(line)));
-    assert.ok(brief.nextActions.every((a) => a.authorityClass !== 'EXECUTE_WITH_APPROVAL'));
+    assert.equal(
+      brief.nextActions.every((a) => a.authorityClass === 'OBSERVE' || a.authorityClass === 'RECOMMEND' || a.authorityClass === 'PREPARE'),
+      true,
+    );
+    assert.equal(/EXECUTE/i.test(JSON.stringify(brief.nextActions)), false);
   });
 
   it('does not steal unscoped blocked questions from portfolio attention', () => {
