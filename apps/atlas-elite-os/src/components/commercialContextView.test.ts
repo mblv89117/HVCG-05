@@ -74,4 +74,52 @@ describe('CommercialContextPanel copy', () => {
     assert.equal(copy.rows[0].clientCode, 'SYN01');
     assert.ok(copy.rows[0].href?.includes('/opportunities/1'));
   });
+
+  it('does not invent certified finance when liveClientPilot says NOT_CERTIFIED', () => {
+    const ctx: OperatorCommercialContext = {
+      contractVersion: 'atlas-operator-commercial-context.v1',
+      entitled: true,
+      liveGtmOutbound: false,
+      paidAds: false,
+      clientCode: 'ACCG01',
+      gcc: {
+        contractVersion: 'gcc-value-signal.v1',
+        honesty: { available: false, recordedOnly: true, emptyReason: 'No GCC value signal on record.' },
+        signals: [],
+      },
+      copilot: { honesty: { available: false, recordedOnly: true }, assessments: [], preCall: [], sharepoint: [] },
+      gtm: { honesty: { available: false, recordedOnly: true }, attributions: [], crmSources: [] },
+      opportunities: [],
+      liveClientPilot: {
+        clientCode: 'ACCG01',
+        whatIsHappening: ['Recovered ACCG project filenames are indexed.'],
+        whyItMatters: ['ACCG01 is an already-active client.'],
+        whatChanged: ['No recent Hub workspace timeline events on this composition.'],
+        known: ['financialContext=NOT_CERTIFIED (NOT_CERTIFIED)'],
+        unknown: ['No verified GCC organization mapping.'],
+        nextActions: [
+          {
+            text: 'OBSERVE entitled workspace.',
+            authorityClass: 'OBSERVE',
+            approvalRequired: false,
+            source: 'live-client-pilot',
+            why: 'Prefer honest empty states.',
+          },
+        ],
+        provenance: [{ source: 'atlas-identity-map', detail: 'gccOrganizationId is null' }],
+        approvalRequired: ['GLOBAL_AUTO_RESPOND=false'],
+        financialContext: 'NOT_CERTIFIED',
+        growthContext: 'NOT_CERTIFIED',
+        capitalContext: 'PARTIAL',
+        contactsCompleteness: 'MISSING',
+        writePolicy: 'read_only',
+        operatingPosture: 'ACTIVE_CLIENT_CONTEXT_RECOVERY',
+      },
+    };
+    const copy = commercialContextCopy(ctx);
+    assert.equal(copy.lanes[0].available, false);
+    assert.equal(JSON.stringify(copy).includes('250000'), false);
+    assert.equal(ctx.liveClientPilot?.financialContext, 'NOT_CERTIFIED');
+    assert.equal(ctx.liveClientPilot?.writePolicy, 'read_only');
+  });
 });

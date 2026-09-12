@@ -1,7 +1,13 @@
 /**
- * Live Client pilot brief for PDG01 / HFD01 (reusable composition).
+ * Live Client operating brief — reusable composition (PDG01 / HFD01 / ACCG01).
  * Authority: OBSERVE / RECOMMEND / PREPARE only. Never invents facts.
  */
+import type { OperatorOperatingPicture } from '../operatorDesk/types.ts';
+import {
+  composeClientTruth,
+  type ClientTruthModel,
+  type WorkspaceTruthSnapshot,
+} from './clientTruth.ts';
 import type {
   LiveClientPilotAction,
   LiveClientPilotBrief,
@@ -17,6 +23,8 @@ export function buildLiveClientPilotBrief(
     durableStatus?: string;
     durableReason?: string;
     truncated?: boolean;
+    workspace?: WorkspaceTruthSnapshot;
+    picture?: OperatorOperatingPicture;
   },
 ): LiveClientPilotBrief {
   const clientCode = ctx.clientCode || 'UNKNOWN';
@@ -135,6 +143,78 @@ export function buildLiveClientPilotBrief(
     );
   }
 
+  const truth = ctx.clientCode
+    ? composeClientTruth({
+        clientCode: ctx.clientCode,
+        commercial: ctx,
+        workspace: extras?.workspace,
+        picture: extras?.picture,
+      })
+    : undefined;
+  const composed: ClientTruthModel | undefined =
+    truth && 'failClosed' in truth ? undefined : truth;
+
+  if (composed) {
+    const workspaceHappening = [
+      composed.answers.workingOn.text,
+      composed.engagements.summary,
+      composed.documents.summary,
+    ].filter(
+      (line) =>
+        Boolean(line) &&
+        !/NOT_CERTIFIED/i.test(line) &&
+        !/no entitled projects and no recovered/i.test(line) &&
+        !/no entitled document index rows/i.test(line) &&
+        !/no entitled engagement rows and no recovered/i.test(line),
+    );
+    const onlyModuleEmpty =
+      whatIsHappening.length === 1 && /No durable module commercial observations/i.test(whatIsHappening[0] || '');
+    if (workspaceHappening.length && (onlyModuleEmpty || !whatIsHappening.length)) {
+      whatIsHappening.length = 0;
+      whatIsHappening.push(...workspaceHappening.slice(0, 6));
+    } else if (workspaceHappening.length) {
+      whatIsHappening.push(...workspaceHappening.slice(0, 3));
+    }
+    if (composed.operatingPosture !== 'STANDARD') {
+      whyItMatters.push(
+        `${composed.displayName || clientCode} is an already-active client. Operating posture is ${composed.operatingPosture} — do not treat this as a brand-new signup.`,
+      );
+    }
+    if (composed.answers.changed.classification === 'CONFIRMED') {
+      whatChanged.push(composed.answers.changed.text);
+    }
+    known.push(composed.identity.summary);
+    known.push(`financialContext=${composed.financialContext.completeness} (${composed.financialContext.classification})`);
+    known.push(`growthContext=${composed.growthContext.completeness} (${composed.growthContext.classification})`);
+    known.push(`contacts=${composed.contacts.completeness} (${composed.contacts.classification})`);
+    if (composed.contacts.classification === 'MISSING') {
+      unknown.push(composed.contacts.summary);
+    }
+    if (composed.financialContext.classification === 'NOT_CERTIFIED') {
+      unknown.push(composed.financialContext.summary);
+    }
+    if (composed.growthContext.classification === 'NOT_CERTIFIED') {
+      unknown.push(composed.growthContext.summary);
+    }
+    provenance.push(...composed.identity.provenance);
+    provenance.push(...composed.financialContext.provenance.slice(0, 2));
+    provenance.push(...composed.growthContext.provenance.slice(0, 2));
+    if (composed.writePolicy === 'read_only') {
+      approvalRequired.push(
+        'Hub writes for this ClientCode remain blocked unless an approved write window exists.',
+      );
+    }
+    if (composed.contactCandidates.length) {
+      nextActions.push({
+        text: `PREPARE contact reconciliation for ${composed.contactCandidates.length} candidate(s) found in entitled sources. Do not silently create HVCG_Contacts.`,
+        authorityClass: 'PREPARE',
+        approvalRequired: true,
+        source: 'contact-candidate-reconciliation',
+        why: 'Candidate emails exist on entitled communications/engagements; canonical contacts are still MISSING.',
+      });
+    }
+  }
+
   if (!whatIsHappening.length) {
     whatIsHappening.push(
       'No durable module commercial observations are currently projected for this ClientCode in Atlas.',
@@ -168,5 +248,24 @@ export function buildLiveClientPilotBrief(
     nextActions,
     provenance,
     approvalRequired,
+    ...(composed
+      ? {
+          operatingPosture: composed.operatingPosture,
+          writePolicy: composed.writePolicy,
+          financialContext: composed.financialContext.completeness,
+          growthContext: composed.growthContext.completeness,
+          capitalContext: composed.capitalContext.completeness,
+          contactsCompleteness: composed.contacts.completeness,
+          queues: composed.queues,
+          contactCandidates: composed.contactCandidates.map((c) => ({
+            displayName: c.displayName,
+            email: c.email,
+            source: c.source,
+            sourceId: c.sourceId,
+            classification: c.classification,
+            writeStatus: c.writeStatus,
+          })),
+        }
+      : {}),
   };
 }

@@ -769,6 +769,8 @@ export interface ClientPmWorkspace {
     evidence: Array<{ source: string; kind: string; id: string; field?: string }>;
   }>;
   source: string;
+  writePolicy?: 'read_only' | 'normal' | 'none';
+  liveClientPilot?: LiveClientPilotBrief;
 }
 
 export interface PmProject {
@@ -928,6 +930,14 @@ export interface LiveClientPilotAction {
   why: string;
 }
 
+export interface LiveClientPilotQueueItem {
+  id: string;
+  title: string;
+  classification: string;
+  source: string;
+  evidence?: string;
+}
+
 export interface LiveClientPilotBrief {
   clientCode: string;
   whatIsHappening: string[];
@@ -938,6 +948,30 @@ export interface LiveClientPilotBrief {
   nextActions: LiveClientPilotAction[];
   provenance: Array<{ source: string; detail: string }>;
   approvalRequired: string[];
+  operatingPosture?: string;
+  writePolicy?: 'read_only' | 'normal' | 'none';
+  financialContext?: string;
+  growthContext?: string;
+  capitalContext?: string;
+  contactsCompleteness?: string;
+  queues?: {
+    needsAction: LiveClientPilotQueueItem[];
+    waiting: LiveClientPilotQueueItem[];
+    overdue: LiveClientPilotQueueItem[];
+    blocked: LiveClientPilotQueueItem[];
+    decisionRequired: LiveClientPilotQueueItem[];
+    atRisk: LiveClientPilotQueueItem[];
+    ready: LiveClientPilotQueueItem[];
+    outcomes: LiveClientPilotQueueItem[];
+  };
+  contactCandidates?: Array<{
+    displayName?: string;
+    email?: string;
+    source: string;
+    sourceId: string;
+    classification: 'PROPOSED';
+    writeStatus: 'CANDIDATE_NOT_CREATED';
+  }>;
 }
 
 export interface OperatorCommercialContext {

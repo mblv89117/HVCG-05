@@ -11,7 +11,12 @@ import { inspectFabricSyncHealth, isFabricSweepEnabled } from '../sharepoint/fab
 import type { IntegrationRepository } from '../../store/repository.ts';
 import type { PmRepository } from '../repository.ts';
 import { buildCommandCenter } from '../commandCenter.ts';
-import { readDeskCommercialContext } from '../commercialContext/handle.ts';
+import {
+  loadEntitledClientWorkspaceTruth,
+  readCommercialContextAsync,
+  readDeskCommercialContext,
+} from '../commercialContext/handle.ts';
+import type { WorkspaceTruthSnapshot } from '../commercialContext/clientTruth.ts';
 import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
 import { requestIndexedDocumentPreview } from '../sharepoint/fabric/documentPreview.ts';
 import { createFabricGraphClient } from '../sharepoint/fabric/graph.ts';
@@ -172,6 +177,14 @@ import {
   HISTORICAL_RECONSTRUCTION_MISSION_KEY,
   mapsToHistoricalReconstructionHonestyIntent,
 } from './historicalReconstructionHonesty.ts';
+import {
+  answerClientOperatingBrief,
+  CLIENT_OPERATING_BRIEF_MISSION_KEY,
+  clientOperatingBriefClientCode,
+  currentWorkspaceUnavailableAnswer,
+  mapsToClientOperatingBriefIntent,
+  WORKSPACE_TRUTH_SOURCE_UNAVAILABLE,
+} from './askAtlasClientOperatingBrief.ts';
 import {
   answerResearchIntelligenceHonesty,
   mapsToResearchIntelligenceHonestyIntent,
@@ -1140,6 +1153,101 @@ export async function handleOperatorDesk(opts: {
             toolsInvoked: ['historical_reconstruction_honesty'],
             policyClass: 'READ_AUTO',
             missionKey: HISTORICAL_RECONSTRUCTION_MISSION_KEY,
+            autoSend: false,
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (mapsToClientOperatingBriefIntent(question, explicitClientCode)) {
+      const entitled = entitledClientCodes(principal);
+      const scoped = clientOperatingBriefClientCode(question, {
+        entitledCodes: entitled,
+        explicitClientCode,
+      });
+      let commercial: Awaited<ReturnType<typeof readCommercialContextAsync>> | undefined;
+      let workspace: WorkspaceTruthSnapshot | undefined;
+      if (scoped && opts.cfg.pmBackend.mode === 'sharepoint') {
+        let loaded:
+          | Awaited<ReturnType<typeof loadEntitledClientWorkspaceTruth>>
+          | undefined;
+        if (opts.sharepoint) {
+          try {
+            loaded = await loadEntitledClientWorkspaceTruth({
+              service: opts.sharepoint,
+              principal,
+              clientCode: scoped,
+              dataDir: opts.cfg.dataDir,
+            });
+          } catch {
+            loaded = undefined;
+          }
+        }
+        if (!loaded?.snapshot || loaded.snapshot.clientCode !== scoped) {
+          const briefAnswer = currentWorkspaceUnavailableAnswer(scoped);
+          const askAtlas = buildConversationalAskAtlasAnswer({
+            question,
+            previewText: briefAnswer,
+            workflowId: 'client-operating-brief-honesty',
+            workflowName: `Operating brief — ${scoped}`,
+            clientCode: scoped,
+          });
+          sendJson(
+            opts.res,
+            200,
+            {
+              operatorDesk: { askAtlas },
+              workflowAnswer: briefAnswer,
+              runtime: {
+                agent: ASK_ATLAS_RUNTIME_AGENT,
+                toolsInvoked: ['client_operating_brief_honesty'],
+                policyClass: 'READ_AUTO',
+                missionKey: CLIENT_OPERATING_BRIEF_MISSION_KEY,
+                autoSend: false,
+                workspaceTruth: WORKSPACE_TRUTH_SOURCE_UNAVAILABLE,
+                portfolioFallback: false,
+              },
+            },
+            opts.origin,
+          );
+          return true;
+        }
+        commercial = loaded.commercial;
+        workspace = loaded.snapshot;
+      } else if (scoped) {
+        commercial = await readCommercialContextAsync({
+          dataDir: opts.cfg.dataDir,
+          principal,
+          clientCode: scoped,
+        });
+      }
+      const briefAnswer = answerClientOperatingBrief(question, {
+        entitledCodes: entitled,
+        explicitClientCode,
+        commercial,
+        workspace,
+        picture: model.operatingPicture,
+      });
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: briefAnswer,
+        workflowId: 'client-operating-brief-honesty',
+        workflowName: scoped ? `Operating brief — ${scoped}` : 'Operating brief',
+        clientCode: scoped,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          workflowAnswer: briefAnswer,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['client_operating_brief_honesty'],
+            policyClass: 'READ_AUTO',
+            missionKey: CLIENT_OPERATING_BRIEF_MISSION_KEY,
             autoSend: false,
           },
         },

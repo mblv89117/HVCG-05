@@ -1,0 +1,74 @@
+{
+  "schema": "atlas_w2c_accg01_honest_client_proof.v1",
+  "missionKey": "ATLAS-W2C-ACCG01-HONEST-REAL-CLIENT-PROOF",
+  "asOf": "2026-09-12T20:35:00Z",
+  "baselineSha": "88066f65e3635c6da5fca0c624330d00f4297795",
+  "reviewedHead": "d9cd6615ab40b9a88010795d82f457e67cfea66e",
+  "liveHubShaObserved": "d8a9574eb6af0c37e56bb6e955126086d1ce284e",
+  "liveEliteShaObserved": "d8a9574eb6af0c37e56bb6e955126086d1ce284e",
+  "ancestry": "live Hub SHA is ancestor of git tip; tip is docs-only ahead of live",
+  "deploymentPlanned": false,
+  "governanceWriteback": false,
+  "method": "Code-level composition + isolation tests + SharePoint/operator HTTP route tests. Not a live authenticated ACCG01 operator certification.",
+  "verdict": "PARTIAL",
+  "whyNotPass": [
+    "Independent review not yet complete after SOURCE_UNAVAILABLE remediation",
+    "Not merged",
+    "Not deployed",
+    "Live ACCG01 authenticated operator proof not run"
+  ],
+  "remediation": {
+    "blocker1SameWorkspaceTruth": "Ask Atlas W2C path now loads the same entitled SharePoint workspace snapshot used by Live Client GET via loadEntitledClientWorkspaceTruth.",
+    "blocker2MultiQueueSemantics": "mergeQueues dedupes only within each queue; overdue+blocked and overdue+decisionRequired can coexist.",
+    "unscopedIntentRegression": "Only unscoped operating-brief questions remain W2C-mapped (fail-closed). Other unscoped intents stay with pre-existing Ask Atlas handlers.",
+    "workspaceSourceUnavailable": "SharePoint-backed current operating questions return SOURCE_UNAVAILABLE when the entitled workspace cannot be loaded. No recovered/static/commercial substitution as current. Unknown/unentitled ClientCode remains fail-closed."
+  },
+  "client": {
+    "clientCode": "ACCG01",
+    "name": "ACCG Inc.",
+    "IDENTITY": "VERIFIED",
+    "CONTACTS": "MISSING",
+    "ENGAGEMENTS": "PARTIAL",
+    "PROJECTS": "INDEXED_OR_PARTIAL",
+    "DOCUMENTS": "INDEXED",
+    "COMMUNICATIONS": "INDEXED_OR_MISSING_ON_HUB_WORKSPACE",
+    "FINANCIAL_CONTEXT": "NOT_CERTIFIED",
+    "GROWTH_CONTEXT": "NOT_CERTIFIED",
+    "CAPITAL_CONTEXT": "PARTIAL",
+    "BUSINESS_USEFUL": "PARTIAL",
+    "GCC_ORG": "MISSING_GCC_ORG_DO_NOT_CREATE",
+    "GROWTH360_ORG": "MISSING_360_ORG_DO_NOT_CREATE",
+    "WRITE_POLICY": "read_only",
+    "OPERATING_POSTURE": "ACTIVE_CLIENT_CONTEXT_RECOVERY",
+    "ISOLATION": "CODE_TESTED_FAIL_CLOSED"
+  },
+  "invariants": {
+    "GLOBAL_AUTO_RESPOND": false,
+    "capitalSubmit": false,
+    "canExecute": false,
+    "liveGtmOutbound": false,
+    "inventedContacts": false,
+    "inventedFinance": false,
+    "inventedGrowth": false,
+    "crossClientLeakage": 0
+  },
+  "tests": {
+    "hubW2cAndRelated": "pass",
+    "hubRouteHonesty": "pass",
+    "hubFullSuite": { "tests": 785, "fail": 0 },
+    "integrationCore": { "tests": 21, "fail": 0 },
+    "eliteTests": "pass",
+    "eliteProductionBuild": "pass",
+    "hubTypecheckGate": "NEW_TYPE_ERRORS: none",
+    "eliteHooksLint": "pass"
+  },
+  "status": {
+    "W2C_VERDICT": "PARTIAL",
+    "ACCG01_BUSINESS_USEFUL": "PARTIAL",
+    "INDEPENDENT_REVIEW": "BLOCKED",
+    "MERGE_STATUS": "BLOCKED",
+    "DEPLOY_STATUS": "BLOCKED",
+    "LIVE_CERT_STATUS": "BLOCKED",
+    "GOVERNANCE_WRITEBACK": "BLOCKED"
+  }
+}
