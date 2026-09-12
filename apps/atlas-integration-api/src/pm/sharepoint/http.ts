@@ -17,7 +17,7 @@ import {
   listDocumentRequests,
   updateDocumentRequest,
 } from './documentRequests.ts';
-import { assertWritableClientCode } from './knowledgeClassification.ts';
+import { assertWritableClientCode, entityBoundaryFor } from './knowledgeClassification.ts';
 import { buildKnowledgeLedger } from './knowledgeLedger.ts';
 import { buildKnowledgeOperatingPicture } from './knowledgeOperating.ts';
 import { PmHttpError, pmNotImplemented, toErrorBody } from './errors.ts';
@@ -42,6 +42,7 @@ import {
   readCommercialContextAsync,
   readDeskCommercialContext,
 } from '../commercialContext/handle.ts';
+import { workspaceSnapshotFromPayload } from '../commercialContext/clientTruth.ts';
 import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from './token.ts';
 import { createFabricGraphClient } from './fabric/graph.ts';
 import { runFabricSync } from './fabric/sync.ts';
@@ -738,12 +739,21 @@ export async function handleSharePointPmRoutes(opts: {
     if ((method === 'GET' || method === 'POST') && clientWorkspace) {
       const rawCode = decodeURIComponent(clientWorkspace[1]);
       const workspace = await buildSharePointClientWorkspace(service, principal, rawCode);
+      const snapshot = workspaceSnapshotFromPayload(workspace);
+      const commercial = await readCommercialContextAsync({
+        dataDir,
+        principal,
+        clientCode: workspace.client.clientCode,
+        workspace: snapshot,
+      });
       send(
         res,
         200,
         {
           workspace: {
             ...workspace,
+            writePolicy: entityBoundaryFor(workspace.client.clientCode)?.writePolicy || 'normal',
+            liveClientPilot: commercial.liveClientPilot,
             attention: listClientAttention(dataDir, rawCode),
           },
         },

@@ -11,7 +11,7 @@ import { inspectFabricSyncHealth, isFabricSweepEnabled } from '../sharepoint/fab
 import type { IntegrationRepository } from '../../store/repository.ts';
 import type { PmRepository } from '../repository.ts';
 import { buildCommandCenter } from '../commandCenter.ts';
-import { readDeskCommercialContext } from '../commercialContext/handle.ts';
+import { readCommercialContext, readDeskCommercialContext } from '../commercialContext/handle.ts';
 import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
 import { requestIndexedDocumentPreview } from '../sharepoint/fabric/documentPreview.ts';
 import { createFabricGraphClient } from '../sharepoint/fabric/graph.ts';
@@ -172,6 +172,12 @@ import {
   HISTORICAL_RECONSTRUCTION_MISSION_KEY,
   mapsToHistoricalReconstructionHonestyIntent,
 } from './historicalReconstructionHonesty.ts';
+import {
+  answerClientOperatingBrief,
+  CLIENT_OPERATING_BRIEF_MISSION_KEY,
+  clientOperatingBriefClientCode,
+  mapsToClientOperatingBriefIntent,
+} from './askAtlasClientOperatingBrief.ts';
 import {
   answerResearchIntelligenceHonesty,
   mapsToResearchIntelligenceHonestyIntent,
@@ -1140,6 +1146,51 @@ export async function handleOperatorDesk(opts: {
             toolsInvoked: ['historical_reconstruction_honesty'],
             policyClass: 'READ_AUTO',
             missionKey: HISTORICAL_RECONSTRUCTION_MISSION_KEY,
+            autoSend: false,
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (mapsToClientOperatingBriefIntent(question, explicitClientCode)) {
+      const entitled = entitledClientCodes(principal);
+      const scoped = clientOperatingBriefClientCode(question, {
+        entitledCodes: entitled,
+        explicitClientCode,
+      });
+      const commercial = scoped
+        ? readCommercialContext({
+            dataDir: opts.cfg.dataDir,
+            principal,
+            clientCode: scoped,
+          })
+        : undefined;
+      const briefAnswer = answerClientOperatingBrief(question, {
+        entitledCodes: entitled,
+        explicitClientCode,
+        commercial,
+        picture: model.operatingPicture,
+      });
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: briefAnswer,
+        workflowId: 'client-operating-brief-honesty',
+        workflowName: scoped ? `Operating brief — ${scoped}` : 'Operating brief',
+        clientCode: scoped,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          workflowAnswer: briefAnswer,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['client_operating_brief_honesty'],
+            policyClass: 'READ_AUTO',
+            missionKey: CLIENT_OPERATING_BRIEF_MISSION_KEY,
             autoSend: false,
           },
         },

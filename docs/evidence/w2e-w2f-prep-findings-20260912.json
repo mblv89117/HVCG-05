@@ -1,0 +1,46 @@
+{
+  "schema": "atlas_w2e_w2f_prep_findings.v1",
+  "asOf": "2026-09-12T18:45:00Z",
+  "note": "Preparation only. Not implemented in the W2C PR.",
+  "W2E": {
+    "missionKey": "ATLAS-W2E-360-APPROVAL-CONTINUITY",
+    "repository": "mblv89117/360-growth-solution",
+    "accessFromThisPrincipal": "NOT_FOUND_404",
+    "knownReuseInAtlasCore": [
+      "EVENT_360_CAMPAIGN_APPROVAL signed ingest",
+      "HFD01 growth360OrganizationId in atlas-identity-map seed",
+      "liveClientPilot Growth360 attribution projection",
+      "canExecute=false invariant"
+    ],
+    "gaps": [
+      "Cannot inspect 360 advisory/request object model from this token",
+      "ACCG01 has no 360 org — do not invent one",
+      "Need to verify 360 domain output → signed envelope → Hub durable ingest → Atlas Approvals without a second approval system"
+    ],
+    "doNotImplementInW2C": true
+  },
+  "W2F": {
+    "missionKey": "ATLAS-W2F-GCC-UNIFIED-FINANCIAL-INTELLIGENCE",
+    "repository": "mblv89117/growth-command-center",
+    "accessFromThisPrincipal": "READABLE",
+    "defaultBranch": "main",
+    "role": "ATLAS_FINANCIAL_INTELLIGENCE_MODULE",
+    "knownReuse": [
+      "PDG01 gccOrganizationId=org-prodigy-games-llc",
+      "signed Hub ingest src/lib/atlas/hubIngest.ts",
+      "forecast-engine.ts remains GCC SoR",
+      "src/lib/financial/deltas.ts",
+      "src/lib/ai advisor (do not duplicate in Atlas)"
+    ],
+    "classify": {
+      "src/lib/mock-data": "INSPECT_AND_LABEL — likely demo/test financial fixtures; must not surface as live Atlas Finance",
+      "src/lib/ai": "DUPLICATE_AI_SURFACE_RISK — Atlas Ask Atlas should consume entitled GCC facts, not fork advisor math"
+    },
+    "gaps": [
+      "Atlas Finance UX should present GCC output without recalculating",
+      "ACCG01 has no GCC org — keep NOT_CERTIFIED",
+      "Need mock vs live labeling pass in GCC without damaging legitimate demos/tests"
+    ],
+    "doNotImplementInW2C": true
+  }
+}

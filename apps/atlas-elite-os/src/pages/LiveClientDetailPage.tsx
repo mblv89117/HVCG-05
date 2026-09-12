@@ -520,7 +520,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   return (
     <ModuleScaffold
       title={title}
-      subtitle={`${overview?.clientCode || clientId} · operator record`}
+      subtitle={`${overview?.clientCode || clientId} · ${workspace.writePolicy === 'read_only' ? 'read-only operator record' : 'operator record'}${workspace.liveClientPilot?.operatingPosture ? ` · ${workspace.liveClientPilot.operatingPosture.replace(/_/g, ' ')}` : ''}`}
       showPendingBanner={false}
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -583,7 +583,11 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         </RecordRow>
       </AtlasCard>
 
-      <CommercialContextPanel context={commercial} error={commercialError} />
+      <CommercialContextPanel
+        context={commercial}
+        error={commercialError}
+        pilot={workspace.liveClientPilot || commercial?.liveClientPilot}
+      />
 
       <AtlasCard title="State" subtitle="Recorded Hub workspace only">
 
@@ -750,6 +754,11 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
       </AtlasCard>
 
       <AtlasCard title="Related projects" subtitle="Deep-link to the project record">
+        {workspace.writePolicy === 'read_only' ? (
+          <Caption1 style={{ display: 'block', marginBottom: 12 }}>
+            This ClientCode is read-only on Hub. Create is hidden until an approved write window exists.
+          </Caption1>
+        ) : (
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
           <Input
             placeholder="New project name"
@@ -775,6 +784,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
             Create project
           </Button>
         </div>
+        )}
         {projects.length === 0 ? (
           <EmptyState
             title="No projects for this client"
@@ -821,6 +831,11 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
       </AtlasCard>
 
       <AtlasCard title="Related tasks" subtitle="Open tasks deep-link to the owning project">
+        {workspace.writePolicy === 'read_only' ? (
+          <Caption1 style={{ display: 'block', marginBottom: 12 }}>
+            Task create is hidden for this read-only ClientCode.
+          </Caption1>
+        ) : (
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
           <Input
             placeholder="Task title"
@@ -846,6 +861,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
             Create task
           </Button>
         </div>
+        )}
         {tasks.length === 0 ? (
           <EmptyState
             title="No open tasks for this client"

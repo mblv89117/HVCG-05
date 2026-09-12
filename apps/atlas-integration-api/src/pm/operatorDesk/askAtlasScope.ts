@@ -66,6 +66,12 @@ const CLIENT_SCOPED_PATTERNS: Array<{
   { re: /^what decisions? (?:do i need to make )?for\s+(.+)$/i, filterState: 'Decision Required' },
   { re: /^what capital (?:matters )?need attention for\s+(.+)$/i, filterState: 'Capital' },
   { re: /^what needs my approval for\s+(.+)$/i },
+  { re: /^what are we working on for\s+(.+)$/i },
+  { re: /^what changed recently for\s+(.+)$/i },
+  { re: /^what documents are missing for\s+(.+)$/i },
+  { re: /^what capital work is active for\s+(.+)$/i, filterState: 'Capital' },
+  { re: /^what does atlas (?:not )?know about (.+?) financials$/i },
+  { re: /^(?:give me (?:the )?|show (?:me )?(?:the )?)?current\s+(.+?)\s+operating brief$/i },
 ];
 
 export function extractClientScopedAttentionQuery(question: string): ClientScopedAttentionQuery | null {

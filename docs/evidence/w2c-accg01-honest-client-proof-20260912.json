@@ -1,0 +1,54 @@
+{
+  "schema": "atlas_w2c_accg01_honest_client_proof.v1",
+  "missionKey": "ATLAS-W2C-ACCG01-HONEST-REAL-CLIENT-PROOF",
+  "asOf": "2026-09-12T18:45:00Z",
+  "baselineSha": "88066f65e3635c6da5fca0c624330d00f4297795",
+  "liveHubShaObserved": "d8a9574eb6af0c37e56bb6e955126086d1ce284e",
+  "liveEliteShaObserved": "d8a9574eb6af0c37e56bb6e955126086d1ce284e",
+  "ancestry": "live Hub SHA is ancestor of git tip; tip is docs-only ahead of live",
+  "deploymentPlanned": false,
+  "governanceWriteback": false,
+  "method": "Code-level composition + isolation tests. Not a live authenticated ACCG01 operator certification.",
+  "verdict": "PARTIAL",
+  "whyNotPass": [
+    "Independent review not yet complete",
+    "Not merged",
+    "Not deployed",
+    "Live ACCG01 authenticated operator proof not run"
+  ],
+  "client": {
+    "clientCode": "ACCG01",
+    "name": "ACCG Inc.",
+    "IDENTITY": "VERIFIED",
+    "CONTACTS": "MISSING",
+    "ENGAGEMENTS": "PARTIAL",
+    "PROJECTS": "INDEXED_OR_PARTIAL",
+    "DOCUMENTS": "INDEXED",
+    "COMMUNICATIONS": "INDEXED_OR_MISSING_ON_HUB_WORKSPACE",
+    "FINANCIAL_CONTEXT": "NOT_CERTIFIED",
+    "GROWTH_CONTEXT": "NOT_CERTIFIED",
+    "CAPITAL_CONTEXT": "PARTIAL",
+    "BUSINESS_USEFUL": "PARTIAL",
+    "GCC_ORG": "MISSING_GCC_ORG_DO_NOT_CREATE",
+    "GROWTH360_ORG": "MISSING_360_ORG_DO_NOT_CREATE",
+    "WRITE_POLICY": "read_only",
+    "OPERATING_POSTURE": "ACTIVE_CLIENT_CONTEXT_RECOVERY",
+    "ISOLATION": "CODE_TESTED_FAIL_CLOSED"
+  },
+  "invariants": {
+    "GLOBAL_AUTO_RESPOND": false,
+    "capitalSubmit": false,
+    "canExecute": false,
+    "inventedContacts": false,
+    "inventedFinance": false,
+    "inventedGrowth": false,
+    "crossClientLeakage": 0
+  },
+  "tests": {
+    "hubW2cAndRelated": "pass",
+    "hubFullSuite": { "tests": 777, "fail": 0 },
+    "integrationCore": { "tests": 21, "fail": 0 },
+    "eliteCopy": "pass",
+    "eliteProductionBuild": "pass"
+  }
+}

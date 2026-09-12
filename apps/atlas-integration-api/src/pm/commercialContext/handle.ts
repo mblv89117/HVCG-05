@@ -7,6 +7,7 @@ import { buildOperatorCommercialContext, toDeskCommercialContext } from './build
 import { buildLiveClientPilotBrief } from './liveClientPilot.ts';
 import { ObserveError, persistObservation } from './observe.ts';
 import { loadOverlay, saveOverlay } from './store.ts';
+import type { WorkspaceTruthSnapshot } from './clientTruth.ts';
 
 export type CommercialMatch =
   | { kind: 'desk' }
@@ -36,6 +37,7 @@ export function readCommercialContext(opts: {
   durableStatus?: string;
   durableReason?: string;
   truncated?: boolean;
+  workspace?: WorkspaceTruthSnapshot;
 }) {
   const overlay = opts.overlay ?? loadOverlay(opts.dataDir);
   const ctx = buildOperatorCommercialContext({
@@ -51,6 +53,7 @@ export function readCommercialContext(opts: {
       durableStatus: opts.durableStatus,
       durableReason: opts.durableReason,
       truncated: opts.truncated,
+      workspace: opts.workspace,
     });
   }
   return ctx;
@@ -64,6 +67,7 @@ export async function readCommercialContextAsync(opts: {
   leads?: SharePointLead[];
   clientCode?: string;
   env?: NodeJS.Dict<string>;
+  workspace?: WorkspaceTruthSnapshot;
 }) {
   if (!opts.clientCode) {
     return readCommercialContext({
@@ -93,6 +97,7 @@ export async function readCommercialContextAsync(opts: {
     durableStatus: hydrated.durableStatus,
     durableReason: hydrated.durableReason,
     truncated: hydrated.truncated,
+    workspace: opts.workspace,
   });
 }
 
