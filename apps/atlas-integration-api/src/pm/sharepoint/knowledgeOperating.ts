@@ -20,6 +20,10 @@ import {
   type OperatingState,
   type RecoveryLedgerRow,
 } from './knowledgeClassification.ts';
+import {
+  classifyOperatingRecord,
+  isOwnerFacingCurrentOperating,
+} from './operatingRecordHygiene.ts';
 import { buildKnowledgeLedger, type KnowledgeLedgerItem } from './knowledgeLedger.ts';
 import {
   buildHvsAccessPicture,
@@ -248,6 +252,16 @@ function queuesFromEntitledWork(input: {
   for (const project of input.projects) {
     const code = project.clientCode || project.clientId || '';
     if (!entitledCodes.has(code)) continue;
+    const hygiene = classifyOperatingRecord({
+      entityType: 'project',
+      sourceList: 'HVCG_Projects',
+      sourceItemId: project.id,
+      clientCode: code,
+      title: project.name,
+      description: project.description,
+      isInternalProject: project.isInternalProject,
+    });
+    if (!isOwnerFacingCurrentOperating(hygiene.classification)) continue;
     for (const queue of projectOperatingStates({ health: project.health, status: project.status })) {
       queues[queue].push(
         item({
@@ -263,9 +277,38 @@ function queuesFromEntitledWork(input: {
     }
   }
 
+  const projectClassById = new Map(
+    input.projects.map((project) => {
+      const code = project.clientCode || project.clientId || '';
+      return [
+        project.id,
+        classifyOperatingRecord({
+          entityType: 'project',
+          sourceList: 'HVCG_Projects',
+          sourceItemId: project.id,
+          clientCode: code,
+          title: project.name,
+          description: project.description,
+          isInternalProject: project.isInternalProject,
+        }),
+      ] as const;
+    }),
+  );
+
   for (const task of input.tasks) {
     const code = task.clientCode || task.clientId || '';
     if (!entitledCodes.has(code)) continue;
+    const parent = task.projectId ? projectClassById.get(task.projectId) : undefined;
+    const hygiene = classifyOperatingRecord({
+      entityType: 'task',
+      sourceList: 'HVCG_Tasks',
+      sourceItemId: task.id,
+      clientCode: code,
+      title: task.title,
+      projectId: task.projectId,
+      parentClassification: parent?.classification,
+    });
+    if (!isOwnerFacingCurrentOperating(hygiene.classification)) continue;
     for (const queue of taskOperatingStates({
       status: task.status,
       dueDate: task.dueDate,
@@ -310,6 +353,14 @@ function queuesFromEntitledWork(input: {
 
   for (const req of input.documentRequests) {
     if (!entitledCodes.has(req.clientCode)) continue;
+    const hygiene = classifyOperatingRecord({
+      entityType: 'document_request',
+      sourceList: 'HVCG_DocumentRequests',
+      sourceItemId: req.id,
+      clientCode: req.clientCode,
+      title: req.title,
+    });
+    if (!isOwnerFacingCurrentOperating(hygiene.classification)) continue;
     const queue: OperatingState = req.status === 'received' ? 'Outcomes' : 'Needs Action';
     queues[queue].push(
       item({
