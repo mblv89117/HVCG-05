@@ -21,6 +21,8 @@ import {
   filterOwnerFacingProjects,
   filterOwnerFacingTasks,
   filterOwnerFacingWorkspaceItems,
+  isHygieneTargetedSource,
+  sourceRecordKey,
   type WorkspaceHygieneSummary,
 } from '../sharepoint/operatingRecordHygiene.ts';
 import type {
@@ -279,21 +281,26 @@ export function applyOperatingHygieneToWorkspaceSnapshot(
   );
   const decisionHygiene = workspace.decisionsRisks
     ? filterOwnerFacingWorkspaceItems(workspace.decisionsRisks.items, {
-        entityType: 'decision',
-        sourceList: 'HVCG_Decisions',
         clientCode: workspace.clientCode,
       })
     : undefined;
-  const allowedIds = new Set<string>([
-    ...projectHygiene.operating.map((p) => p.id),
-    ...taskHygiene.operating.map((t) => t.id),
-    ...(decisionHygiene?.operating || []).map((d) => String(d.id ?? '')),
+  const allowedKeys = new Set<string>([
+    ...projectHygiene.operating.map((p) => sourceRecordKey('HVCG_Projects', p.id)),
+    ...taskHygiene.operating.map((t) => sourceRecordKey('HVCG_Tasks', t.id)),
+    ...(decisionHygiene?.operating || []).map((d) =>
+      sourceRecordKey(
+        typeof d.sourceList === 'string' ? d.sourceList : undefined,
+        String(d.id ?? ''),
+      ),
+    ),
   ]);
   const timeline = (workspace.timeline || []).filter((ev) => {
-    if (ev.source === 'HVCG_Projects' || ev.source === 'HVCG_Tasks' || ev.source === 'HVCG_Decisions') {
-      return allowedIds.has(ev.id);
+    if (isHygieneTargetedSource(ev.source)) {
+      // List-local IDs collide across HVCG_* lists — always qualify by source.
+      if (!ev.source || !ev.id) return false;
+      return allowedKeys.has(sourceRecordKey(ev.source, ev.id));
     }
-    // Communications/meetings remain; harden isolation is project/task/decision scoped.
+    // Communications/meetings remain; harden isolation is project/task/decision/risk scoped.
     return true;
   });
   return {

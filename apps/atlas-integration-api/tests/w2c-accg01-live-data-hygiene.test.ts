@@ -8,6 +8,7 @@ import {
   classifyOperatingRecord,
   filterOwnerFacingProjects,
   filterOwnerFacingTasks,
+  filterOwnerFacingWorkspaceItems,
   isOwnerFacingCurrentOperating,
 } from '../src/pm/sharepoint/operatingRecordHygiene.ts';
 import {
@@ -181,12 +182,16 @@ describe('W2C ACCG01 live data hygiene', () => {
             title: 'ATLAS Harden Decision M014703',
             summary: 'milestone+doc fix test',
             clientCode: 'ACCG01',
+            sourceList: 'HVCG_Decisions',
+            entityType: 'decision',
           },
           {
             id: 'd-real',
             title: 'Approve ACCG engagement scope',
             summary: 'Owner decision on engagement',
             clientCode: 'ACCG01',
+            sourceList: 'HVCG_Decisions',
+            entityType: 'decision',
           },
         ],
       },
@@ -309,5 +314,217 @@ describe('W2C ACCG01 live data hygiene', () => {
     assert.match(accg.answers.workingOn.text, /ACCG Inc\. Operating Engagement/);
     assert.equal(/harden/i.test(accg.answers.workingOn.text), false);
     assert.equal(/harden/i.test(pdg.answers.workingOn.text), false);
+  });
+
+  it('does not collide list-local decision ID 6 with risk ID 6', () => {
+    const decision = classifyOperatingRecord({
+      entityType: 'decision',
+      sourceList: 'HVCG_Decisions',
+      sourceItemId: '6',
+      clientCode: 'ACCG01',
+      title: 'ATLAS Harden Decision M014703',
+      summary: 'milestone+doc fix test',
+    });
+    assert.equal(decision.classification, 'TEST_HARDENING');
+
+    const risk = classifyOperatingRecord({
+      entityType: 'risk',
+      sourceList: 'HVCG_Risks',
+      sourceItemId: '6',
+      clientCode: 'ACCG01',
+      title: 'ACCG receivables concentration risk',
+      summary: 'Client operating risk requiring review',
+    });
+    assert.equal(risk.classification, 'REAL_CURRENT_OPERATING');
+
+    const filtered = filterOwnerFacingWorkspaceItems(
+      [
+        {
+          id: '6',
+          title: 'ATLAS Harden Decision M014703',
+          summary: 'milestone+doc fix test',
+          clientCode: 'ACCG01',
+          sourceList: 'HVCG_Decisions',
+          entityType: 'decision',
+        },
+        {
+          id: '6',
+          title: 'ACCG receivables concentration risk',
+          summary: 'Client operating risk requiring review',
+          clientCode: 'ACCG01',
+          sourceList: 'HVCG_Risks',
+          entityType: 'risk',
+        },
+      ],
+      { clientCode: 'ACCG01' },
+    );
+    assert.equal(filtered.operating.length, 1);
+    assert.equal(filtered.operating[0]?.title, 'ACCG receivables concentration risk');
+    assert.equal(filtered.operating[0]?.sourceList, 'HVCG_Risks');
+    assert.equal(filtered.quarantined.length, 1);
+    assert.equal(filtered.quarantined[0]?.sourceRef, 'HVCG_Decisions:6');
+    assert.equal(filtered.quarantined[0]?.proposedClassification, 'TEST_HARDENING');
+  });
+
+  it('classifies TEST_HARDENING risks under HVCG_Risks without mistaking them for decisions', () => {
+    const riskClass = classifyOperatingRecord({
+      entityType: 'risk',
+      sourceList: 'HVCG_Risks',
+      sourceItemId: '88',
+      clientCode: 'ACCG01',
+      title: 'Some operating risk',
+      summary: 'normal risk',
+    });
+    assert.equal(riskClass.classification, 'REAL_CURRENT_OPERATING');
+    assert.notEqual(riskClass.signals.knownSourceIdentity, true);
+
+    // Inverse: a risk that looks like the known decision title must NOT match HVCG_Decisions:6 registry.
+    const notDecisionRegistry = classifyOperatingRecord({
+      entityType: 'risk',
+      sourceList: 'HVCG_Risks',
+      sourceItemId: '6',
+      clientCode: 'ACCG01',
+      title: 'ATLAS Harden Decision M014703',
+      summary: 'milestone+doc fix test',
+    });
+    assert.notEqual(notDecisionRegistry.signals.knownSourceIdentity, true);
+    assert.notEqual(notDecisionRegistry.classification, 'REAL_CURRENT_OPERATING');
+
+    const hardenRisk = filterOwnerFacingWorkspaceItems(
+      [
+        {
+          id: '99',
+          title: 'Risk about harden process improvement',
+          summary: 'functional test internal only',
+          clientCode: 'ACCG01',
+          sourceList: 'HVCG_Risks',
+          entityType: 'risk',
+        },
+      ],
+      { clientCode: 'ACCG01' },
+    );
+    assert.equal(hardenRisk.quarantined[0]?.sourceList, 'HVCG_Risks');
+    assert.equal(hardenRisk.quarantined[0]?.entityType, 'risk');
+    assert.equal(hardenRisk.quarantined[0]?.sourceRef, 'HVCG_Risks:99');
+    assert.equal(hardenRisk.quarantined[0]?.proposedClassification, 'UNKNOWN_REQUIRES_REVIEW');
+    assert.equal(hardenRisk.operating.length, 0);
+  });
+
+  it('filters timeline by source|id composite keys (project/task list-local collision)', () => {
+    const keepProject = applyOperatingHygieneToWorkspaceSnapshot({
+      clientCode: 'ACCG01',
+      projects: [{ id: '11', name: 'ACCG Inc. Operating Engagement' }],
+      tasks: [
+        {
+          id: '11',
+          title: 'Schedule and run kickoff call',
+          projectId: '27',
+        },
+      ],
+      timeline: [
+        {
+          at: '2026-09-10T10:00:00Z',
+          kind: 'project',
+          title: 'Project created: ACCG Inc. Operating Engagement',
+          source: 'HVCG_Projects',
+          id: '11',
+        },
+        {
+          at: '2026-09-10T11:00:00Z',
+          kind: 'task',
+          title: 'Task: Schedule and run kickoff call',
+          source: 'HVCG_Tasks',
+          id: '11',
+        },
+        {
+          at: '2026-09-10T12:00:00Z',
+          kind: 'communication',
+          title: 'Client email',
+          source: 'HVCG_Communications',
+          id: '11',
+        },
+      ],
+    });
+    assert.ok(keepProject);
+    const titlesA = (keepProject?.timeline || []).map((e) => e.title);
+    assert.equal(titlesA.some((t) => /Operating Engagement/.test(t)), true);
+    assert.equal(titlesA.some((t) => /kickoff call/.test(t)), false);
+    assert.equal(titlesA.some((t) => /Client email/.test(t)), true);
+
+    const keepTask = applyOperatingHygieneToWorkspaceSnapshot({
+      clientCode: 'ACCG01',
+      projects: [{ id: '44', name: 'ACCG01 - harden-014529' }],
+      tasks: [{ id: '44', title: 'Confirm ACCG document package' }],
+      timeline: [
+        {
+          at: '2026-09-10T10:00:00Z',
+          kind: 'project',
+          title: 'Project created: ACCG01 - harden-014529',
+          source: 'HVCG_Projects',
+          id: '44',
+        },
+        {
+          at: '2026-09-10T11:00:00Z',
+          kind: 'task',
+          title: 'Task: Confirm ACCG document package',
+          source: 'HVCG_Tasks',
+          id: '44',
+        },
+      ],
+    });
+    assert.ok(keepTask);
+    const titlesB = (keepTask?.timeline || []).map((e) => e.title);
+    assert.equal(titlesB.some((t) => /harden-014529/.test(t)), false);
+    assert.equal(titlesB.some((t) => /document package/.test(t)), true);
+  });
+
+  it('filters timeline decision/risk collisions by source-qualified keys', () => {
+    const workspace = applyOperatingHygieneToWorkspaceSnapshot({
+      clientCode: 'ACCG01',
+      projects: [{ id: '100', name: 'ACCG Inc. Operating Engagement' }],
+      decisionsRisks: {
+        queried: true,
+        items: [
+          {
+            id: '6',
+            title: 'ATLAS Harden Decision M014703',
+            summary: 'milestone+doc fix test',
+            clientCode: 'ACCG01',
+            sourceList: 'HVCG_Decisions',
+            entityType: 'decision',
+          },
+          {
+            id: '6',
+            title: 'ACCG receivables concentration risk',
+            summary: 'Client operating risk requiring review',
+            clientCode: 'ACCG01',
+            sourceList: 'HVCG_Risks',
+            entityType: 'risk',
+          },
+        ],
+      },
+      timeline: [
+        {
+          at: '2026-09-10T10:00:00Z',
+          kind: 'decision',
+          title: 'Decision: ATLAS Harden Decision M014703',
+          source: 'HVCG_Decisions',
+          id: '6',
+        },
+        {
+          at: '2026-09-10T11:00:00Z',
+          kind: 'risk',
+          title: 'Risk: ACCG receivables concentration risk',
+          source: 'HVCG_Risks',
+          id: '6',
+        },
+      ],
+    });
+    assert.ok(workspace);
+    assert.equal((workspace?.decisionsRisks?.items || []).length, 1);
+    assert.equal((workspace?.decisionsRisks?.items || [])[0]?.sourceList, 'HVCG_Risks');
+    const titles = (workspace?.timeline || []).map((e) => e.title);
+    assert.equal(titles.some((t) => /Harden Decision/.test(t)), false);
+    assert.equal(titles.some((t) => /receivables concentration/.test(t)), true);
   });
 });

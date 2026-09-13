@@ -254,8 +254,6 @@ export async function buildSharePointClientWorkspace(
   const open = tasks.filter(openTask);
   const extras = await service.listWorkspaceCollections(principal, clientCode);
   const decisionHygiene = filterOwnerFacingWorkspaceItems(extras.decisionsRisks.items, {
-    entityType: 'decision',
-    sourceList: 'HVCG_Decisions',
     clientCode,
   });
   const decisionsRisks = {

@@ -177,6 +177,92 @@ export function isOwnerFacingCurrentOperating(classification: OperatingRecordCla
   return classification === 'REAL_CURRENT_OPERATING';
 }
 
+/** Canonical SharePoint list names used for hygiene source identity. */
+export const HYGIENE_SOURCE_LISTS = [
+  'HVCG_Projects',
+  'HVCG_Tasks',
+  'HVCG_Decisions',
+  'HVCG_Risks',
+  'HVCG_Milestones',
+  'HVCG_DocumentRequests',
+  'HVCG_Communications',
+  'HVCG_Meetings',
+  'HVCG_Engagements',
+  'HVCG_Deliverables',
+  'HVCG_Contacts',
+] as const;
+
+export type HygieneSourceList = (typeof HYGIENE_SOURCE_LISTS)[number];
+
+const SOURCE_LIST_ALIASES: Record<string, HygieneSourceList> = {
+  HVCG_Projects: 'HVCG_Projects',
+  HVCG_Tasks: 'HVCG_Tasks',
+  HVCG_Decisions: 'HVCG_Decisions',
+  HVCG_Risks: 'HVCG_Risks',
+  HVCG_Milestones: 'HVCG_Milestones',
+  HVCG_DocumentRequests: 'HVCG_DocumentRequests',
+  HVCG_Communications: 'HVCG_Communications',
+  'HVCG_Communications/file-index': 'HVCG_Communications',
+  HVCG_Meetings: 'HVCG_Meetings',
+  HVCG_Engagements: 'HVCG_Engagements',
+  HVCG_Deliverables: 'HVCG_Deliverables',
+  HVCG_Contacts: 'HVCG_Contacts',
+};
+
+/** Normalize timeline/workspace source labels to a canonical list name when known. */
+export function canonicalSourceList(source: string | undefined | null): string | undefined {
+  const raw = (source || '').trim();
+  if (!raw) return undefined;
+  return SOURCE_LIST_ALIASES[raw] || raw;
+}
+
+/** List-local SharePoint IDs collide across lists — always qualify by source list. */
+export function sourceRecordKey(source: string | undefined | null, id: string | undefined | null): string {
+  const list = canonicalSourceList(source) || 'UNKNOWN_SOURCE';
+  const itemId = String(id ?? '').trim() || 'UNKNOWN_ID';
+  return `${list}|${itemId}`;
+}
+
+export function entityTypeForSourceList(sourceList: string): HygieneEntityType {
+  switch (canonicalSourceList(sourceList)) {
+    case 'HVCG_Projects':
+      return 'project';
+    case 'HVCG_Tasks':
+      return 'task';
+    case 'HVCG_Decisions':
+      return 'decision';
+    case 'HVCG_Risks':
+      return 'risk';
+    case 'HVCG_Milestones':
+      return 'milestone';
+    case 'HVCG_DocumentRequests':
+      return 'document_request';
+    case 'HVCG_Communications':
+      return 'communication';
+    case 'HVCG_Meetings':
+      return 'meeting';
+    case 'HVCG_Engagements':
+      return 'engagement';
+    case 'HVCG_Deliverables':
+      return 'document';
+    default:
+      return 'other';
+  }
+}
+
+/** Hygiene-targeted timeline/workspace classes where unknown source must fail closed. */
+export function isHygieneTargetedSource(source: string | undefined | null): boolean {
+  const list = canonicalSourceList(source);
+  return (
+    list === 'HVCG_Projects' ||
+    list === 'HVCG_Tasks' ||
+    list === 'HVCG_Decisions' ||
+    list === 'HVCG_Risks' ||
+    list === 'HVCG_Milestones' ||
+    list === 'HVCG_DocumentRequests'
+  );
+}
+
 export function classifyOperatingRecord(input: HygieneClassifiable): OperatingRecordHygieneResult {
   const evidence: string[] = [];
   const signals: HygieneEvidenceSignals = {};
@@ -458,7 +544,12 @@ export function filterOwnerFacingTasks<T extends { id: string; title: string; cl
 
 export function filterOwnerFacingWorkspaceItems(
   items: Array<Record<string, unknown>>,
-  opts: { entityType: HygieneEntityType; sourceList: string; clientCode?: string },
+  opts?: {
+    /** Fallback only when item lacks stamped sourceList (legacy snapshots). */
+    entityType?: HygieneEntityType;
+    sourceList?: string;
+    clientCode?: string;
+  },
 ): { operating: Array<Record<string, unknown>>; quarantined: HygieneInventoryRow[] } {
   const operating: Array<Record<string, unknown>> = [];
   const quarantined: HygieneInventoryRow[] = [];
@@ -470,10 +561,52 @@ export function filterOwnerFacingWorkspaceItems(
       (typeof item.description === 'string' && item.description) ||
       '';
     const clientCode =
-      (typeof item.clientCode === 'string' && item.clientCode) || opts.clientCode || '';
+      (typeof item.clientCode === 'string' && item.clientCode) || opts?.clientCode || '';
+    const stampedList =
+      typeof item.sourceList === 'string' && item.sourceList.trim()
+        ? canonicalSourceList(item.sourceList)
+        : undefined;
+    const sourceList = stampedList || opts?.sourceList;
+    const stampedEntity =
+      typeof item.entityType === 'string' && item.entityType.trim()
+        ? (item.entityType as HygieneEntityType)
+        : undefined;
+    const entityType =
+      stampedEntity ||
+      (sourceList ? entityTypeForSourceList(sourceList) : undefined) ||
+      opts?.entityType;
+
+    // Missing list identity on hygiene-targeted combined sections must not assume HVCG_Decisions.
+    if (!sourceList || !entityType) {
+      const unknownResult: OperatingRecordHygieneResult = {
+        classification: 'UNKNOWN_REQUIRES_REVIEW',
+        confidence: 'LOW',
+        evidence: [
+          'workspace item missing sourceList/entityType provenance; fail-closed for owner-facing current truth',
+        ],
+        signals: { discoveryHintOnly: true },
+        safeClientOperatingVisibility: false,
+        sourceMutationRequired: false,
+      };
+      quarantined.push(
+        toHygieneInventoryRow(
+          {
+            entityType: entityType || 'other',
+            sourceList: sourceList || 'UNKNOWN_SOURCE',
+            sourceItemId: id,
+            clientCode,
+            title,
+            summary,
+          },
+          unknownResult,
+        ),
+      );
+      continue;
+    }
+
     const result = classifyOperatingRecord({
-      entityType: opts.entityType,
-      sourceList: opts.sourceList,
+      entityType,
+      sourceList,
       sourceItemId: id,
       clientCode,
       title,
@@ -486,8 +619,8 @@ export function filterOwnerFacingWorkspaceItems(
       quarantined.push(
         toHygieneInventoryRow(
           {
-            entityType: opts.entityType,
-            sourceList: opts.sourceList,
+            entityType,
+            sourceList,
             sourceItemId: id,
             clientCode,
             title,
