@@ -4,7 +4,7 @@
   "asOf": "2026-09-13T01:00:00Z",
   "baseSha": "4a91b6578d40f46f93e163c6ae637b32d33e4e53",
   "reviewedHeadPrior": "bb81a7033cf4468f1ec17ed013dce154d8f7e414",
-  "remediationHead": "PENDING_COMMIT",
+  "remediationHead": "6e5bb3a307efa1a49427fb78491d3f8b5ebeda5b",
   "branch": "cursor/w2c-accg01-live-data-hygiene-20260912",
   "prNumber": 225,
   "independentReview": {
@@ -32,7 +32,7 @@
     "Authenticated live ACCG01 re-certification not run after deploy"
   ],
   "architecture": {
-    "sameWorkspaceTruth": "PASS — Ask Atlas and Live Client continue to share loadEntitledClientWorkspaceTruth",
+    "sameWorkspaceTruth": "PASS \u2014 Ask Atlas and Live Client continue to share loadEntitledClientWorkspaceTruth",
     "accg01BusinessUseful": "PARTIAL until post-deploy live certification confirms harden rows are absent from owner-facing current view",
     "filterInsertion": [
       "buildSharePointClientWorkspace (primary)",
@@ -40,7 +40,10 @@
       "queuesFromEntitledWork in knowledgeOperating.ts"
     ],
     "sourceIdentity": {
-      "mapWorkspaceItemsStamps": ["sourceList", "entityType"],
+      "mapWorkspaceItemsStamps": [
+        "sourceList",
+        "entityType"
+      ],
       "decisionsRisksCombinedSection": "retained for UI; each item keeps originating HVCG_Decisions or HVCG_Risks provenance",
       "hygieneUses": "item.sourceList + item.entityType + sourceItemId + ClientCode",
       "timelineFilterKey": "canonicalSourceList(source)|id via sourceRecordKey()"
@@ -48,13 +51,13 @@
     "notUsed": "Broad fuzzy title suppression as sole filter"
   },
   "queueSemantics": {
-    "crossQueueDedup": "NOT reintroduced — overdue+blocked and overdue+decisionRequired still coexist",
+    "crossQueueDedup": "NOT reintroduced \u2014 overdue+blocked and overdue+decisionRequired still coexist",
     "readyMeaning": "READY means task status is ready/inbox (canonical knowledgeClassification.taskOperatingStates). It is NOT defined as non-overdue. A task with status=ready and dueDate in the past appears in BOTH ready and overdue.",
     "readyVsOverdue": "DOCUMENTED_AS_INTENTIONAL_MULTI_QUEUE"
   },
   "contacts": {
     "canonical": "MISSING",
-    "candidates": "PROPOSED / CANDIDATE_NOT_CREATED — unchanged; no auto-create"
+    "candidates": "PROPOSED / CANDIDATE_NOT_CREATED \u2014 unchanged; no auto-create"
   },
   "financeGrowthCapital": {
     "financialContext": "NOT_CERTIFIED",
@@ -97,9 +100,11 @@
       "presentationDedup": "Only when stable source identity proves equivalence; not implemented as title-based collapse"
     },
     "engagements": {
-      "examples": ["ACCG Inc. - Engagement"],
+      "examples": [
+        "ACCG Inc. - Engagement"
+      ],
       "determination": "E_UNKNOWN_PENDING_LIVE_ITEM_IDS",
-      "detail": "Two visually identical engagement titles observed live. Without distinct source item IDs in this PR inventory, treat as UNKNOWN — preserve both; do not delete. Owner cleanup manifest recommends listing both source IDs in an approved write window if archival is desired."
+      "detail": "Two visually identical engagement titles observed live. Without distinct source item IDs in this PR inventory, treat as UNKNOWN \u2014 preserve both; do not delete. Owner cleanup manifest recommends listing both source IDs in an approved write window if archival is desired."
     }
   },
   "suspectInventory": [
@@ -326,18 +331,27 @@
     "note": "Counts are from the evidence inventory assembled for this remediation (known IDs + owner-observed structured harden lineage). Live post-deploy certification must confirm full production item-id binding for LIVE_PENDING_ITEM_ID rows. HVCG_Risks item ID collisions with HVCG_Decisions are protected by stamped sourceList."
   },
   "regressionCoverage": {
-    "decisionId6RiskId6Collision": "PASS — Decisions:6 TEST_HARDENING quarantined; Risks:6 REAL_CURRENT_OPERATING retained; sourceRef HVCG_Decisions:6 vs HVCG_Risks:6",
-    "projectTaskTimelineCollision": "PASS — source|id composite keys; communications/meetings not suppressed",
-    "riskNotInterpretedAsDecisions": "PASS — risk classification uses sourceList=HVCG_Risks entityType=risk"
+    "decisionId6RiskId6Collision": "PASS \u2014 Decisions:6 TEST_HARDENING quarantined; Risks:6 REAL_CURRENT_OPERATING retained; sourceRef HVCG_Decisions:6 vs HVCG_Risks:6",
+    "projectTaskTimelineCollision": "PASS \u2014 source|id composite keys; communications/meetings not suppressed",
+    "riskNotInterpretedAsDecisions": "PASS \u2014 risk classification uses sourceList=HVCG_Risks entityType=risk"
   },
   "ownerCleanupManifest": "docs/evidence/w2c-accg01-owner-cleanup-manifest-20260912.json",
   "ownerCleanupManifestUpdated": false,
   "ownerCleanupManifestNote": "Exact target identities unchanged (HVCG_Decisions:6 remains the known harden decision). Risk ID collisions no longer falsely map to that target.",
   "tests": {
-    "hygiene": { "tests": 11, "fail": 0 },
+    "hygiene": {
+      "tests": 11,
+      "fail": 0
+    },
     "hubW2cAndRelated": "pass",
-    "hubFullSuite": { "tests": 796, "fail": 0 },
-    "integrationCore": { "tests": 21, "fail": 0 },
+    "hubFullSuite": {
+      "tests": 796,
+      "fail": 0
+    },
+    "integrationCore": {
+      "tests": 21,
+      "fail": 0
+    },
     "eliteTests": "pass",
     "eliteProductionBuild": "pass",
     "hubTypecheckGate": "NEW_TYPE_ERRORS: none",
