@@ -32,6 +32,7 @@ export interface PmSearchHit {
     | 'engagement'
     | 'deliverable'
     | 'decision'
+    | 'risk'
     | 'opportunity'
     | 'lead'
     | 'capital_opportunity'
@@ -409,7 +410,27 @@ export async function searchSharePointPm(
     pushCollection(extras.meetings.items, 'meeting', 'HVCG_Meetings', c.clientCode);
     pushCollection(extras.engagements.items, 'engagement', 'HVCG_Engagements', c.clientCode);
     pushCollection(extras.deliverables.items, 'deliverable', 'HVCG_Deliverables', c.clientCode);
-    pushCollection(extras.decisionsRisks.items, 'decision', 'HVCG_Decisions', c.clientCode);
+    for (const item of extras.decisionsRisks.items) {
+      const title = String(item.title || '');
+      const hay = [title, item.summary, item.status].filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(q)) continue;
+      const modifiedAt = typeof item.date === 'string' && item.date.trim() ? item.date : undefined;
+      const sourceList =
+        typeof item.sourceList === 'string' && item.sourceList.trim()
+          ? item.sourceList
+          : 'HVCG_Decisions';
+      const kind: PmSearchHit['kind'] =
+        item.entityType === 'risk' || sourceList === 'HVCG_Risks' ? 'risk' : 'decision';
+      push({
+        kind,
+        id: String(item.id),
+        clientCode: c.clientCode,
+        title,
+        href: clientHref(c.clientCode),
+        source: sourceList,
+        ...(modifiedAt ? { modifiedAt } : {}),
+      });
+    }
   }
 
   for (const o of opportunities) {
