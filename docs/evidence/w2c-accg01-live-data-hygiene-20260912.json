@@ -4,7 +4,7 @@
   "asOf": "2026-09-22T01:53:59Z",
   "baseSha": "4a91b6578d40f46f93e163c6ae637b32d33e4e53",
   "reviewedHeadPrior": "bb81a7033cf4468f1ec17ed013dce154d8f7e414",
-  "remediationHead": "6e5bb3a307efa1a49427fb78491d3f8b5ebeda5b",
+  "remediationHead": "ce36e3a83344c54c63572d20b1207d0b81164279",
   "branch": "cursor/w2c-accg01-live-data-hygiene-20260912",
   "prNumber": 225,
   "independentReview": {
@@ -387,5 +387,6 @@
     "hubTypecheckGate": "NEW_TYPE_ERRORS: none",
     "eliteHooksLint": "pass",
     "githubCiOnPriorRemediationTip": "pass (hub/elite/integration-core green on ce1cfe81)"
-  }
+  },
+  "codeFixHead": "6e5bb3a307efa1a49427fb78491d3f8b5ebeda5b"
 }
