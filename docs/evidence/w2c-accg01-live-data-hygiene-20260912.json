@@ -1,7 +1,7 @@
 {
   "schema": "atlas_w2c_accg01_live_data_hygiene.v1",
   "missionKey": "ATLAS-W2C-ACCG01-LIVE-DATA-HYGIENE",
-  "asOf": "2026-09-13T01:00:00Z",
+  "asOf": "2026-09-22T01:53:59Z",
   "baseSha": "4a91b6578d40f46f93e163c6ae637b32d33e4e53",
   "reviewedHeadPrior": "bb81a7033cf4468f1ec17ed013dce154d8f7e414",
   "remediationHead": "6e5bb3a307efa1a49427fb78491d3f8b5ebeda5b",
@@ -333,14 +333,15 @@
   "regressionCoverage": {
     "decisionId6RiskId6Collision": "PASS \u2014 Decisions:6 TEST_HARDENING quarantined; Risks:6 REAL_CURRENT_OPERATING retained; sourceRef HVCG_Decisions:6 vs HVCG_Risks:6",
     "projectTaskTimelineCollision": "PASS \u2014 source|id composite keys; communications/meetings not suppressed",
-    "riskNotInterpretedAsDecisions": "PASS \u2014 risk classification uses sourceList=HVCG_Risks entityType=risk"
+    "riskNotInterpretedAsDecisions": "PASS \u2014 risk classification uses sourceList=HVCG_Risks entityType=risk",
+    "sourceRecordKeyUnit": "PASS \u2014 HVCG_Projects|11 \u2260 HVCG_Tasks|11; HVCG_Decisions|6 \u2260 HVCG_Risks|6"
   },
   "ownerCleanupManifest": "docs/evidence/w2c-accg01-owner-cleanup-manifest-20260912.json",
   "ownerCleanupManifestUpdated": false,
   "ownerCleanupManifestNote": "Exact target identities unchanged (HVCG_Decisions:6 remains the known harden decision). Risk ID collisions no longer falsely map to that target.",
   "tests": {
     "hygiene": {
-      "tests": 11,
+      "tests": 12,
       "fail": 0
     },
     "hubW2cAndRelated": "pass",
@@ -365,5 +366,26 @@
     "DEPLOY_STATUS": "BLOCKED",
     "LIVE_CERT_STATUS": "BLOCKED",
     "GOVERNANCE_WRITEBACK": "BLOCKED"
+  },
+  "validationReRun": {
+    "agent": "w2c-hygiene-independent-review-remediation",
+    "hubFullSuite": {
+      "tests": 796,
+      "fail": 0
+    },
+    "hygiene": {
+      "tests": 12,
+      "fail": 0
+    },
+    "w2cRouteAndSourceUnavailable": "pass",
+    "integrationCore": {
+      "tests": 21,
+      "fail": 0
+    },
+    "eliteTests": "pass",
+    "eliteProductionBuild": "pass",
+    "hubTypecheckGate": "NEW_TYPE_ERRORS: none",
+    "eliteHooksLint": "pass",
+    "githubCiOnPriorRemediationTip": "pass (hub/elite/integration-core green on ce1cfe81)"
   }
 }

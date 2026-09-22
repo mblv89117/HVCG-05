@@ -10,6 +10,7 @@ import {
   filterOwnerFacingTasks,
   filterOwnerFacingWorkspaceItems,
   isOwnerFacingCurrentOperating,
+  sourceRecordKey,
 } from '../src/pm/sharepoint/operatingRecordHygiene.ts';
 import {
   applyOperatingHygieneToWorkspaceSnapshot,
@@ -21,6 +22,15 @@ import { emptyOverlay } from '../src/pm/commercialContext/store.ts';
 import { answerClientOperatingBrief } from '../src/pm/operatorDesk/askAtlasClientOperatingBrief.ts';
 
 describe('W2C ACCG01 live data hygiene', () => {
+  it('sourceRecordKey qualifies list-local IDs by canonical source list', () => {
+    assert.equal(sourceRecordKey('HVCG_Projects', '11'), 'HVCG_Projects|11');
+    assert.equal(sourceRecordKey('HVCG_Tasks', '11'), 'HVCG_Tasks|11');
+    assert.notEqual(sourceRecordKey('HVCG_Projects', '11'), sourceRecordKey('HVCG_Tasks', '11'));
+    assert.equal(sourceRecordKey('HVCG_Decisions', '6'), 'HVCG_Decisions|6');
+    assert.equal(sourceRecordKey('HVCG_Risks', '6'), 'HVCG_Risks|6');
+    assert.notEqual(sourceRecordKey('HVCG_Decisions', '6'), sourceRecordKey('HVCG_Risks', '6'));
+  });
+
   it('classifies known source-identity and structured harden lineage as TEST_HARDENING', () => {
     const knownDecision = classifyOperatingRecord({
       entityType: 'decision',
@@ -411,6 +421,7 @@ describe('W2C ACCG01 live data hygiene', () => {
   });
 
   it('filters timeline by source|id composite keys (project/task list-local collision)', () => {
+    // REAL project 11 vs known TEST_HARDENING task 11 (registry) — flat ID sets would leak the task.
     const keepProject = applyOperatingHygieneToWorkspaceSnapshot({
       clientCode: 'ACCG01',
       projects: [{ id: '11', name: 'ACCG Inc. Operating Engagement' }],
@@ -451,24 +462,28 @@ describe('W2C ACCG01 live data hygiene', () => {
     assert.equal(titlesA.some((t) => /kickoff call/.test(t)), false);
     assert.equal(titlesA.some((t) => /Client email/.test(t)), true);
 
+    // Reverse collision: TEST project vs REAL task share list-local id "12".
+    // Use id 12 for the project (structured harden) and a non-registry task id that collides
+    // would be unsafe for ACCG01 because HVCG_Tasks|12 is itself a known TEST_HARDENING row.
+    // Pattern under test: same numeric id, different source lists — use id 55 (not in known registry).
     const keepTask = applyOperatingHygieneToWorkspaceSnapshot({
       clientCode: 'ACCG01',
-      projects: [{ id: '44', name: 'ACCG01 - harden-014529' }],
-      tasks: [{ id: '44', title: 'Confirm ACCG document package' }],
+      projects: [{ id: '55', name: 'ACCG01 - harden-014529' }],
+      tasks: [{ id: '55', title: 'Confirm ACCG document package' }],
       timeline: [
         {
           at: '2026-09-10T10:00:00Z',
           kind: 'project',
           title: 'Project created: ACCG01 - harden-014529',
           source: 'HVCG_Projects',
-          id: '44',
+          id: '55',
         },
         {
           at: '2026-09-10T11:00:00Z',
           kind: 'task',
           title: 'Task: Confirm ACCG document package',
           source: 'HVCG_Tasks',
-          id: '44',
+          id: '55',
         },
       ],
     });
