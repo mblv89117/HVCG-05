@@ -1,6 +1,8 @@
 /**
- * W2C Ask Atlas — client-scoped operating-brief honesty.
- * Does not implement full W2D concierge. Does not invent finance/growth/contacts.
+ * W2C/W2D Ask Atlas — client-scoped operating-brief honesty.
+ * Closed concierge router over answers composeClientTruth already returns.
+ * Does not invent finance/growth/contacts, GCC orgs, or 360 orgs.
+ * Does not submit capital, apply approvals, or raise authority.
  * Client-bound questions never fall back to portfolio.
  */
 
@@ -37,17 +39,47 @@ export function currentWorkspaceUnavailableAnswer(clientCode: string): string {
 
 export type ClientOperatingBriefTopic =
   | 'operating_brief'
+  | 'my_business'
   | 'working_on'
+  | 'projects'
   | 'changed'
   | 'waiting'
   | 'missing_documents'
+  | 'documents'
   | 'capital'
   | 'owner_decisions'
+  | 'approvals'
   | 'financials_known'
   | 'financials_unknown'
+  | 'finance'
   | 'growth'
   | 'blocked'
   | 'provenance';
+
+/**
+ * Closed phrase map. New concierge phrases register in
+ * mapsToClientOperatingBriefIntent only when a client is in scope.
+ * Capital submit/prepare stays on capitalSubmissionHonesty.
+ * Generic approval-center phrases stay on approval honesty.
+ */
+const CONCIERGE_PHRASE_MAP: Array<{ topic: ClientOperatingBriefTopic; pattern: RegExp }> = [
+  { topic: 'my_business', pattern: /\bmy business\b|\bbusiness picture\b|\bbusiness brief\b/ },
+  { topic: 'finance', pattern: /\bfinance picture\b|\bfinance brief\b/ },
+  { topic: 'growth', pattern: /\bgrowth picture\b|\bgrowth brief\b/ },
+  { topic: 'capital', pattern: /\bcapital context\b|\bcapital brief\b/ },
+  { topic: 'projects', pattern: /\bwhat projects\b|\bprojects are active\b|\bprojects brief\b|\bprojects domain\b/ },
+  {
+    topic: 'documents',
+    pattern:
+      /\bwhat documents exist\b|\bdocuments exist\b|\bdocument inventory\b|\bdocuments on the operating brief\b/,
+  },
+  { topic: 'approvals', pattern: /\bapprovals brief\b|\bapproval brief\b/ },
+];
+
+function isCapitalSubmitOrPrepare(question: string): boolean {
+  const q = normalize(question).toLowerCase();
+  return /capital submission|submission package|prepare capital|submit to lender|lender package/.test(q);
+}
 
 const FOREIGN_CODE = /(?:^|[^A-Z0-9])(PDG01|ACCG01|CCB01|HFD01|KAVA01|CPL01|LIEN01)(?:[^A-Z0-9]|$)/g;
 
@@ -58,8 +90,13 @@ function normalize(question: string): string {
 function detectTopic(question: string): ClientOperatingBriefTopic | null {
   const q = normalize(question).toLowerCase();
   if (!q) return null;
+  // Submit/prepare stays on capitalSubmissionHonesty. Never answer it here.
+  if (isCapitalSubmitOrPrepare(q)) return null;
   if (/provenance|where did atlas get|based on what|show the (source|evidence)/.test(q)) {
     return 'provenance';
+  }
+  for (const row of CONCIERGE_PHRASE_MAP) {
+    if (row.pattern.test(q)) return row.topic;
   }
   if (/does atlas not know|what does atlas not know|absent|unverified/.test(q) && /financial/.test(q)) {
     return 'financials_unknown';
@@ -85,14 +122,19 @@ export function mapsToClientOperatingBriefIntent(
   question: string,
   explicitClientCode?: string,
 ): boolean {
+  if (isCapitalSubmitOrPrepare(question)) return false;
   const topic = detectTopic(question);
   if (!topic) return false;
   const entitled = [...ENTITLED_CANONICAL_CLIENT_CODES];
   const match = resolveEntitledClientCodeFromQuestion(question, entitled);
   const hasClient =
-    Boolean((explicitClientCode || '').trim()) || match.kind === 'exact' || match.kind === 'unique_prefix';
+    Boolean((explicitClientCode || '').trim()) ||
+    match.kind === 'exact' ||
+    match.kind === 'unique_prefix' ||
+    match.kind === 'ambiguous';
   // Unscoped "current operating brief" fail-closes later. Other unscoped
   // questions must not steal pre-existing portfolio/global Ask Atlas intents.
+  // An ambiguous ClientCode match is in scope only so the answer can fail closed.
   if (topic === 'operating_brief') return true;
   return hasClient;
 }
@@ -150,28 +192,75 @@ function renderBrief(truth: ClientTruthModel): string {
   ].join('\n');
 }
 
+function authorityFooter(truth: ClientTruthModel): string {
+  return `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=${truth.capitalSubmit}; canExecute=${truth.canExecute}.`;
+}
+
 function renderTopic(truth: ClientTruthModel, topic: ClientOperatingBriefTopic): string {
   switch (topic) {
     case 'operating_brief':
       return renderBrief(truth);
+    case 'my_business':
+      return [
+        truth.answers.who.text,
+        truth.answers.workingOn.text,
+        truth.answers.engagement.text,
+        `writePolicy=${truth.writePolicy}.`,
+        authorityFooter(truth),
+      ].join(' ');
     case 'working_on':
       return truth.answers.workingOn.text;
+    case 'projects':
+      return [
+        truth.projects.summary,
+        truth.answers.workingOn.text,
+        `projects=${truth.projects.completeness}.`,
+        authorityFooter(truth),
+      ].join(' ');
     case 'changed':
       return truth.answers.changed.text;
     case 'waiting':
       return `${truth.answers.waiting.text} Client-owed: ${truth.answers.clientNext.text}`;
     case 'missing_documents':
       return truth.answers.documentsMissing.text;
+    case 'documents':
+      return [
+        truth.answers.documentsExist.text,
+        `Missing: ${truth.answers.documentsMissing.text}`,
+        `documents=${truth.documents.completeness}.`,
+        authorityFooter(truth),
+      ].join(' ');
     case 'capital':
-      return `${truth.clientCode}: ${truth.answers.capital.text} Outstanding requests: ${truth.answers.outstandingRequests.text}`;
+      return [
+        `${truth.clientCode} capitalContext=${truth.capitalContext.completeness}/${truth.capitalContext.classification}.`,
+        truth.answers.capital.text,
+        authorityFooter(truth),
+      ].join(' ');
     case 'owner_decisions':
-      return truth.answers.ownerApproval.text;
+    case 'approvals':
+      return [
+        truth.answers.ownerApproval.text,
+        'Ask Atlas did not apply an approval action.',
+        authorityFooter(truth),
+      ].join(' ');
     case 'financials_known':
       return truth.answers.financialKnown.text;
     case 'financials_unknown':
       return truth.answers.financialUnknown.text;
+    case 'finance':
+      return [
+        truth.answers.financialKnown.text,
+        truth.answers.financialUnknown.text,
+        `financialContext=${truth.financialContext.completeness}.`,
+        authorityFooter(truth),
+      ].join(' ');
     case 'growth':
-      return `${truth.answers.growthKnown.text} ${truth.answers.growthUnknown.text}`;
+      return [
+        truth.answers.growthKnown.text,
+        truth.answers.growthUnknown.text,
+        `growthContext=${truth.growthContext.completeness}.`,
+        authorityFooter(truth),
+      ].join(' ');
     case 'blocked':
       return truth.answers.blocked.text;
     case 'provenance':

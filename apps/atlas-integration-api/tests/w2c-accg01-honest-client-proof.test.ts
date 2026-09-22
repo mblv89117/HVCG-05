@@ -11,6 +11,9 @@ import {
   mapsToClientOperatingBriefIntent,
   WORKSPACE_TRUTH_SOURCE_UNAVAILABLE,
 } from '../src/pm/operatorDesk/askAtlasClientOperatingBrief.ts';
+import { mapsToApprovalCenterHonestyIntent } from '../src/pm/operatorDesk/approvalCenterHonesty.ts';
+import { mapsToCapitalSubmissionHonestyIntent } from '../src/pm/operatorDesk/capitalSubmissionHonesty.ts';
+import { buildConversationalAskAtlasAnswer } from '../src/pm/operatorDesk/workflowCreation.ts';
 import { extractClientScopedAttentionQuery, resolveAskAtlasScope } from '../src/pm/operatorDesk/askAtlasScope.ts';
 import {
   mapsToGetAttentionItems,
@@ -277,6 +280,151 @@ describe('W2C ACCG01 honest real-client operator proof', () => {
     assert.equal(mapsToClientOperatingBriefIntent('Summarize Capital'), false);
     assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), false);
     assert.equal(mapsToSearchAuthorizedKnowledge('What documents do we have for ACCG?'), true);
+  });
+
+  const CONCIERGE_QUESTIONS = [
+    'What is the My Business picture for ACCG?',
+    'What is the finance picture for ACCG?',
+    'What is the growth picture for ACCG?',
+    'What is the capital context for ACCG?',
+    'What projects are active for ACCG?',
+    'What documents exist for ACCG?',
+    'What is the approvals brief for ACCG?',
+  ];
+
+  it('routes one client-scoped concierge question per domain onto existing ClientTruth answers', () => {
+    for (const question of CONCIERGE_QUESTIONS) {
+      assert.equal(mapsToClientOperatingBriefIntent(question), true);
+      const answer = answerClientOperatingBrief(question, {
+        entitledCodes: STAFF.allowedClientIds,
+      });
+      assert.equal(/PDG01|HFD01|Prodigy|Hart Family/.test(answer), false);
+      assert.equal(/targetamount|lender approval|\$[0-9]{4,}/i.test(answer), false);
+      assert.match(answer, /GLOBAL_AUTO_RESPOND=false/);
+      assert.match(answer, /capitalSubmit=false/);
+      assert.match(answer, /canExecute=false/);
+    }
+
+    const business = answerClientOperatingBrief(CONCIERGE_QUESTIONS[0]!, {
+      entitledCodes: STAFF.allowedClientIds,
+    });
+    assert.match(business, /ACCG/);
+    assert.match(business, /writePolicy=read_only/);
+    assert.match(business, /engagement|working/i);
+
+    const finance = answerClientOperatingBrief(CONCIERGE_QUESTIONS[1]!, {
+      entitledCodes: STAFF.allowedClientIds,
+    });
+    assert.match(finance, /NOT_CERTIFIED/);
+    assert.match(finance, /financialContext=NOT_CERTIFIED/);
+    assert.equal(/GCC organization is mapped/i.test(finance), false);
+
+    const growth = answerClientOperatingBrief(CONCIERGE_QUESTIONS[2]!, {
+      entitledCodes: STAFF.allowedClientIds,
+    });
+    assert.match(growth, /NOT_CERTIFIED/);
+    assert.match(growth, /growthContext=NOT_CERTIFIED/);
+    assert.equal(/Growth360 organization is mapped/i.test(growth), false);
+
+    const capital = answerClientOperatingBrief(CONCIERGE_QUESTIONS[3]!, {
+      entitledCodes: STAFF.allowedClientIds,
+    });
+    assert.match(capital, /capitalContext=/);
+    assert.equal(/Outstanding requests|prepare capital|capital submission/i.test(capital), false);
+
+    const projects = answerClientOperatingBrief(CONCIERGE_QUESTIONS[4]!, {
+      entitledCodes: STAFF.allowedClientIds,
+    });
+    assert.match(projects, /project/i);
+
+    const documents = answerClientOperatingBrief(CONCIERGE_QUESTIONS[5]!, {
+      entitledCodes: STAFF.allowedClientIds,
+    });
+    assert.match(documents, /document/i);
+    assert.equal(/invent a closing checklist|closing binder/i.test(documents), false);
+
+    const approvals = answerClientOperatingBrief(CONCIERGE_QUESTIONS[6]!, {
+      entitledCodes: STAFF.allowedClientIds,
+    });
+    assert.match(approvals, /did not apply an approval action/);
+    assert.match(approvals, /unsent drafts|read-only/i);
+
+    const stamped = buildConversationalAskAtlasAnswer({
+      question: CONCIERGE_QUESTIONS[1]!,
+      previewText: finance,
+      workflowId: 'client-operating-brief-honesty',
+      workflowName: 'Operating brief — ACCG01',
+      clientCode: 'ACCG01',
+    });
+    assert.notEqual(stamped.items[0]?.classification, 'CONFIRMED');
+    assert.notEqual(stamped.items[0]?.state, 'Decision Required');
+    assert.equal(stamped.items[0]?.classification, 'PROPOSED');
+    const ordinary = buildConversationalAskAtlasAnswer({
+      question: 'create a workflow',
+      previewText: 'Draft preview without a certification gap.',
+      workflowId: 'wf-ordinary',
+      workflowName: 'Ordinary draft',
+    });
+    assert.equal(ordinary.items[0]?.classification, 'CONFIRMED');
+    assert.equal(ordinary.items[0]?.state, 'Decision Required');
+  });
+
+  it('does not let unscoped concierge phrases steal portfolio or capital-submit handlers', () => {
+    for (const question of [
+      'What is the My Business picture?',
+      'What is the finance picture?',
+      'What is the growth picture?',
+      'What is the capital context?',
+      'What projects are active?',
+      'What documents exist?',
+      'What is the approvals brief?',
+    ]) {
+      assert.equal(mapsToClientOperatingBriefIntent(question), false);
+      assert.equal(mapsToClientOperatingBriefIntent(question, 'ACCG01'), true);
+    }
+    assert.equal(mapsToGetAttentionItems('What is blocked?'), true);
+    assert.equal(mapsToGetAttentionItems('Summarize Capital'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('Summarize Capital'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('Prepare capital submission for ACCG'), false);
+    assert.equal(mapsToCapitalSubmissionHonestyIntent('Prepare capital submission for ACCG'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('What needs my approval for ACCG?'), false);
+    assert.equal(mapsToApprovalCenterHonestyIntent('What needs my approval for ACCG?'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), false);
+    assert.equal(mapsToSearchAuthorizedKnowledge('What documents do we have for ACCG?'), true);
+  });
+
+  it('refuses cross-client concierge answers instead of leaking the other workspace', () => {
+    const mismatched = answerClientOperatingBrief('What is the finance picture for PDG?', {
+      entitledCodes: STAFF.allowedClientIds,
+      workspace: {
+        clientCode: 'ACCG01',
+        displayName: 'ACCG Inc.',
+        projects: [{ id: 'p-accg', name: 'ACCG weekly operating file' }],
+      },
+    });
+    assert.match(mismatched, /does not match|Fail closed|will not fall back/i);
+    assert.equal(/weekly operating file/.test(mismatched), false);
+
+    assert.equal(
+      mapsToClientOperatingBriefIntent('What is the finance picture for ACCG and PDG?'),
+      true,
+    );
+    const ambiguous = answerClientOperatingBrief('What is the finance picture for ACCG and PDG?', {
+      entitledCodes: STAFF.allowedClientIds,
+      picture: picture(),
+    });
+    assert.match(ambiguous, /ambiguous|will not fall back/i);
+    assert.equal(/weekly operating file|secret/.test(ambiguous), false);
+
+    const leaked = answerClientOperatingBrief('What projects are active for ACCG?', {
+      entitledCodes: STAFF.allowedClientIds,
+      workspace: {
+        clientCode: 'ACCG01',
+        projects: [{ id: 'p-leak', name: 'Joint file PDG01 secret packet' }],
+      },
+    });
+    assert.match(leaked, /refused to emit a cross-client/);
+    assert.equal(/secret packet/.test(leaked), false);
   });
 
   it('current workspace unavailable copy does not substitute recovered or portfolio truth', () => {

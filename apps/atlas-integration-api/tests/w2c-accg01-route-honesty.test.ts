@@ -16,6 +16,7 @@ import type { GraphListItem, GraphListPage, PmGraphTransport } from '../src/pm/s
 import { IntegrationRepository } from '../src/store/repository.ts';
 import type { UserBasicLookup } from '../src/entitlements/userLookup.ts';
 import { FILE_INDEX_MARKER } from '../src/pm/sharepoint/fabric/fileIndex.ts';
+import { CLIENT_OPERATING_BRIEF_MISSION_KEY } from '../src/pm/operatorDesk/askAtlasClientOperatingBrief.ts';
 
 const SITE =
   'contoso.sharepoint.com,11111111-1111-4111-8111-111111111011,22222222-2222-4222-8222-222222222022';
@@ -268,12 +269,18 @@ async function askAtlas(base: string, question: string, token = 'staff', client?
   const res = await fetch(url, { headers: auth(token) });
   const body = (await res.json()) as {
     workflowAnswer?: string;
+    operatorDesk?: {
+      askAtlas?: {
+        items?: Array<{ state?: string; classification?: string }>;
+      };
+    };
     runtime?: {
       policyClass?: string;
       autoSend?: boolean;
       missionKey?: string;
       workspaceTruth?: string;
       portfolioFallback?: boolean;
+      toolsInvoked?: string[];
     };
     error?: string;
     code?: string;
@@ -418,9 +425,96 @@ describe('W2C ACCG01 route-level honest workspace truth', () => {
         assert.equal(working.body.runtime?.portfolioFallback, false);
         assert.equal(/weekly operating file|PDG secret|Hart Family secret|PDG01|HFD01|01_Intake Docs/.test(text), false);
         assert.equal(/\$[0-9]{4,}|TargetAmount|lender approval/.test(text), false);
+
+        const finance = await askAtlas(base, 'What is the finance picture for ACCG?');
+        assert.equal(finance.status, 200);
+        assert.match(finance.body.workflowAnswer || '', /SOURCE_UNAVAILABLE/);
+        assert.equal(finance.body.runtime?.portfolioFallback, false);
+        assert.equal(finance.body.runtime?.workspaceTruth, 'SOURCE_UNAVAILABLE');
       },
       { includeAccgClient: false },
     );
+  });
+
+  it('answers one natural-language concierge question per domain for ACCG01', async () => {
+    await withW2cHub((oid) => (oid === USER_STAFF ? STAFF_CODES : ['ACCG01']), async ({ base }) => {
+      const business = await askAtlas(base, 'What is the My Business picture for ACCG?');
+      assert.equal(business.status, 200);
+      assert.equal(business.body.runtime?.policyClass, 'READ_AUTO');
+      assert.equal(business.body.runtime?.autoSend, false);
+      assert.equal(business.body.runtime?.missionKey, CLIENT_OPERATING_BRIEF_MISSION_KEY);
+      assert.match(business.body.workflowAnswer || '', new RegExp(ACCG_PROJECT));
+      assert.match(business.body.workflowAnswer || '', /writePolicy=read_only/);
+      assert.match(business.body.workflowAnswer || '', /capitalSubmit=false/);
+      assert.match(business.body.workflowAnswer || '', /canExecute=false/);
+      assert.equal(/PDG secret|Hart Family secret|PDG01|HFD01/.test(business.body.workflowAnswer || ''), false);
+
+      const finance = await askAtlas(base, 'What is the finance picture for ACCG?');
+      assert.equal(finance.status, 200);
+      assert.match(finance.body.workflowAnswer || '', /NOT_CERTIFIED/);
+      assert.match(finance.body.workflowAnswer || '', /financialContext=NOT_CERTIFIED/);
+      assert.equal(finance.body.runtime?.policyClass, 'READ_AUTO');
+      assert.equal(finance.body.runtime?.autoSend, false);
+      assert.equal(/\$[0-9]{4,}|GCC organization is mapped|PDG01|HFD01/.test(finance.body.workflowAnswer || ''), false);
+      const financeItem = finance.body.operatorDesk?.askAtlas?.items?.[0];
+      assert.notEqual(financeItem?.classification, 'CONFIRMED');
+      assert.notEqual(financeItem?.state, 'Decision Required');
+
+      const growth = await askAtlas(base, 'What is the growth picture for ACCG?');
+      assert.equal(growth.status, 200);
+      assert.match(growth.body.workflowAnswer || '', /NOT_CERTIFIED/);
+      assert.match(growth.body.workflowAnswer || '', /growthContext=NOT_CERTIFIED/);
+      assert.equal(/Growth360 organization is mapped|PDG01|HFD01/.test(growth.body.workflowAnswer || ''), false);
+      const growthItem = growth.body.operatorDesk?.askAtlas?.items?.[0];
+      assert.notEqual(growthItem?.classification, 'CONFIRMED');
+      assert.notEqual(growthItem?.state, 'Decision Required');
+
+      const capital = await askAtlas(base, 'What is the capital context for ACCG?');
+      assert.equal(capital.status, 200);
+      assert.match(capital.body.workflowAnswer || '', /capitalContext=/);
+      assert.match(capital.body.workflowAnswer || '', /capitalSubmit=false/);
+      assert.equal(/capital submission|prepare capital|submit to lender|\$[0-9]{4,}|PDG01|HFD01/.test(capital.body.workflowAnswer || ''), false);
+      assert.equal(capital.body.runtime?.toolsInvoked?.includes('client_operating_brief_honesty'), true);
+
+      const projects = await askAtlas(base, 'What projects are active for ACCG?');
+      assert.equal(projects.status, 200);
+      assert.match(projects.body.workflowAnswer || '', new RegExp(ACCG_PROJECT));
+      assert.equal(/PDG secret|Hart Family secret|PDG01|HFD01/.test(projects.body.workflowAnswer || ''), false);
+
+      const documents = await askAtlas(base, 'What documents exist for ACCG?');
+      assert.equal(documents.status, 200);
+      assert.match(documents.body.workflowAnswer || '', /document/i);
+      assert.equal(/PDG secret|Hart Family secret|PDG01|HFD01|closing binder/.test(documents.body.workflowAnswer || ''), false);
+
+      const approvals = await askAtlas(base, 'What is the approvals brief for ACCG?');
+      assert.equal(approvals.status, 200);
+      assert.match(approvals.body.workflowAnswer || '', /did not apply an approval action/);
+      assert.match(approvals.body.workflowAnswer || '', /GLOBAL_AUTO_RESPOND=false/);
+      assert.equal(approvals.body.runtime?.toolsInvoked?.includes('approval_center_honesty'), false);
+      assert.equal(approvals.body.runtime?.toolsInvoked?.includes('client_operating_brief_honesty'), true);
+      assert.equal(approvals.body.runtime?.policyClass, 'READ_AUTO');
+      assert.equal(approvals.body.runtime?.autoSend, false);
+      assert.equal(GLOBAL_AUTO_RESPOND, false);
+
+      const unscoped = await askAtlas(base, 'What is the My Business picture?');
+      assert.equal(unscoped.status, 200);
+      assert.notEqual(unscoped.body.runtime?.missionKey, CLIENT_OPERATING_BRIEF_MISSION_KEY);
+      assert.equal(/writePolicy=|WHAT IS HAPPENING|ACCG weekly operating file/.test(unscoped.body.workflowAnswer || ''), false);
+
+      const portfolioCapital = await askAtlas(base, 'Summarize Capital');
+      assert.equal(portfolioCapital.status, 200);
+      assert.notEqual(portfolioCapital.body.runtime?.missionKey, CLIENT_OPERATING_BRIEF_MISSION_KEY);
+
+      const prepare = await askAtlas(base, 'Prepare capital submission for ACCG');
+      assert.equal(prepare.status, 200);
+      assert.notEqual(prepare.body.runtime?.missionKey, CLIENT_OPERATING_BRIEF_MISSION_KEY);
+      assert.equal(prepare.body.runtime?.toolsInvoked?.includes('capital_submission_honesty'), true);
+
+      const both = await askAtlas(base, 'What is the finance picture for ACCG and PDG?');
+      assert.equal(both.status, 200);
+      assert.match(both.body.workflowAnswer || '', /ambiguous|will not fall back/i);
+      assert.equal(/PDG secret|Hart Family secret|weekly operating file/.test(both.body.workflowAnswer || ''), false);
+    });
   });
 
   it('Graph/server workspace errors are SOURCE_UNAVAILABLE without silent workspace-less composition', async () => {
