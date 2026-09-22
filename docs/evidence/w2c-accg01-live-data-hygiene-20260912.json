@@ -1,0 +1,392 @@
+{
+  "schema": "atlas_w2c_accg01_live_data_hygiene.v1",
+  "missionKey": "ATLAS-W2C-ACCG01-LIVE-DATA-HYGIENE",
+  "asOf": "2026-09-22T01:53:59Z",
+  "baseSha": "4a91b6578d40f46f93e163c6ae637b32d33e4e53",
+  "reviewedHeadPrior": "bb81a7033cf4468f1ec17ed013dce154d8f7e414",
+  "remediationHead": "f0cfd995524622712ab2a77b005b4ef76ee80283",
+  "branch": "cursor/w2c-accg01-live-data-hygiene-20260912",
+  "prNumber": 225,
+  "independentReview": {
+    "verdictPrior": "REQUEST_CHANGES",
+    "blockersRemediated": [
+      "decisionRiskSourceIdentityPreserved",
+      "listLocalIdCollisionProtected",
+      "timelineCompositeSourceKeyProtected"
+    ]
+  },
+  "method": "Read-only forensic inventory of Hub composition paths + evidence-backed classification layer. Independent-review remediation preserves list-local source identity for HVCG_Decisions vs HVCG_Risks and timeline source|id composite keys. Live SharePoint item enumeration was not re-queried in this PR.",
+  "liveHubShaObserved": "4a91b6578d40f46f93e163c6ae637b32d33e4e53",
+  "liveEliteShaObserved": "4a91b6578d40f46f93e163c6ae637b32d33e4e53",
+  "deploymentPlanned": false,
+  "governanceWriteback": false,
+  "sourceRecordsModified": false,
+  "decisionRiskSourceIdentityPreserved": true,
+  "listLocalIdCollisionProtected": true,
+  "timelineCompositeSourceKeyProtected": true,
+  "verdict": "PARTIAL",
+  "whyNotPass": [
+    "Independent review not complete",
+    "Not merged",
+    "Not deployed",
+    "Authenticated live ACCG01 re-certification not run after deploy"
+  ],
+  "architecture": {
+    "sameWorkspaceTruth": "PASS \u2014 Ask Atlas and Live Client continue to share loadEntitledClientWorkspaceTruth",
+    "accg01BusinessUseful": "PARTIAL until post-deploy live certification confirms harden rows are absent from owner-facing current view",
+    "filterInsertion": [
+      "buildSharePointClientWorkspace (primary)",
+      "composeClientTruth / applyOperatingHygieneToWorkspaceSnapshot (defense-in-depth)",
+      "queuesFromEntitledWork in knowledgeOperating.ts"
+    ],
+    "sourceIdentity": {
+      "mapWorkspaceItemsStamps": [
+        "sourceList",
+        "entityType"
+      ],
+      "decisionsRisksCombinedSection": "retained for UI; each item keeps originating HVCG_Decisions or HVCG_Risks provenance",
+      "hygieneUses": "item.sourceList + item.entityType + sourceItemId + ClientCode",
+      "timelineFilterKey": "canonicalSourceList(source)|id via sourceRecordKey()"
+    },
+    "notUsed": "Broad fuzzy title suppression as sole filter"
+  },
+  "queueSemantics": {
+    "crossQueueDedup": "NOT reintroduced \u2014 overdue+blocked and overdue+decisionRequired still coexist",
+    "readyMeaning": "READY means task status is ready/inbox (canonical knowledgeClassification.taskOperatingStates). It is NOT defined as non-overdue. A task with status=ready and dueDate in the past appears in BOTH ready and overdue.",
+    "readyVsOverdue": "DOCUMENTED_AS_INTENTIONAL_MULTI_QUEUE"
+  },
+  "contacts": {
+    "canonical": "MISSING",
+    "candidates": "PROPOSED / CANDIDATE_NOT_CREATED \u2014 unchanged; no auto-create"
+  },
+  "financeGrowthCapital": {
+    "financialContext": "NOT_CERTIFIED",
+    "growthContext": "NOT_CERTIFIED",
+    "capitalContext": "PARTIAL",
+    "unchanged": true
+  },
+  "writeAuthority": {
+    "writePolicy": "read_only",
+    "GLOBAL_AUTO_RESPOND": false,
+    "capitalSubmit": false,
+    "canExecute": false
+  },
+  "countsHonesty": {
+    "documents": {
+      "rawIndexedSourceCountObservedLive": 1975,
+      "uniqueBusinessRecordCountIfProvable": null,
+      "note": "Large indexed communications/file-index volume is treated as RAW INDEXED SOURCE COUNT. Not assumed wrong. Not manipulated."
+    },
+    "meetings": {
+      "rawIndexedSourceCountObservedLive": 1423,
+      "currentOperatingCountIfProvable": null,
+      "note": "Raw archive/index volume; hygiene does not suppress meetings by title."
+    },
+    "communications": {
+      "rawIndexedSourceCountObservedLive": 2623,
+      "currentOperatingCountIfProvable": null,
+      "note": "Raw archive/index volume; hygiene does not suppress communications by title."
+    }
+  },
+  "duplicateAnalysis": {
+    "onboardingTasks": {
+      "examples": [
+        "Schedule and run kickoff call",
+        "Collect critical onboarding documents",
+        "Complete onboarding review"
+      ],
+      "determination": "B_OR_A_MIXED",
+      "detail": "Known functional-test lineage created HVCG_Tasks IDs 11/12/13 under project ID 27 (ACCG01 - Onboarding) on 2026-07-22. Repeated visible titles may also attach to separate TEST_HARDENING harden-* projects. Title equality alone is not treated as true duplicate. Exclusion is via parent/project classification and known source identity. Physical SharePoint deletion not performed.",
+      "presentationDedup": "Only when stable source identity proves equivalence; not implemented as title-based collapse"
+    },
+    "engagements": {
+      "examples": [
+        "ACCG Inc. - Engagement"
+      ],
+      "determination": "E_UNKNOWN_PENDING_LIVE_ITEM_IDS",
+      "detail": "Two visually identical engagement titles observed live. Without distinct source item IDs in this PR inventory, treat as UNKNOWN \u2014 preserve both; do not delete. Owner cleanup manifest recommends listing both source IDs in an approved write window if archival is desired."
+    }
+  },
+  "suspectInventory": [
+    {
+      "clientCode": "ACCG01",
+      "entityType": "project",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Projects",
+      "sourceItemId": "LIVE_PENDING_ITEM_ID",
+      "sourceRef": "HVCG_Projects:LIVE_PENDING_ITEM_ID",
+      "title": "ACCG01 - harden-1784680909",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "structuredHardenProjectLineage convention {ClientCode} - harden{optionalLetter}-{digits}",
+        "owner-observed live ACCG01 operating workspace",
+        "IsInternalProject does not cover these rows (ClientCode=ACCG01)"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    },
+    {
+      "clientCode": "ACCG01",
+      "entityType": "project",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Projects",
+      "sourceItemId": "LIVE_PENDING_ITEM_ID",
+      "sourceRef": "HVCG_Projects:LIVE_PENDING_ITEM_ID",
+      "title": "ACCG01 - hardenR-013942",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "structuredHardenProjectLineage",
+        "owner-observed live ACCG01 operating workspace"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    },
+    {
+      "clientCode": "ACCG01",
+      "entityType": "project",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Projects",
+      "sourceItemId": "LIVE_PENDING_ITEM_ID",
+      "sourceRef": "HVCG_Projects:LIVE_PENDING_ITEM_ID",
+      "title": "ACCG01 - harden-014529",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "structuredHardenProjectLineage",
+        "owner-observed live ACCG01 operating workspace"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    },
+    {
+      "clientCode": "ACCG01",
+      "entityType": "project",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Projects",
+      "sourceItemId": "LIVE_PENDING_ITEM_ID",
+      "sourceRef": "HVCG_Projects:LIVE_PENDING_ITEM_ID",
+      "title": "ACCG01 - hardenM-014703",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "structuredHardenProjectLineage",
+        "corroborates decision M014703 functional-test run lineage"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    },
+    {
+      "clientCode": "ACCG01",
+      "entityType": "project",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Projects",
+      "sourceItemId": "27",
+      "sourceRef": "HVCG_Projects:27",
+      "title": "ACCG01 - Onboarding",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "flow-functional-tests-latest.json HVCG_CreateProjectFromTemplate Create_Project ID=27 ClientCode=ACCG01 (2026-07-22)"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    },
+    {
+      "clientCode": "ACCG01",
+      "entityType": "decision",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Decisions",
+      "sourceItemId": "LIVE_PENDING_ITEM_ID",
+      "sourceRef": "HVCG_Decisions:LIVE_PENDING_ITEM_ID",
+      "title": "HARDEN Decision 1784680909",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "structuredHardenDecisionLineage",
+        "descriptionTestMarker: Functional test internal only",
+        "owner-observed live ACCG01 workspace"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    },
+    {
+      "clientCode": "ACCG01",
+      "entityType": "decision",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Decisions",
+      "sourceItemId": "LIVE_PENDING_ITEM_ID",
+      "sourceRef": "HVCG_Decisions:LIVE_PENDING_ITEM_ID",
+      "title": "ATLAS Harden Decision R013942",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "structuredHardenDecisionLineage",
+        "descriptionTestMarker: REST HttpRequest functional test"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    },
+    {
+      "clientCode": "ACCG01",
+      "entityType": "decision",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Decisions",
+      "sourceItemId": "LIVE_PENDING_ITEM_ID",
+      "sourceRef": "HVCG_Decisions:LIVE_PENDING_ITEM_ID",
+      "title": "ATLAS Harden Decision 014529",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "structuredHardenDecisionLineage",
+        "descriptionTestMarker: recovery test"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    },
+    {
+      "clientCode": "ACCG01",
+      "entityType": "decision",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Decisions",
+      "sourceItemId": "6",
+      "sourceRef": "HVCG_Decisions:6",
+      "title": "ATLAS Harden Decision M014703",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "flow-functional-tests-latest.json HVCG_ExecutiveDecisionEscalation Create_Decision ID=6",
+        "descriptionTestMarker: milestone+doc fix test"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    },
+    {
+      "clientCode": "ACCG01",
+      "entityType": "task",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Tasks",
+      "sourceItemId": "11",
+      "sourceRef": "HVCG_Tasks:11",
+      "title": "Schedule and run kickoff call",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "flow-functional-tests-latest.json Create_Task_Kickoff ID=11 under project 27"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    },
+    {
+      "clientCode": "ACCG01",
+      "entityType": "task",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Tasks",
+      "sourceItemId": "12",
+      "sourceRef": "HVCG_Tasks:12",
+      "title": "Collect critical onboarding documents",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "flow-functional-tests-latest.json Create_Task_CollectDocs ID=12 under project 27"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    },
+    {
+      "clientCode": "ACCG01",
+      "entityType": "task",
+      "sourceSystem": "sharepoint",
+      "sourceList": "HVCG_Tasks",
+      "sourceItemId": "13",
+      "sourceRef": "HVCG_Tasks:13",
+      "title": "Complete onboarding review",
+      "currentClassification": "UNCLASSIFIED_CLIENT_SCOPED",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": [
+        "flow-functional-tests-latest.json Create_Task_OnboardingReview ID=13 under project 27"
+      ],
+      "safeClientOperatingVisibility": false,
+      "sourceMutationRequired": false,
+      "confidence": "HIGH"
+    }
+  ],
+  "classificationCountsFromEvidenceInventory": {
+    "TEST_HARDENING_RECORDS_FOUND": 12,
+    "INTERNAL_SYSTEM_RECORDS_FOUND": 0,
+    "HISTORICAL_RECOVERED_RECORDS_FOUND": 0,
+    "UNKNOWN_REQUIRES_REVIEW_COUNT": 0,
+    "note": "Counts are from the evidence inventory assembled for this remediation (known IDs + owner-observed structured harden lineage). Live post-deploy certification must confirm full production item-id binding for LIVE_PENDING_ITEM_ID rows. HVCG_Risks item ID collisions with HVCG_Decisions are protected by stamped sourceList."
+  },
+  "regressionCoverage": {
+    "decisionId6RiskId6Collision": "PASS \u2014 Decisions:6 TEST_HARDENING quarantined; Risks:6 REAL_CURRENT_OPERATING retained; sourceRef HVCG_Decisions:6 vs HVCG_Risks:6",
+    "projectTaskTimelineCollision": "PASS \u2014 source|id composite keys; communications/meetings not suppressed",
+    "riskNotInterpretedAsDecisions": "PASS \u2014 risk classification uses sourceList=HVCG_Risks entityType=risk",
+    "sourceRecordKeyUnit": "PASS \u2014 HVCG_Projects|11 \u2260 HVCG_Tasks|11; HVCG_Decisions|6 \u2260 HVCG_Risks|6"
+  },
+  "ownerCleanupManifest": "docs/evidence/w2c-accg01-owner-cleanup-manifest-20260912.json",
+  "ownerCleanupManifestUpdated": false,
+  "ownerCleanupManifestNote": "Exact target identities unchanged (HVCG_Decisions:6 remains the known harden decision). Risk ID collisions no longer falsely map to that target.",
+  "tests": {
+    "hygiene": {
+      "tests": 12,
+      "fail": 0
+    },
+    "hubW2cAndRelated": "pass",
+    "hubFullSuite": {
+      "tests": 796,
+      "fail": 0
+    },
+    "integrationCore": {
+      "tests": 21,
+      "fail": 0
+    },
+    "eliteTests": "pass",
+    "eliteProductionBuild": "pass",
+    "hubTypecheckGate": "NEW_TYPE_ERRORS: none",
+    "eliteHooksLint": "pass"
+  },
+  "status": {
+    "W2C_LIVE_DATA_HYGIENE_VERDICT": "PARTIAL",
+    "W2C_OVERALL": "NOT_DECLARED_PASS",
+    "INDEPENDENT_REVIEW": "REMEDIATED_AWAITING_RE_REVIEW",
+    "MERGE_STATUS": "BLOCKED",
+    "DEPLOY_STATUS": "BLOCKED",
+    "LIVE_CERT_STATUS": "BLOCKED",
+    "GOVERNANCE_WRITEBACK": "BLOCKED"
+  },
+  "validationReRun": {
+    "agent": "w2c-hygiene-independent-review-remediation",
+    "hubFullSuite": {
+      "tests": 796,
+      "fail": 0
+    },
+    "hygiene": {
+      "tests": 12,
+      "fail": 0
+    },
+    "w2cRouteAndSourceUnavailable": "pass",
+    "integrationCore": {
+      "tests": 21,
+      "fail": 0
+    },
+    "eliteTests": "pass",
+    "eliteProductionBuild": "pass",
+    "hubTypecheckGate": "NEW_TYPE_ERRORS: none",
+    "eliteHooksLint": "pass",
+    "githubCiOnPriorRemediationTip": "pass (hub/elite/integration-core green on ce1cfe81)"
+  },
+  "codeFixHead": "6e5bb3a307efa1a49427fb78491d3f8b5ebeda5b"
+}

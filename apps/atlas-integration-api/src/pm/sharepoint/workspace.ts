@@ -9,6 +9,13 @@ import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { clientPortalHrefs, isReadyClientActivation } from './clientActivation.ts';
 import { PmHttpError } from './errors.ts';
 import { isFileIndexRow } from './fabric/fileIndex.ts';
+import {
+  filterOwnerFacingProjects,
+  filterOwnerFacingTasks,
+  filterOwnerFacingWorkspaceItems,
+  summarizeHygiene,
+  type WorkspaceHygieneSummary,
+} from './operatingRecordHygiene.ts';
 import type { SharePointClient, SharePointPmService, SharePointProject, SharePointTask } from './repository.ts';
 
 export type CompletenessStatus =
@@ -82,6 +89,12 @@ export interface ClientWorkspacePayload {
     statements: BriefStatement[];
   };
   nextActions: Array<{ text: string; evidence: EvidenceRef[] }>;
+  /**
+   * Non-destructive hygiene: owner-facing arrays above are REAL_CURRENT_OPERATING only.
+   * Quarantined TEST_HARDENING / INTERNAL_SYSTEM / HISTORICAL_RECOVERED / UNKNOWN remain
+   * auditable here for provenance/admin — never deleted from SharePoint by this path.
+   */
+  hygiene: WorkspaceHygieneSummary;
   source: 'sharepoint';
   gccWorkspaceKey: string;
   clientPortalHrefs: ReturnType<typeof clientPortalHrefs>;
@@ -229,11 +242,24 @@ export async function buildSharePointClientWorkspace(
   const client = await service.persistVerifyReplayForClient(authorized);
   const hrefs = clientPortalHrefs(client.clientCode);
   const ready = isReadyClientActivation(client.activationStatus) || isReadyClientActivation(client.activation?.status);
-  const projects = (await service.listAuthorizedProjects(principal)).filter((p) => p.clientCode === clientCode);
+  const rawProjects = (await service.listAuthorizedProjects(principal)).filter((p) => p.clientCode === clientCode);
   const allTasks = await service.listAuthorizedTasks(principal);
-  const tasks = allTasks.filter((t) => t.clientCode === clientCode || projects.some((p) => p.id === t.projectId));
+  const rawTasks = allTasks.filter(
+    (t) => t.clientCode === clientCode || rawProjects.some((p) => p.id === t.projectId),
+  );
+  const projectHygiene = filterOwnerFacingProjects(rawProjects);
+  const taskHygiene = filterOwnerFacingTasks(rawTasks, projectHygiene.byId);
+  const projects = projectHygiene.operating;
+  const tasks = taskHygiene.operating;
   const open = tasks.filter(openTask);
   const extras = await service.listWorkspaceCollections(principal, clientCode);
+  const decisionHygiene = filterOwnerFacingWorkspaceItems(extras.decisionsRisks.items, {
+    clientCode,
+  });
+  const decisionsRisks = {
+    ...extras.decisionsRisks,
+    items: decisionHygiene.operating,
+  };
   const fileIndex = extras.communications.items.filter((i) => isFileIndexRow(i));
   const documents: ClientWorkspacePayload['documents'] = {
     status:
@@ -266,6 +292,16 @@ export async function buildSharePointClientWorkspace(
       : 'No SharePointLibraryUrl on HVCG_Clients and document lists are not granted to Hub.',
   };
   const { statements, nextActions } = deriveBrief({ client, projects, tasks });
+  const rawOpen = rawTasks.filter(openTask);
+  const hygiene = summarizeHygiene({
+    rawProjects: rawProjects.length,
+    operatingProjects: projects.length,
+    rawTasks: rawOpen.length,
+    operatingTasks: open.length,
+    rawDecisionsRisks: extras.decisionsRisks.items.length,
+    operatingDecisionsRisks: decisionHygiene.operating.length,
+    quarantined: [...projectHygiene.quarantined, ...taskHygiene.quarantined, ...decisionHygiene.quarantined],
+  });
   return {
     kind: 'client_workspace_v1',
     client,
@@ -307,7 +343,7 @@ export async function buildSharePointClientWorkspace(
     meetings: extras.meetings,
     engagements: extras.engagements,
     deliverables: extras.deliverables,
-    decisionsRisks: extras.decisionsRisks,
+    decisionsRisks,
     contacts: extras.contacts,
     timeline: [
       ...buildTimeline(projects, tasks),
@@ -339,6 +375,7 @@ export async function buildSharePointClientWorkspace(
       statements,
     },
     nextActions,
+    hygiene,
     source: 'sharepoint',
     gccWorkspaceKey: `gcc-${client.clientCode}`,
     clientPortalHrefs: hrefs,

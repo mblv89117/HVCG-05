@@ -1,0 +1,81 @@
+{
+  "schema": "atlas_w2c_accg01_owner_cleanup_manifest.v1",
+  "missionKey": "ATLAS-W2C-ACCG01-LIVE-DATA-HYGIENE",
+  "asOf": "2026-09-12T23:55:00Z",
+  "baseSha": "4a91b6578d40f46f93e163c6ae637b32d33e4e53",
+  "status": "OWNER_GATED_NOT_EXECUTED",
+  "writeWindowRequired": true,
+  "writePolicy": "read_only",
+  "executed": false,
+  "purpose": "Optional physical archival/marking of ACCG01 functional-test / harden SoR rows after non-destructive Hub presentation filtering. Do not execute without an approved Owner write window.",
+  "recommendedActions": [
+    {
+      "action": "MARK_OR_ARCHIVE",
+      "sourceList": "HVCG_Projects",
+      "sourceItemId": "27",
+      "title": "ACCG01 - Onboarding",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": "flow-functional-tests-latest.json Create_Project ID=27",
+      "mutation": "Owner-approved archive or stamp RecordClass/SourceIdentity if schema write window later adds fields. Do not auto-delete."
+    },
+    {
+      "action": "MARK_OR_ARCHIVE",
+      "sourceList": "HVCG_Decisions",
+      "sourceItemId": "6",
+      "title": "ATLAS Harden Decision M014703",
+      "proposedClassification": "TEST_HARDENING",
+      "evidence": "flow-functional-tests-latest.json Create_Decision ID=6",
+      "mutation": "Owner-approved archive or internal stamp. Do not auto-delete."
+    },
+    {
+      "action": "RESOLVE_LIVE_ITEM_IDS_THEN_ARCHIVE",
+      "sourceList": "HVCG_Projects",
+      "titles": [
+        "ACCG01 - harden-1784680909",
+        "ACCG01 - hardenR-013942",
+        "ACCG01 - harden-014529",
+        "ACCG01 - hardenM-014703"
+      ],
+      "proposedClassification": "TEST_HARDENING",
+      "mutation": "During approved write window, resolve exact SharePoint item IDs, confirm ClientCode=ACCG01, then archive/mark. Hub already excludes via structured lineage without mutation."
+    },
+    {
+      "action": "RESOLVE_LIVE_ITEM_IDS_THEN_ARCHIVE",
+      "sourceList": "HVCG_Decisions",
+      "titles": [
+        "HARDEN Decision 1784680909",
+        "ATLAS Harden Decision R013942",
+        "ATLAS Harden Decision 014529"
+      ],
+      "proposedClassification": "TEST_HARDENING",
+      "mutation": "Resolve IDs + confirm description test markers before archive/mark."
+    },
+    {
+      "action": "REVIEW_DUPLICATE_ENGAGEMENTS",
+      "sourceList": "HVCG_Engagements",
+      "titles": ["ACCG Inc. - Engagement"],
+      "determination": "UNKNOWN — preserve both until distinct sourceItemIds prove true duplicates",
+      "mutation": "Do not delete automatically. If both IDs are true duplicates, Owner may archive one after review."
+    },
+    {
+      "action": "REVIEW_ONBOARDING_TASK_COPIES",
+      "sourceList": "HVCG_Tasks",
+      "knownTestIds": ["11", "12", "13"],
+      "mutation": "Archive known test tasks with parent project 27. Other same-title tasks only if parent project is TEST_HARDENING."
+    }
+  ],
+  "explicitNonActions": [
+    "Do not delete SharePoint/M365 source records automatically in this PR",
+    "Do not enable writes for ACCG01",
+    "Do not auto-create contacts",
+    "Do not invent finance/growth/capital facts",
+    "Do not start W2D/W2E/W2F"
+  ],
+  "ownerActionRequired": [
+    "Independent review of hygiene PR",
+    "Guarded deploy after merge",
+    "Authenticated live ACCG01 re-certification",
+    "Optional: approve write window to archive/mark source harden rows listed here",
+    "Governance writeback only after live cert"
+  ]
+}

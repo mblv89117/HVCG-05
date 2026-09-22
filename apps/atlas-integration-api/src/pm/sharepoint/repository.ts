@@ -547,8 +547,29 @@ export class SharePointPmService {
     };
   }
 
-  private mapWorkspaceItems(items: GraphListItem[], clientCode: string): Array<Record<string, unknown>> {
+  private mapWorkspaceItems(
+    items: GraphListItem[],
+    clientCode: string,
+    listName: string,
+  ): Array<Record<string, unknown>> {
     const out: Array<Record<string, unknown>> = [];
+    const sourceList = listName;
+    const entityType =
+      listName === 'HVCG_Decisions'
+        ? 'decision'
+        : listName === 'HVCG_Risks'
+          ? 'risk'
+          : listName === 'HVCG_Communications'
+            ? 'communication'
+            : listName === 'HVCG_Meetings'
+              ? 'meeting'
+              : listName === 'HVCG_Engagements'
+                ? 'engagement'
+                : listName === 'HVCG_Deliverables'
+                  ? 'deliverable'
+                  : listName === 'HVCG_Contacts'
+                    ? 'contact'
+                    : 'other';
     for (const item of items) {
       const code = asString(item.fields.ClientCode);
       if (code !== clientCode) continue;
@@ -556,6 +577,9 @@ export class SharePointPmService {
         id: item.id,
         title: asString(item.fields.Title) || item.id,
         clientCode: code,
+        // Preserve list-local provenance — SharePoint item IDs collide across lists.
+        sourceList,
+        entityType,
         date:
           isoDate(item.fields.CommunicationDate) ||
           isoDate(item.fields.MeetingDate) ||
@@ -609,7 +633,7 @@ export class SharePointPmService {
       listName: string,
     ): Promise<WorkspaceCollectionResult> => {
       if (!listId) return this.ungranted(listName);
-      const items = this.mapWorkspaceItems(await this.listAll(listId), clientCode);
+      const items = this.mapWorkspaceItems(await this.listAll(listId), clientCode, listName);
       return { status: 'COMPLETE', queried: true, items };
     };
     const [communications, meetings, engagements, deliverables, decisions, risks, contacts] = await Promise.all([
@@ -621,6 +645,7 @@ export class SharePointPmService {
       load(this.settings.risksListId, 'HVCG_Risks'),
       load(this.settings.contactsListId, 'HVCG_Contacts'),
     ]);
+    // Combined presentation section — each item retains its originating sourceList/entityType.
     const decisionItems = [...decisions.items, ...risks.items];
     const decisionsRisks: WorkspaceCollectionResult =
       decisions.queried || risks.queried
@@ -668,7 +693,11 @@ export class SharePointPmService {
     for (const code of entitled) {
       const pack = (row: { items: GraphListItem[]; queried: boolean; listName: string }): WorkspaceCollectionResult => {
         if (!row.queried) return this.ungranted(row.listName);
-        return { status: 'COMPLETE', queried: true, items: this.mapWorkspaceItems(row.items, code) };
+        return {
+          status: 'COMPLETE',
+          queried: true,
+          items: this.mapWorkspaceItems(row.items, code, row.listName),
+        };
       };
       const decisionItems = [...pack(decisions).items, ...pack(risks).items];
       const decisionsRisks: WorkspaceCollectionResult =

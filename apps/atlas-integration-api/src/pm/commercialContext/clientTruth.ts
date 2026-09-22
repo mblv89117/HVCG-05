@@ -17,6 +17,14 @@ import { hvsActionableClientKnowledge } from '../sharepoint/hvsActionableClientK
 import { hvsRecoveredDocuments } from '../sharepoint/hvsRecoveredDocuments.ts';
 import { hvsRecoveredProjects } from '../sharepoint/hvsRecoveredProjects.ts';
 import { hvsRecoveredCapitalPackets } from '../sharepoint/hvsRecoveredClientRecords.ts';
+import {
+  filterOwnerFacingProjects,
+  filterOwnerFacingTasks,
+  filterOwnerFacingWorkspaceItems,
+  isHygieneTargetedSource,
+  sourceRecordKey,
+  type WorkspaceHygieneSummary,
+} from '../sharepoint/operatingRecordHygiene.ts';
 import type {
   OperatorOperatingItem,
   OperatorOperatingPicture,
@@ -120,6 +128,7 @@ export type WorkspaceTruthSnapshot = {
     blocker?: string;
     requiresApproval?: boolean;
     nextAction?: string;
+    projectId?: string;
   }>;
   documents?: { queried: boolean; items: Array<{ id: string; title: string; source?: string }>; reason?: string };
   communications?: { queried: boolean; items: Array<Record<string, unknown>>; reason?: string };
@@ -129,6 +138,8 @@ export type WorkspaceTruthSnapshot = {
   decisionsRisks?: { queried: boolean; items: Array<Record<string, unknown>>; reason?: string };
   timeline?: Array<{ at: string; kind: string; title: string; source: string; id: string }>;
   nextActions?: Array<{ text: string; evidence?: Array<{ source: string; kind?: string; id: string; field?: string }> }>;
+  /** Present when Hub workspace applied operating-record hygiene. */
+  hygiene?: WorkspaceHygieneSummary;
 };
 
 export type ClientTruthModel = {
@@ -222,6 +233,7 @@ export function workspaceSnapshotFromPayload(payload: {
   decisionsRisks?: WorkspaceTruthSnapshot['decisionsRisks'];
   timeline?: WorkspaceTruthSnapshot['timeline'];
   nextActions?: Array<{ text: string; evidence?: Array<{ source: string; kind?: string; id: string; field?: string }> }>;
+  hygiene?: WorkspaceHygieneSummary;
 }): WorkspaceTruthSnapshot | undefined {
   const clientCode = payload.overview?.clientCode || payload.client?.clientCode;
   if (!clientCode) return undefined;
@@ -240,6 +252,76 @@ export function workspaceSnapshotFromPayload(payload: {
     decisionsRisks: payload.decisionsRisks,
     timeline: payload.timeline,
     nextActions: payload.nextActions,
+    hygiene: payload.hygiene,
+  };
+}
+
+/**
+ * Defense-in-depth: ensure TEST_HARDENING / INTERNAL_SYSTEM / UNKNOWN / HISTORICAL
+ * never enter owner-facing composition even if a caller skipped workspace filtering.
+ */
+export function applyOperatingHygieneToWorkspaceSnapshot(
+  workspace?: WorkspaceTruthSnapshot,
+): WorkspaceTruthSnapshot | undefined {
+  if (!workspace) return undefined;
+  const projectHygiene = filterOwnerFacingProjects(
+    (workspace.projects || []).map((p) => ({
+      ...p,
+      name: p.name,
+      id: p.id,
+      clientCode: workspace.clientCode,
+    })),
+  );
+  const taskHygiene = filterOwnerFacingTasks(
+    (workspace.tasks || []).map((t) => ({
+      ...t,
+      clientCode: workspace.clientCode,
+    })),
+    projectHygiene.byId,
+  );
+  const decisionHygiene = workspace.decisionsRisks
+    ? filterOwnerFacingWorkspaceItems(workspace.decisionsRisks.items, {
+        clientCode: workspace.clientCode,
+      })
+    : undefined;
+  const allowedKeys = new Set<string>([
+    ...projectHygiene.operating.map((p) => sourceRecordKey('HVCG_Projects', p.id)),
+    ...taskHygiene.operating.map((t) => sourceRecordKey('HVCG_Tasks', t.id)),
+    ...(decisionHygiene?.operating || []).map((d) =>
+      sourceRecordKey(
+        typeof d.sourceList === 'string' ? d.sourceList : undefined,
+        String(d.id ?? ''),
+      ),
+    ),
+  ]);
+  const timeline = (workspace.timeline || []).filter((ev) => {
+    if (isHygieneTargetedSource(ev.source)) {
+      // List-local IDs collide across HVCG_* lists — always qualify by source.
+      if (!ev.source || !ev.id) return false;
+      return allowedKeys.has(sourceRecordKey(ev.source, ev.id));
+    }
+    // Communications/meetings remain; harden isolation is project/task/decision/risk scoped.
+    return true;
+  });
+  return {
+    ...workspace,
+    projects: projectHygiene.operating.map(({ name, id, projectType, status, health, nextAction, ownerName }) => ({
+      id,
+      name,
+      projectType,
+      status,
+      health,
+      nextAction,
+      ownerName,
+    })),
+    tasks: taskHygiene.operating,
+    decisionsRisks: workspace.decisionsRisks
+      ? {
+          ...workspace.decisionsRisks,
+          items: decisionHygiene?.operating || [],
+        }
+      : workspace.decisionsRisks,
+    timeline,
   };
 }
 
@@ -400,7 +482,9 @@ export function composeClientTruth(opts: {
   const identity = opts.identity ?? PRODUCTION_IDENTITY.getByClientCode(clientCode);
   const boundary = entityBoundaryFor(clientCode);
   const writePolicy = boundary?.writePolicy || (isAccgReadOnly(clientCode) ? 'read_only' : 'normal');
-  const workspace = opts.workspace?.clientCode === clientCode ? opts.workspace : undefined;
+  const workspace = applyOperatingHygieneToWorkspaceSnapshot(
+    opts.workspace?.clientCode === clientCode ? opts.workspace : undefined,
+  );
   const displayName = workspace?.displayName || identity?.displayName || clientCode;
   const hvsBlocked = opts.picture?.hvsDataAccess === 'BLOCKED';
   const knowledge = hvsBlocked
@@ -867,12 +951,18 @@ export function composeClientTruth(opts: {
     },
     provenance: {
       question: 'What is the provenance of every important statement?',
-      text: 'Every domain above carries source+detail provenance. Claims without a source stay MISSING or NOT_CERTIFIED.',
+      text: workspace?.hygiene?.quarantined.length
+        ? `Every domain above carries source+detail provenance. Claims without a source stay MISSING or NOT_CERTIFIED. Operating hygiene quarantined ${workspace.hygiene.quarantined.length} TEST_HARDENING/INTERNAL_SYSTEM/HISTORICAL_RECOVERED/UNKNOWN record(s) from owner-facing current work; source rows remain auditable and were not deleted.`
+        : 'Every domain above carries source+detail provenance. Claims without a source stay MISSING or NOT_CERTIFIED.',
       classification: 'CONFIRMED',
       provenance: [
         identityDomain.provenance[0]!,
         financialContext.provenance[0]!,
         growthContext.provenance[0]!,
+        ...(workspace?.hygiene?.quarantined.slice(0, 4).map((row) => ({
+          source: 'operating-record-hygiene',
+          detail: `${row.proposedClassification}:${row.sourceRef}:${row.title}`,
+        })) || []),
       ],
     },
   };
