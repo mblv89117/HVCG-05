@@ -564,6 +564,18 @@ export function answerWorkflowDiscovery(
   return `You have ${custom.length} conversational workflow definition(s). Open Workflow Center for full detail.`;
 }
 
+/**
+ * Pure NOT_CERTIFIED honesty prose must not be labeled a confirmed decision.
+ * Mixed operating briefs that also state what is happening stay on the
+ * existing confirmed stamp.
+ */
+function notCertifiedHonestyProse(previewText: string): boolean {
+  return (
+    /\bNOT_CERTIFIED\b/.test(previewText) &&
+    !/WHAT IS HAPPENING|WHAT ATLAS KNOWS:/.test(previewText)
+  );
+}
+
 export function buildConversationalAskAtlasAnswer(opts: {
   question: string;
   previewText: string;
@@ -573,6 +585,8 @@ export function buildConversationalAskAtlasAnswer(opts: {
   now?: string;
 }): AskAtlasAnswer {
   const now = opts.now ?? new Date().toISOString();
+  const withholdConfirmedDecision = notCertifiedHonestyProse(opts.previewText);
+  const classification = withholdConfirmedDecision ? 'PROPOSED' : 'CONFIRMED';
   return {
     kind: 'ask_atlas_attention_v1',
     question: ASK_ATLAS_QUESTION,
@@ -582,12 +596,12 @@ export function buildConversationalAskAtlasAnswer(opts: {
     items: [
       {
         id: `workflow-draft:${opts.workflowId}`,
-        state: 'Decision Required',
+        state: withholdConfirmedDecision ? 'Waiting' : 'Decision Required',
         why: `Workflow drafted: ${opts.workflowName}`,
         basedOn: opts.previewText.slice(0, 240),
         evidence: opts.workflowId,
-        provenance: 'CONFIRMED',
-        classification: 'CONFIRMED',
+        provenance: classification,
+        classification,
         ...(opts.clientCode ? { clientCode: opts.clientCode } : {}),
       },
     ],
@@ -597,7 +611,7 @@ export function buildConversationalAskAtlasAnswer(opts: {
       trigger: 'signed_operator_question',
       timestamp: now,
       tools: ['workflow_definition', 'workflow_preview'],
-      classification: 'CONFIRMED',
+      classification,
       result: 'answered',
       readWriteStatus: 'READ_AUTO',
       policyDecision: 'answered',
