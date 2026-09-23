@@ -7,6 +7,7 @@ import { buildOperatorCommercialContext } from '../src/pm/commercialContext/buil
 import { emptyOverlay } from '../src/pm/commercialContext/store.ts';
 import {
   answerClientOperatingBrief,
+  collectPendingDecisionLines,
   currentWorkspaceUnavailableAnswer,
   mapsToClientOperatingBriefIntent,
   WORKSPACE_TRUTH_SOURCE_UNAVAILABLE,
@@ -191,6 +192,43 @@ describe('W2C ACCG01 honest real-client operator proof', () => {
         assert.match(answer, /NOT_CERTIFIED/);
       }
     }
+  });
+
+  it('drops blank or foreign ClientCode lines from a client-scoped approvals answer', () => {
+    const lines = collectPendingDecisionLines({
+      clientCode: 'ACCG01',
+      approvalItems: [
+        { title: 'ACCG capital credit path', clientCode: 'accg01', status: 'PENDING' },
+        { title: 'Uncoded lender decision packet', clientCode: '', status: 'PENDING' },
+        { title: 'Missing code packet', status: 'PENDING' },
+        { title: 'PDG coded packet', clientCode: 'PDG01', status: 'PENDING' },
+      ],
+      workspace: {
+        clientCode: 'ACCG01',
+        decisionsRisks: {
+          queried: true,
+          items: [
+            { title: 'ACCG decision on file', clientCode: 'ACCG01', status: 'Open' },
+            { title: 'Blank decision row', status: 'Open' },
+          ],
+        },
+        tasks: [
+          { id: 't-blank', title: 'Task without a client code', status: 'needs_review', requiresApproval: true },
+          {
+            id: 't-accg',
+            title: 'ACCG coded owner task',
+            status: 'needs_review',
+            requiresApproval: true,
+            clientCode: 'ACCG01',
+          },
+        ],
+      },
+    });
+    assert.deepEqual(lines, [
+      'ACCG capital credit path',
+      'ACCG decision on file',
+      'ACCG coded owner task',
+    ]);
   });
 
   it('fail-closes unscoped operating-brief questions instead of portfolio fallback', () => {

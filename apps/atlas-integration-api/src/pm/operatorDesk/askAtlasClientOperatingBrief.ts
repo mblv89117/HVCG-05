@@ -209,6 +209,11 @@ function resolveScope(opts: {
   return { kind: 'unresolved' };
 }
 
+function exactClientCode(value: string | undefined, scoped: string): boolean {
+  const code = (value || '').trim().toUpperCase();
+  return code.length > 0 && code === scoped;
+}
+
 function foreignCodesIn(blob: string, scoped: string): string[] {
   const found = new Set<string>();
   FOREIGN_CODE.lastIndex = 0;
@@ -260,19 +265,24 @@ export function collectPendingDecisionLines(opts: {
   for (const item of opts.approvalItems || []) {
     const status = (item.status || 'PENDING').toUpperCase();
     if (status !== 'PENDING' && status !== 'DEFERRED') continue;
-    if (item.clientCode && item.clientCode.toUpperCase() !== scoped) continue;
+    // Blank or missing ClientCode is not an entitled match. Exclude it.
+    if (!exactClientCode(item.clientCode, scoped)) continue;
     const title = (item.title || '').trim();
     if (!title) continue;
     const action = (item.requestedAction || '').trim();
     push(action && action !== title ? `${title} — ${action}` : title);
   }
   for (const row of opts.workspace?.decisionsRisks?.items || []) {
+    const rowCode = typeof row.clientCode === 'string' ? row.clientCode : undefined;
+    if (!exactClientCode(rowCode, scoped)) continue;
     const title = typeof row.title === 'string' ? row.title.trim() : '';
     const status = typeof row.status === 'string' ? row.status : '';
     if (/complete|closed|rejected/i.test(status)) continue;
     if (title) push(title);
   }
   for (const task of opts.workspace?.tasks || []) {
+    const taskCode = task.clientCode;
+    if (!exactClientCode(taskCode, scoped)) continue;
     const needs =
       task.requiresApproval === true ||
       /approval|needs_review|needs_owner_approval|decision/i.test(task.status || '');

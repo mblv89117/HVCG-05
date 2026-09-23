@@ -37,11 +37,15 @@ const ACCG_TIMELINE = 'ACCG ops check-in';
 const ACCG_FILE = 'ACCG indexed correspondence.pdf';
 const ACCG_CANDIDATE_EMAIL = 'ops@accg-inc.example';
 
+const CYCLE_NEXT_LINK = `https://graph.microsoft.com/v1.0/sites/${SITE}/lists/${COMMS}/items?$skiptoken=repeat`;
+const PARTIAL_FILE_TITLE = 'cycled partial file.pdf';
+
 class MemoryGraph implements PmGraphTransport {
   readonly lists = new Map<string, GraphListItem[]>();
   nextId = 1;
   etagN = 1;
-  commsMode: 'ok' | 'deny' | 'hang' = 'ok';
+  commsCalls = 0;
+  commsMode: 'ok' | 'deny' | 'hang' | 'cycle' | 'page_cap' = 'ok';
 
   constructor() {
     this.lists.set(PROJECTS, []);
@@ -65,11 +69,33 @@ class MemoryGraph implements PmGraphTransport {
   }
 
   async listItems(listId: string): Promise<GraphListPage> {
+    if (listId === COMMS) this.commsCalls += 1;
     if (listId === COMMS && this.commsMode === 'deny') {
       throw new PmHttpError(403, 'forbidden', 'file-index rejected');
     }
     if (listId === COMMS && this.commsMode === 'hang') {
       await new Promise((resolve) => setTimeout(resolve, 2500));
+    }
+    if (listId === COMMS && (this.commsMode === 'cycle' || this.commsMode === 'page_cap')) {
+      const nextLink =
+        this.commsMode === 'cycle'
+          ? CYCLE_NEXT_LINK
+          : `https://graph.microsoft.com/v1.0/sites/${SITE}/lists/${COMMS}/items?$skiptoken=page-${this.commsCalls}`;
+      return {
+        items: [
+          {
+            id: `partial-${this.commsCalls}`,
+            etag: `"etag-partial-${this.commsCalls}"`,
+            fields: {
+              Title: PARTIAL_FILE_TITLE,
+              ClientCode: 'ACCG01',
+              Summary: FILE_INDEX_MARKER,
+              SourceItemId: `file:partial-${this.commsCalls}`,
+            },
+          },
+        ],
+        nextLink,
+      };
     }
     return { items: this.lists.get(listId) || [] };
   }
@@ -203,13 +229,14 @@ function seedAccgWorkspace(graph: MemoryGraph, opts?: { includeAccgClient?: bool
 
 async function withW2cHub(
   entitlements: (oid: string | undefined) => string[],
-  fn: (ctx: { base: string }) => Promise<void>,
+  fn: (ctx: { base: string; graph: MemoryGraph }) => Promise<void>,
   opts?: {
     includeAccgClient?: boolean;
     authorizeClientError?: number;
-    commsMode?: 'ok' | 'deny' | 'hang';
+    commsMode?: 'ok' | 'deny' | 'hang' | 'cycle' | 'page_cap';
     deadlineMs?: number;
     seedApprovalTask?: boolean;
+    seedBlankForeignApproval?: boolean;
   },
 ) {
   const dir = mkdtempSync(join(tmpdir(), 'atlas-w2c-route-'));
@@ -229,6 +256,21 @@ async function withW2cHub(
         OwnerEmail: 'staff@hvcg.example',
       },
       '21',
+    );
+  }
+  if (opts?.seedBlankForeignApproval) {
+    graph.seed(
+      TASKS,
+      {
+        Title: 'Uncoded lender decision packet',
+        ProjectIdLookupId: 11,
+        ClientCode: '',
+        TaskStatus: 'In Review',
+        Priority: 'High',
+        DueDate: '2026-10-02',
+        OwnerEmail: 'staff@hvcg.example',
+      },
+      '22',
     );
   }
   const prev = { ...process.env };
@@ -286,7 +328,7 @@ async function withW2cHub(
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
   const port = (server.address() as AddressInfo).port;
   try {
-    await fn({ base: `http://127.0.0.1:${port}` });
+    await fn({ base: `http://127.0.0.1:${port}`, graph });
   } finally {
     await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
     rmSync(dir, { recursive: true, force: true });
@@ -648,6 +690,62 @@ describe('W2C ACCG01 route-level honest workspace truth', () => {
         assert.match(approvals.body.workflowAnswer || '', /GLOBAL_AUTO_RESPOND=false/);
       },
       { commsMode: 'hang', deadlineMs: 400, seedApprovalTask: true },
+    );
+  });
+
+  it('repeated nextLink or page-cap file-index walks are SOURCE_UNAVAILABLE and are not cached complete', async () => {
+    for (const commsMode of ['cycle', 'page_cap'] as const) {
+      await withW2cHub(
+        (oid) => (oid === USER_STAFF ? STAFF_CODES : ['ACCG01']),
+        async ({ base, graph }) => {
+          const first = await askAtlas(base, 'Documents', 'staff', 'ACCG01');
+          assert.equal(first.status, 200);
+          assert.equal(first.body.runtime?.pending, false);
+          assert.equal(first.body.runtime?.workspaceTruth, 'SOURCE_UNAVAILABLE');
+          assert.match(first.body.workflowAnswer || '', /SOURCE_UNAVAILABLE/);
+          assert.match(first.body.workflowAnswer || '', /will not invent files/i);
+          assert.match(first.body.workflowAnswer || '', /GLOBAL_AUTO_RESPOND=false/);
+          assert.match(first.body.workflowAnswer || '', /capitalSubmit=false/);
+          assert.match(first.body.workflowAnswer || '', /canExecute=false/);
+          assert.equal(/documents=INDEXED|documents=CONFIRMED|entitled document index row/i.test(first.body.workflowAnswer || ''), false);
+          assert.equal(first.body.workflowAnswer?.includes(PARTIAL_FILE_TITLE), false);
+          assert.equal(first.body.runtime?.toolsInvoked?.includes('applyApprovalAction'), false);
+          const afterFirst = graph.commsCalls;
+          assert.ok(afterFirst > 1, `${commsMode} walk must page the file-index`);
+
+          const second = await askAtlas(base, 'What documents exist for ACCG?');
+          assert.equal(second.status, 200);
+          assert.equal(second.body.runtime?.pending, false);
+          assert.equal(second.body.runtime?.workspaceTruth, 'SOURCE_UNAVAILABLE');
+          assert.match(second.body.workflowAnswer || '', /SOURCE_UNAVAILABLE/);
+          assert.equal(/documents=INDEXED|documents=CONFIRMED|entitled document index row/i.test(second.body.workflowAnswer || ''), false);
+          assert.ok(
+            graph.commsCalls > afterFirst,
+            `${commsMode} truncation must not be served as a complete list cache hit`,
+          );
+        },
+        { commsMode },
+      );
+    }
+  });
+
+  it('blank ClientCode task on another entitled client is excluded from the ACCG01 approvals answer', async () => {
+    await withW2cHub(
+      (oid) => (oid === USER_STAFF ? STAFF_CODES : ['ACCG01']),
+      async ({ base }) => {
+        const approvals = await askAtlas(base, 'What is the approvals brief for ACCG?');
+        assert.equal(approvals.status, 200);
+        assert.equal(approvals.body.runtime?.pending, false);
+        assert.match(approvals.body.workflowAnswer || '', /ACCG capital credit path/);
+        assert.equal((approvals.body.workflowAnswer || '').includes('Uncoded lender decision packet'), false);
+        assert.match(approvals.body.workflowAnswer || '', /did not apply an approval action/);
+        assert.match(approvals.body.workflowAnswer || '', /GLOBAL_AUTO_RESPOND=false/);
+        assert.match(approvals.body.workflowAnswer || '', /capitalSubmit=false/);
+        assert.match(approvals.body.workflowAnswer || '', /canExecute=false/);
+        assert.equal(approvals.body.runtime?.toolsInvoked?.includes('applyApprovalAction'), false);
+        assert.equal(GLOBAL_AUTO_RESPOND, false);
+      },
+      { seedApprovalTask: true, seedBlankForeignApproval: true },
     );
   });
 
