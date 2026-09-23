@@ -75,9 +75,20 @@ export function commercialContextCopy(
     : undefined;
 
   const gccLines =
-    operator?.gcc.signals.map((s) =>
-      [s.signalType.replace(/_/g, ' '), s.severity, s.summary].filter(Boolean).join(' · '),
-    ) || [];
+    operator?.gcc.signals.map((s) => {
+      const summary = (s.summary || '').replace(/\$\s?\d[\d,]*(?:\.\d+)?/g, '').replace(/\s{2,}/g, ' ').trim();
+      return [
+        s.signalType.replace(/_/g, ' '),
+        s.severity,
+        summary || undefined,
+        'observation-only',
+        'copiesLedger=false',
+        'canExecute=false',
+        'not a certified ledger',
+      ]
+        .filter(Boolean)
+        .join(' · ');
+    }) || [];
   const copilotLines = operator
     ? [
         ...operator.copilot.assessments.map((a) => a.summary || `Assessment ${a.assessmentId}`),

@@ -14,6 +14,7 @@ import type {
   OperatorCommercialContext,
 } from './types.ts';
 import { growth360ApprovalId } from '../../modules/ingest/campaignApproval.ts';
+import { gccObservationHonestyLine } from '../../modules/ingest/gccValueSignal.ts';
 
 export type { LiveClientPilotAction, LiveClientPilotBrief };
 
@@ -61,11 +62,11 @@ export function buildLiveClientPilotBrief(
   }
 
   for (const signal of ctx.gcc.signals) {
-    const summary = signal.summary || signal.signalType.replace(/_/g, ' ');
-    whatIsHappening.push(`GCC signal (${signal.signalType}): ${summary}`);
+    const line = gccObservationHonestyLine(signal);
+    whatIsHappening.push(`GCC signal: ${line}`);
     whyItMatters.push('GCC observation is available in Atlas without opening GCC for routine status.');
     whatChanged.push(`GCC observation recorded at ${signal.emittedAt}.`);
-    known.push(`GCC value signal ${signal.signalId} on record (observation-only; copiesLedger=false).`);
+    known.push(`GCC value signal ${signal.signalId} on record. ${line}`);
     provenance.push({
       source: 'gcc-module-ingest',
       detail: `idempotencyKey=${signal.idempotencyKey}; signalType=${signal.signalType}`,
@@ -191,6 +192,9 @@ export function buildLiveClientPilotBrief(
     }
     known.push(composed.identity.summary);
     known.push(`financialContext=${composed.financialContext.completeness} (${composed.financialContext.classification})`);
+    if (ctx.gcc.signals.length) {
+      known.push(composed.financialContext.summary);
+    }
     known.push(`growthContext=${composed.growthContext.completeness} (${composed.growthContext.classification})`);
     known.push(`contacts=${composed.contacts.completeness} (${composed.contacts.classification})`);
     if (composed.contacts.classification === 'MISSING') {

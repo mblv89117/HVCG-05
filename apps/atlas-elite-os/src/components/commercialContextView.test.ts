@@ -48,7 +48,7 @@ describe('CommercialContextPanel copy', () => {
             clientCode: 'SYN01',
             signalType: 'expansion_opportunity',
             severity: 'medium',
-            summary: 'Recorded expansion signal',
+            summary: 'Recorded expansion signal $424,242',
             emittedAt: '2026-08-22T00:00:00.000Z',
           },
         ],
@@ -69,6 +69,9 @@ describe('CommercialContextPanel copy', () => {
     const copy = commercialContextCopy(ctx);
     assert.equal(copy.lanes[0].available, true);
     assert.ok(copy.lanes[0].lines.some((line) => line.includes('Recorded expansion signal')));
+    assert.equal(JSON.stringify(copy.lanes[0].lines).includes('424242'), false);
+    assert.equal(JSON.stringify(copy.lanes[0].lines).includes('$'), false);
+    assert.ok(copy.lanes[0].lines.some((line) => /observation-only/.test(line) && /copiesLedger=false/.test(line) && /canExecute=false/.test(line) && /not a certified ledger/.test(line)));
     assert.ok(copy.lanes[1].lines.some((line) => line.includes('Observation-only MRI')));
     assert.ok(copy.lanes[2].lines.some((line) => line.includes('cmp-gtm-001')));
     assert.equal(copy.rows[0].clientCode, 'SYN01');
@@ -119,6 +122,7 @@ describe('CommercialContextPanel copy', () => {
     const copy = commercialContextCopy(ctx);
     assert.equal(copy.lanes[0].available, false);
     assert.equal(JSON.stringify(copy).includes('250000'), false);
+    assert.equal(JSON.stringify(copy).includes('org-apex'), false);
     assert.equal(ctx.liveClientPilot?.financialContext, 'NOT_CERTIFIED');
     assert.equal(ctx.liveClientPilot?.writePolicy, 'read_only');
   });

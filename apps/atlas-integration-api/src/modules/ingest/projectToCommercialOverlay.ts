@@ -21,6 +21,7 @@ import type {
 } from '../../pm/commercialContext/types.ts';
 import { loadOverlay, saveOverlay } from '../../pm/commercialContext/store.ts';
 import { evaluateCampaignApproval } from './campaignApproval.ts';
+import { evaluateGccValueSignal } from './gccValueSignal.ts';
 
 const FIXTURE_CODES = new Set(['MRI01', 'SYN01', 'T360A']);
 
@@ -136,31 +137,16 @@ export function applyEnvelopeToOverlay(
     if (existing) {
       return { projected: true, kind: 'gcc-value-signal.v1', replay: true, fixtureOnly, overlay };
     }
-    if (fixtureOnly) {
+    const accepted = evaluateGccValueSignal(envelope);
+    if (fixtureOnly || !accepted.ok) {
       return { projected: false, kind: 'gcc-value-signal.v1', fixtureOnly, overlay };
     }
-    const signalTypeRaw = asString(envelope.payload.signalType, 64) || 'engagement_health';
-    const allowed = new Set([
-      'renewal_risk',
-      'expansion_opportunity',
-      'value_realized',
-      'engagement_health',
-      'ltv_update',
-      'capital_need',
-      'constraint',
-      'ai_opportunity',
-      'process_bottleneck',
-      'contract_opportunity',
-    ]);
-    const signalType = (allowed.has(signalTypeRaw)
-      ? signalTypeRaw
-      : 'engagement_health') as GccValueSignal['signalType'];
     const next: GccValueSignal = {
       contractVersion: 'gcc-value-signal.v1',
       signalId: asString(envelope.sourceRecordId, 255) || idempotencyKey,
       clientCode: envelope.clientCode,
-      signalType,
-      summary: asString(envelope.payload.summary, 2000) || asString(envelope.payload.notes, 2000),
+      signalType: accepted.signalType,
+      summary: accepted.summary,
       emittedAt: resolveRecordedAt(envelope, opts),
       copiesLedger: false,
       idempotencyKey,

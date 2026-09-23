@@ -30,6 +30,7 @@ import type {
   OperatorOperatingPicture,
 } from '../operatorDesk/types.ts';
 import { growth360ApprovalId } from '../../modules/ingest/campaignApproval.ts';
+import { gccObservationHonestyLine } from '../../modules/ingest/gccValueSignal.ts';
 import type { OperatorCommercialContext } from './types.ts';
 
 export const CLIENT_TRUTH_CONTRACT = 'atlas-client-truth.v1' as const;
@@ -635,13 +636,14 @@ export function composeClientTruth(opts: {
     ],
   );
 
+  const gccQuotes = gccSignals.slice(0, 4).map((s) => gccObservationHonestyLine(s));
   const financialContext = domain(
     'financialContext',
     hasGccOrg || gccSignals.length ? (hasGccOrg ? 'PARTIAL' : 'NOT_CERTIFIED') : 'NOT_CERTIFIED',
     gccSignals.length && hasGccOrg ? 'CONFIRMED' : 'NOT_CERTIFIED',
     hasGccOrg
       ? gccSignals.length
-        ? `GCC organization is mapped. ${gccSignals.length} observation-only value signal(s) on record. Not a certified financial dataset.`
+        ? `GCC organization is mapped. ${gccQuotes.join(' ')}`
         : `GCC organization ${identity?.gccOrganizationId} is mapped. No value signal is currently projected. Financial intelligence remains observation-only.`
       : 'No verified GCC organization mapping. financialContext is NOT_CERTIFIED. Atlas does not invent Atlas Finance data or create a GCC organization.',
     [
@@ -901,7 +903,9 @@ export function composeClientTruth(opts: {
     financialUnknown: {
       question: 'What financial information is absent/unverified?',
       text: hasGccOrg
-        ? 'Mapped GCC observations are not a certified ledger. Ratios, runway, and actuals are absent unless a GCC OBSERVE signal is projected.'
+        ? gccSignals.length
+          ? 'Observation-only GCC text is not a certified ledger. copiesLedger=false. canExecute=false. Runway, cash, and forecast dollars are not copied into Atlas.'
+          : 'Mapped GCC observations are not a certified ledger. Ratios, runway, and actuals are absent unless a GCC OBSERVE signal is projected.'
         : 'No GCC organization, no certified actuals, no certified forecast, no certified runway. financialContext=NOT_CERTIFIED.',
       classification: 'NOT_CERTIFIED',
       provenance: financialContext.provenance,
