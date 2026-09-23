@@ -18,6 +18,7 @@ import {
   type WorkspaceTruthSnapshot,
 } from '../commercialContext/clientTruth.ts';
 import type { OperatorCommercialContext } from '../commercialContext/types.ts';
+import { gccObservationHonestyLine } from '../../modules/ingest/gccValueSignal.ts';
 import type { OperatorOperatingPicture } from './types.ts';
 import { isReservedOperatingStateToken } from './types.ts';
 
@@ -87,6 +88,54 @@ export type ClientOperatingBriefTopic =
   | 'growth'
   | 'blocked'
   | 'provenance';
+
+const FINANCE_SCOPED_TOPICS = new Set<ClientOperatingBriefTopic>([
+  'finance',
+  'financials_known',
+  'financials_unknown',
+]);
+
+/** Finance picture / known / unknown. Capital submit stays on its own honesty path. */
+export function isFinanceScopedOperatingTopic(topic: ClientOperatingBriefTopic | null): boolean {
+  return topic !== null && FINANCE_SCOPED_TOPICS.has(topic);
+}
+
+/**
+ * Finance answer when the entitled workspace cannot be loaded.
+ * A hydrated GCC value-signal is quoted as observation-only text.
+ * Workspace and document truth stay SOURCE_UNAVAILABLE.
+ * No recovered, portfolio, or workspace substitute is invented.
+ * No signal: today's NOT_CERTIFIED / SOURCE_UNAVAILABLE honesty.
+ */
+export function financeAnswerWhenWorkspaceUnavailable(
+  clientCode: string,
+  commercial?: OperatorCommercialContext,
+): string {
+  const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
+  const scopedCommercial =
+    commercial?.clientCode && commercial.clientCode.trim().toUpperCase() !== code ? undefined : commercial;
+  const signals = (scopedCommercial?.gcc.signals || []).filter(
+    (signal) => signal.clientCode === code && signal.copiesLedger === false,
+  );
+  if (!signals.length) return currentWorkspaceUnavailableAnswer(code);
+
+  const text = [
+    `Atlas cannot load the current ${code} workspace right now.`,
+    `Current workspace truth is ${WORKSPACE_TRUTH_SOURCE_UNAVAILABLE}.`,
+    `Document availability is ${WORKSPACE_TRUTH_SOURCE_UNAVAILABLE}.`,
+    'Atlas will not substitute recovered or portfolio data for a current operating answer.',
+    ...signals.slice(0, 4).map((signal) =>
+      gccObservationHonestyLine({ signalType: signal.signalType, summary: signal.summary }),
+    ),
+    'financialContext=NOT_CERTIFIED.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+  if (foreignCodesIn(text, code).length) return currentWorkspaceUnavailableAnswer(code);
+  if (/\$[\d,]{4,}|targetamount|funding commitment|committed funded/i.test(text)) {
+    return currentWorkspaceUnavailableAnswer(code);
+  }
+  return text;
+}
 
 /**
  * Closed phrase map. New concierge phrases register in
