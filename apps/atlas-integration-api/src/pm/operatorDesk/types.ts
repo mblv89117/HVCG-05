@@ -831,6 +831,14 @@ export interface AtlasAuthorizedSearch {
   ran: boolean;
   pictureComposed: boolean;
   actionabilityApplied: boolean;
+  /** Set when the communications file index did not finish. Absent on a finished walk. */
+  documentsIndex?: 'SOURCE_UNAVAILABLE';
+  documentsAvailability?: 'SOURCE_UNAVAILABLE';
+  status?: 'SOURCE_UNAVAILABLE';
+  /** Present and false only when the file index is unfinished. */
+  indexComplete?: false;
+  queried?: false;
+  reason?: string;
 }
 
 export interface ProposedEngineeringMission {
@@ -1105,6 +1113,14 @@ export interface OperatorDeskModel {
     hitCount: number;
     hits: OperatorSearchHit[];
     ran: boolean;
+    /** Set when the communications file index did not finish. Absent on a finished walk. */
+    documentsIndex?: 'SOURCE_UNAVAILABLE';
+    documentsAvailability?: 'SOURCE_UNAVAILABLE';
+    status?: 'SOURCE_UNAVAILABLE';
+    indexComplete?: false;
+    queried?: false;
+    honestEmpty?: false;
+    reason?: string;
   };
 }
 

@@ -22,7 +22,12 @@ import {
   DOCUMENT_PREVIEW_PAGE_SIZE,
   type DocumentPreviewFields,
 } from '../sharepoint/fabric/documentPreview.ts';
-import type { PmSearchHit } from '../sharepoint/search.ts';
+import {
+  documentsIndexSignal,
+  type DocumentsIndexSignal,
+  type EntitledSearchResponse,
+  type PmSearchHit,
+} from '../sharepoint/search.ts';
 import { buildAskAtlasAnswer } from './askAtlas.ts';
 import {
   ASK_ATLAS_MISSION_KEY,
@@ -131,12 +136,20 @@ export interface ToolGatewayContext {
     hitCount: number;
     hits: Array<OperatorSearchHit & { source?: string }>;
     ran: boolean;
+    documentsIndex?: DocumentsIndexSignal['documentsIndex'];
+    documentsAvailability?: DocumentsIndexSignal['documentsAvailability'];
+    status?: DocumentsIndexSignal['status'];
+    indexComplete?: DocumentsIndexSignal['indexComplete'];
+    queried?: DocumentsIndexSignal['queried'];
+    honestEmpty?: false;
+    reason?: string;
   };
   /**
    * Existing entitled desk search. Must be searchSharePointPm (or a test
    * double of that function). Do not pass a second index or raw Graph.
+   * Keep documentsIndex / indexComplete when the communications walk did not finish.
    */
-  entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+  entitledSearch?: (query: string) => Promise<EntitledSearchResponse>;
   /** Hub data dir for durable overlays (business memory, etc.). */
   dataDir?: string;
   /**
@@ -1626,12 +1639,18 @@ function searchActivityAnswer(
   ctx: ToolGatewayContext,
   search: AtlasAuthorizedSearch,
 ): AskAtlasAnswer {
-  const result = search.honestEmpty ? 'honest_empty' : 'answered';
+  const unfinished = Boolean(documentsIndexSignal(search));
+  const honestEmpty = unfinished ? false : search.honestEmpty;
+  const classification =
+    unfinished && search.classification === 'HONEST_EMPTY'
+      ? 'PROPOSED'
+      : neverPromoteClassification(search.classification);
+  const result = honestEmpty ? 'honest_empty' : 'answered';
   return {
     kind: 'ask_atlas_attention_v1',
     question: ASK_ATLAS_QUESTION,
     invented: false,
-    honestEmpty: search.honestEmpty,
+    honestEmpty,
     ranking: [...ASK_ATLAS_RANKING],
     items: [],
     activity: {
@@ -1640,7 +1659,7 @@ function searchActivityAnswer(
       trigger: 'operator_operating_picture',
       timestamp: ctx.now || new Date().toISOString(),
       tools: [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL],
-      classification: neverPromoteClassification(search.classification),
+      classification,
       result,
       readWriteStatus: 'READ_AUTO',
       policyDecision: result,
@@ -1654,7 +1673,12 @@ function composeAuthorizedSearch(
   query: string,
   pmHits: AtlasAuthorizedSearchHit[],
   pictureHits: AtlasAuthorizedSearchHit[],
-  opts: { entitled: boolean; ran: boolean; binding?: PictureClientBinding | null },
+  opts: {
+    entitled: boolean;
+    ran: boolean;
+    binding?: PictureClientBinding | null;
+    documentsIndex?: Parameters<typeof documentsIndexSignal>[0];
+  },
 ): AuthorizedSearchToolResult {
   const merged = mergeAuthorizedHits(pmHits, pictureHits).map((hit) =>
     attachExistingQueueActionability(hit, ctx.picture),
@@ -1662,7 +1686,11 @@ function composeAuthorizedSearch(
   const hits = rankAuthorizedHits(merged);
   const pictureComposed = pictureHits.length > 0;
   const actionabilityApplied = hits.some((hit) => Boolean(hit.queue));
-  const classification = hits.length ? strongestHitClassification(hits) : ('HONEST_EMPTY' as const);
+  const unfinishedFields = documentsIndexSignal(opts.documentsIndex);
+  let classification = hits.length ? strongestHitClassification(hits) : ('HONEST_EMPTY' as const);
+  // An unfinished communications walk is not a finished empty index.
+  // PROPOSED is only the non-promoting activity floor when no hit carries a class.
+  if (unfinishedFields && classification === 'HONEST_EMPTY') classification = 'PROPOSED';
   let why = 'No entitled search hits are available for this query.';
   let basedOn =
     'Entitled desk search returned no hits. No operational client rows, amounts, or clients were invented.';
@@ -1679,10 +1707,19 @@ function composeAuthorizedSearch(
     basedOn =
       'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.';
   }
+  if (unfinishedFields) {
+    const note = unfinishedFields.reason;
+    if (!hits.length) {
+      why = note;
+      basedOn = note;
+    } else if (!basedOn.includes('documents=SOURCE_UNAVAILABLE')) {
+      basedOn = `${basedOn} ${note}`;
+    }
+  }
   const authorizedSearch: AtlasAuthorizedSearch = {
     kind: 'atlas_authorized_search_v1',
     invented: false,
-    honestEmpty: hits.length === 0,
+    honestEmpty: unfinishedFields ? false : hits.length === 0,
     query,
     hitCount: hits.length,
     hits,
@@ -1711,6 +1748,7 @@ function composeAuthorizedSearch(
     researchIntelligence: composeResearchIntelligence(hits, ctx.now),
     onboarding: composeOnboardingAgent(hits),
     clientSupport: composeClientSupportAgent(hits),
+    ...(unfinishedFields || {}),
   };
   authorizedSearch.projects = attachRelatedContextToProjects(
     ctx.principal,
@@ -1734,23 +1772,29 @@ function composeBoundAuthorizedSearch(
   binding: PictureClientBinding | null,
   pmHits: AtlasAuthorizedSearchHit[],
   ran: boolean,
+  documentsIndex?: Parameters<typeof documentsIndexSignal>[0],
 ): AuthorizedSearchToolResult {
   const pictureHits = binding ? composeEntitledPictureHits(ctx.picture, binding) : [];
   return composeAuthorizedSearch(ctx, query, pmHits, pictureHits, {
     entitled: true,
     ran: ran || pictureHits.length > 0,
     binding,
+    documentsIndex,
   });
 }
 
 function reuseDeskSearchHits(
   ctx: ToolGatewayContext,
   query: string,
-): { hits: AtlasAuthorizedSearchHit[]; ran: boolean } | null {
+): { hits: AtlasAuthorizedSearchHit[]; ran: boolean; documentsIndex?: DocumentsIndexSignal } | null {
   const desk = ctx.deskSearch;
   if (!desk?.ran) return null;
   if (!sameSearchQuery(desk.q, query)) return null;
-  return { hits: desk.hits.map(toAuthorizedSearchHit), ran: true };
+  return {
+    hits: desk.hits.map(toAuthorizedSearchHit),
+    ran: true,
+    documentsIndex: documentsIndexSignal(desk),
+  };
 }
 
 /**
@@ -1801,7 +1845,14 @@ export function searchAuthorizedKnowledgeSync(ctx: ToolGatewayContext): Authoriz
   const pmHits = filterHitsToBinding(reused?.hits || [], scoped.binding);
   return withDocumentRelatedContext(
     ctx,
-    composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, reused?.ran === true),
+    composeBoundAuthorizedSearch(
+      ctx,
+      query,
+      scoped.binding,
+      pmHits,
+      reused?.ran === true,
+      reused?.documentsIndex,
+    ),
   );
 }
 
@@ -1822,7 +1873,7 @@ export async function searchAuthorizedKnowledge(ctx: ToolGatewayContext): Promis
     const pmHits = filterHitsToBinding(reused.hits, scoped.binding);
     return finalizeAuthorizedDocuments(
       ctx,
-      composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true),
+      composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true, reused.documentsIndex),
     );
   }
 
@@ -1837,7 +1888,7 @@ export async function searchAuthorizedKnowledge(ctx: ToolGatewayContext): Promis
   const pmHits = filterHitsToBinding(found.results.map(toAuthorizedSearchHit), scoped.binding);
   return finalizeAuthorizedDocuments(
     ctx,
-    composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true),
+    composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true, documentsIndexSignal(found)),
   );
 }
 

@@ -28,8 +28,11 @@ import type { SharePointPmSettings } from '../src/pm/sharepoint/settings.ts';
 import { buildSharePointClientWorkspace } from '../src/pm/sharepoint/workspace.ts';
 import { buildKnowledgeOperatingPicture } from '../src/pm/sharepoint/knowledgeOperating.ts';
 import { searchSharePointPm } from '../src/pm/sharepoint/search.ts';
-import type { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
 import { FILE_INDEX_MARKER } from '../src/pm/sharepoint/fabric/fileIndex.ts';
+import { searchAuthorizedKnowledge } from '../src/pm/operatorDesk/toolGateway.ts';
+import { runAtlasSearchRuntime } from '../src/pm/operatorDesk/agentRuntime.ts';
+import { buildOperatorDeskModel, emptyHonestDesk, emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
+import { renderOperatorDeskHtml } from '../src/pm/operatorDesk/html.ts';
 
 const SITE =
   'contoso.sharepoint.com,11111111-1111-4111-8111-111111111011,22222222-2222-4222-8222-222222222022';
@@ -873,5 +876,317 @@ describe('W2I-R1 workspace route honesty', () => {
       assert.match(documents.body.workflowAnswer || '', /capitalSubmit=false/);
       assert.match(documents.body.workflowAnswer || '', /canExecute=false/);
     });
+  });
+});
+
+function assertUnfinishedIndex(body: {
+  documentsIndex?: string;
+  documentsAvailability?: string;
+  status?: string;
+  indexComplete?: boolean;
+  queried?: boolean;
+  honestEmpty?: boolean;
+  reason?: string;
+}): void {
+  assert.equal(body.documentsIndex, 'SOURCE_UNAVAILABLE');
+  assert.equal(body.documentsAvailability, 'SOURCE_UNAVAILABLE');
+  assert.equal(body.status, 'SOURCE_UNAVAILABLE');
+  assert.equal(body.indexComplete, false);
+  assert.equal(body.queried, false);
+  assert.equal(body.honestEmpty, false);
+  assert.match(body.reason || '', /documents=SOURCE_UNAVAILABLE/);
+  assert.equal(/documents=MISSING|documents=INDEXED/.test(JSON.stringify(body)), false);
+  assert.equal(JSON.stringify(body).includes('"indexComplete":true'), false);
+}
+
+describe('W2I-R1 communications budget and authorized search honesty', () => {
+  const accgClient = {
+    id: 'ACCG01',
+    itemId: '1',
+    clientCode: 'ACCG01',
+    displayName: 'ACCG Inc.',
+    source: 'sharepoint' as const,
+  };
+  const completeExtras = {
+    communications: { status: 'COMPLETE' as const, queried: true, items: [] },
+    meetings: { status: 'COMPLETE' as const, queried: true, items: [] },
+    engagements: { status: 'COMPLETE' as const, queried: true, items: [] },
+    deliverables: { status: 'COMPLETE' as const, queried: true, items: [] },
+    decisionsRisks: { status: 'COMPLETE' as const, queried: true, items: [] },
+    contacts: { status: 'COMPLETE' as const, queried: true, items: [] },
+  };
+
+  function catalog(overrides: Record<string, unknown> = {}) {
+    return {
+      listAuthorizedClients: async () => [accgClient],
+      listAuthorizedProjects: async () => [],
+      listAuthorizedTasks: async () => [],
+      listWorkspaceCollections: async () => completeExtras,
+      listVendors: async () => [],
+      listOpportunities: async () => [],
+      listIndexedFiles: async () => [],
+      ...overrides,
+    } as unknown as SharePointPmService;
+  }
+
+  it('extras budget timeout is an unfinished documents index, not a finished empty search', async () => {
+    let batchedCalled = false;
+    const hanging = catalog({
+      async listWorkspaceCollectionsForSearch() {
+        batchedCalled = true;
+        return new Promise(() => {});
+      },
+      async listWorkspaceCollections() {
+        throw new Error('batched search must not fall through to a per-client walk');
+      },
+    });
+    const started = Date.now();
+    const found = await searchSharePointPm(hanging, principal, 'zzz nomatch', { extrasBudgetMs: 40 });
+    assert.ok(Date.now() - started < 1000, 'budget timeout must not wait for an 80-page walk');
+    assert.equal(batchedCalled, true);
+    assert.equal(found.results.length, 0);
+    assertUnfinishedIndex(found);
+    assert.equal(found.scope, 'entitled');
+
+    const named = await searchSharePointPm(hanging, principal, 'ACCG', { extrasBudgetMs: 40 });
+    assert.ok(named.results.some((hit) => hit.kind === 'client' && hit.clientCode === 'ACCG01'));
+    assertUnfinishedIndex(named);
+    assert.equal(named.results.some((hit) => hit.kind === 'document'), false);
+
+    const throwing = catalog({
+      async listWorkspaceCollections() {
+        throw new Error('communications walk failed');
+      },
+    });
+    const thrown = await searchSharePointPm(throwing, principal, 'zzz nomatch', { extrasBudgetMs: 40 });
+    assert.equal(thrown.results.length, 0);
+    assertUnfinishedIndex(thrown);
+
+    const finished = await searchSharePointPm(
+      catalog({
+        async listWorkspaceCollectionsForSearch() {
+          return new Map([
+            ['ACCG01', completeExtras],
+            ['PDG01', completeExtras],
+            ['HFD01', completeExtras],
+          ]);
+        },
+      }),
+      principal,
+      'zzz nomatch',
+      { extrasBudgetMs: 40 },
+    );
+    assert.equal(finished.results.length, 0);
+    assert.equal(finished.documentsIndex, undefined);
+    assert.equal(finished.indexComplete, undefined);
+    assert.equal(finished.honestEmpty, undefined);
+    assert.equal(finished.status, undefined);
+  });
+
+  it('authorized and operator search do not call a truncated communications walk honest empty', async () => {
+    const communications = {
+      status: 'SOURCE_UNAVAILABLE' as const,
+      queried: false,
+      items: [{ id: 'partial', title: PARTIAL_TITLE, summary: FILE_INDEX_MARKER }],
+      reason: 'HVCG_Communications list walk did not complete. reason=page_cap; pagesFetched=80.',
+    };
+    const truncated = catalog({
+      async listWorkspaceCollections() {
+        return {
+          ...completeExtras,
+          communications,
+          meetings: {
+            status: 'COMPLETE' as const,
+            queried: true,
+            items: [{ id: 'm1', title: 'ACCG kickoff partial notes', summary: 'agenda' }],
+          },
+        };
+      },
+      async listWorkspaceCollectionsForSearch() {
+        return new Map([
+          [
+            'ACCG01',
+            {
+              ...completeExtras,
+              communications,
+              meetings: {
+                status: 'COMPLETE' as const,
+                queried: true,
+                items: [{ id: 'm1', title: 'ACCG kickoff partial notes', summary: 'agenda' }],
+              },
+            },
+          ],
+        ]);
+      },
+    });
+    const picture = emptyHonestOperatingPicture();
+    const entitledSearch = (query: string) => searchSharePointPm(truncated, principal, query);
+
+    const emptyWalk = await searchAuthorizedKnowledge({
+      principal,
+      picture,
+      searchQuery: 'zzz nomatch',
+      entitledSearch,
+    });
+    assert.equal(emptyWalk.authorizedSearch.hitCount, 0);
+    assert.equal(emptyWalk.authorizedSearch.ran, true);
+    assertUnfinishedIndex(emptyWalk.authorizedSearch);
+    assert.notEqual(emptyWalk.authorizedSearch.classification, 'HONEST_EMPTY');
+    assert.equal(emptyWalk.askAtlas.honestEmpty, false);
+    assert.notEqual(emptyWalk.askAtlas.activity.classification, 'HONEST_EMPTY');
+    assert.notEqual(emptyWalk.askAtlas.activity.result, 'honest_empty');
+    assert.equal(JSON.stringify(emptyWalk.authorizedSearch.hits).includes(PARTIAL_TITLE), false);
+
+    const withMeeting = await searchAuthorizedKnowledge({
+      principal,
+      picture,
+      searchQuery: 'partial notes',
+      entitledSearch,
+    });
+    assert.ok(withMeeting.authorizedSearch.hits.some((hit) => hit.kind === 'meeting'));
+    assert.equal(
+      withMeeting.authorizedSearch.hits.some((hit) => hit.kind === 'document' || hit.title === PARTIAL_TITLE),
+      false,
+    );
+    assertUnfinishedIndex(withMeeting.authorizedSearch);
+    assert.equal(withMeeting.authorizedSearch.honestEmpty, false);
+    assert.notEqual(withMeeting.authorizedSearch.classification, 'HONEST_EMPTY');
+    assert.equal(withMeeting.askAtlas.honestEmpty, false);
+    assert.notEqual(withMeeting.askAtlas.activity.result, 'honest_empty');
+
+    const runtime = await runAtlasSearchRuntime({
+      principal,
+      picture,
+      question: 'Search zzz nomatch',
+      entitledSearch,
+    });
+    assert.ok(runtime.authorizedSearch);
+    assert.equal(runtime.authorizedSearch.hitCount, 0);
+    assertUnfinishedIndex(runtime.authorizedSearch);
+    assert.equal(runtime.askAtlas.honestEmpty, false);
+    assert.notEqual(runtime.askAtlas.activity.classification, 'HONEST_EMPTY');
+    assert.notEqual(runtime.askAtlas.activity.result, 'honest_empty');
+
+    let reusedSearchCalled = false;
+    const reused = await searchAuthorizedKnowledge({
+      principal,
+      picture,
+      searchQuery: 'partial notes',
+      deskSearch: {
+        q: 'partial notes',
+        ran: true,
+        hitCount: 1,
+        hits: [
+          {
+            id: 'm1',
+            title: 'ACCG kickoff partial notes',
+            kind: 'meeting',
+            href: '/clients/ACCG01',
+            clientCode: 'ACCG01',
+            source: 'HVCG_Meetings',
+          },
+        ],
+        documentsIndex: 'SOURCE_UNAVAILABLE',
+        documentsAvailability: 'SOURCE_UNAVAILABLE',
+        status: 'SOURCE_UNAVAILABLE',
+        indexComplete: false,
+        queried: false,
+        honestEmpty: false,
+        reason:
+          'HVCG_Communications file-index walk did not complete. documents=SOURCE_UNAVAILABLE. Search is not a complete index.',
+      },
+      entitledSearch: async () => {
+        reusedSearchCalled = true;
+        return { query: 'partial notes', results: [] };
+      },
+    });
+    assert.equal(reusedSearchCalled, false);
+    assert.ok(reused.authorizedSearch.hits.some((hit) => hit.kind === 'meeting'));
+    assertUnfinishedIndex(reused.authorizedSearch);
+    assert.equal(reused.askAtlas.honestEmpty, false);
+    assert.notEqual(reused.authorizedSearch.classification, 'HONEST_EMPTY');
+
+    const finishedEmpty = await searchAuthorizedKnowledge({
+      principal,
+      picture,
+      searchQuery: 'zzz nomatch',
+      entitledSearch: async (query) => ({ query, results: [] }),
+    });
+    assert.equal(finishedEmpty.authorizedSearch.honestEmpty, true);
+    assert.equal(finishedEmpty.authorizedSearch.classification, 'HONEST_EMPTY');
+    assert.equal(finishedEmpty.authorizedSearch.documentsIndex, undefined);
+    assert.equal(finishedEmpty.authorizedSearch.indexComplete, undefined);
+    assert.equal(finishedEmpty.askAtlas.honestEmpty, true);
+    assert.equal(finishedEmpty.askAtlas.activity.result, 'honest_empty');
+
+    const desk = buildOperatorDeskModel({
+      hubSha: 'w2i-r1',
+      entitledClients: ['ACCG01'],
+      commandCenter: {},
+      commercialContext: emptyHonestDesk(1),
+      searchQuery: 'zzz nomatch',
+      searchRan: true,
+      searchHits: [],
+      searchDocumentsIndex: {
+        documentsIndex: 'SOURCE_UNAVAILABLE',
+        documentsAvailability: 'SOURCE_UNAVAILABLE',
+        status: 'SOURCE_UNAVAILABLE',
+        indexComplete: false,
+        queried: false,
+        honestEmpty: false,
+        reason:
+          'HVCG_Communications file-index walk did not complete. documents=SOURCE_UNAVAILABLE. Search is not a complete index.',
+      },
+    });
+    assertUnfinishedIndex(desk.search);
+    const unfinishedHtml = renderOperatorDeskHtml(desk);
+    assert.match(unfinishedHtml, /documents=SOURCE_UNAVAILABLE/);
+    assert.equal(unfinishedHtml.includes('No entitled matches'), false);
+
+    const meetingDesk = buildOperatorDeskModel({
+      hubSha: 'w2i-r1',
+      entitledClients: ['ACCG01'],
+      commandCenter: {},
+      commercialContext: emptyHonestDesk(1),
+      searchQuery: 'partial notes',
+      searchRan: true,
+      searchHits: [
+        {
+          id: 'm1',
+          title: 'ACCG kickoff partial notes',
+          kind: 'meeting',
+          href: '/clients/ACCG01',
+          clientCode: 'ACCG01',
+        },
+      ],
+      searchDocumentsIndex: desk.search.documentsIndex
+        ? {
+            documentsIndex: 'SOURCE_UNAVAILABLE',
+            documentsAvailability: 'SOURCE_UNAVAILABLE',
+            status: 'SOURCE_UNAVAILABLE',
+            indexComplete: false,
+            queried: false,
+            honestEmpty: false,
+            reason: desk.search.reason || '',
+          }
+        : undefined,
+    });
+    const meetingHtml = renderOperatorDeskHtml(meetingDesk);
+    assert.match(meetingHtml, /ACCG kickoff partial notes/);
+    assert.match(meetingHtml, /documents=SOURCE_UNAVAILABLE/);
+    assert.equal(meetingHtml.includes('No entitled matches'), false);
+
+    const finishedDesk = buildOperatorDeskModel({
+      hubSha: 'w2i-r1',
+      entitledClients: ['ACCG01'],
+      commandCenter: {},
+      commercialContext: emptyHonestDesk(1),
+      searchQuery: 'zzz nomatch',
+      searchRan: true,
+      searchHits: [],
+    });
+    assert.equal(finishedDesk.search.documentsIndex, undefined);
+    assert.equal(finishedDesk.search.indexComplete, undefined);
+    assert.match(renderOperatorDeskHtml(finishedDesk), /No entitled matches/);
   });
 });

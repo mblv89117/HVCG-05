@@ -208,6 +208,62 @@ export type PmSearchResponse = {
   reason?: string;
 };
 
+/** Fields operator search and Ask Atlas must keep when the file index did not finish. */
+export type DocumentsIndexSignal = {
+  documentsIndex: 'SOURCE_UNAVAILABLE';
+  documentsAvailability: 'SOURCE_UNAVAILABLE';
+  status: 'SOURCE_UNAVAILABLE';
+  indexComplete: false;
+  queried: false;
+  honestEmpty: false;
+  reason: string;
+};
+
+export type EntitledSearchResponse = Pick<
+  PmSearchResponse,
+  | 'query'
+  | 'results'
+  | 'documentsIndex'
+  | 'documentsAvailability'
+  | 'status'
+  | 'indexComplete'
+  | 'queried'
+  | 'honestEmpty'
+  | 'reason'
+>;
+
+export const DOCUMENTS_INDEX_UNFINISHED_REASON =
+  'HVCG_Communications file-index walk did not complete. documents=SOURCE_UNAVAILABLE. Search is not a complete index.';
+
+export function unfinishedDocumentsIndexFields(reason?: string): DocumentsIndexSignal {
+  const kept = typeof reason === 'string' && reason.includes('documents=SOURCE_UNAVAILABLE') ? reason : '';
+  return {
+    documentsIndex: 'SOURCE_UNAVAILABLE',
+    documentsAvailability: 'SOURCE_UNAVAILABLE',
+    status: 'SOURCE_UNAVAILABLE',
+    indexComplete: false,
+    queried: false,
+    honestEmpty: false,
+    reason: kept || DOCUMENTS_INDEX_UNFINISHED_REASON,
+  };
+}
+
+/** A truncated, timed-out, or missing communications walk. Finished walks return undefined. */
+export function documentsIndexSignal(
+  row:
+    | {
+        documentsIndex?: string;
+        indexComplete?: boolean;
+        reason?: string;
+      }
+    | null
+    | undefined,
+): DocumentsIndexSignal | undefined {
+  if (!row) return undefined;
+  if (row.documentsIndex !== 'SOURCE_UNAVAILABLE' && row.indexComplete !== false) return undefined;
+  return unfinishedDocumentsIndexFields(row.reason);
+}
+
 export async function searchSharePointPm(
   service: SearchPmService,
   principal: AtlasPrincipal,
@@ -231,8 +287,16 @@ export async function searchSharePointPm(
   // kick off in parallel — do not wait for HVCG_Clients before opportunities.
   const entitled = new Set(entitledClientCodes(principal));
   const clientsP = service.listAuthorizedClients(principal);
+  const dependsOnCommunicationsWalk = (code: string | undefined): boolean =>
+    Boolean(code && isCanonicalClientCode(code) && entitled.has(code));
+  type WorkspaceExtras = NonNullable<Awaited<ReturnType<SharePointPmService['listWorkspaceCollections']>>>;
+  type ExtrasRow = {
+    client?: { clientCode: string };
+    code?: string;
+    extras?: WorkspaceExtras;
+  };
   const extrasStarted = Date.now();
-  const extrasPromise = (async () => {
+  const extrasPromise = (async (): Promise<{ rows: ExtrasRow[]; walkMissing: boolean }> => {
     const extraCodes = manny ? (await clientsP).map((c) => c.clientCode) : entitledClientCodes(principal);
     if (service.listWorkspaceCollectionsForSearch) {
       const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
@@ -240,10 +304,19 @@ export async function searchSharePointPm(
         () => service.listWorkspaceCollectionsForSearch!(principal, extraCodes),
         Math.max(0, remaining),
       );
-      const clients = await clientsP;
-      return clients.map((client) => ({ client, extras: batched?.get(client.clientCode) }));
+      const listed = await clientsP;
+      const byCode = new Map(listed.map((client) => [client.clientCode, client]));
+      return {
+        rows: extraCodes.map((code) => ({
+          client: byCode.get(code),
+          code,
+          extras: batched?.get(code),
+        })),
+        // Budget timeout or throw becomes undefined. That is not an empty index.
+        walkMissing: !batched && extraCodes.some((code) => dependsOnCommunicationsWalk(code)),
+      };
     }
-    return Promise.all(
+    const rows = await Promise.all(
       extraCodes.map(async (code) => {
         const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
         const extras = await withBudget(
@@ -253,8 +326,9 @@ export async function searchSharePointPm(
         return { code, extras };
       }),
     );
+    return { rows, walkMissing: false };
   })();
-  const [clients, projects, tasks, extrasRows, opportunities, leads, capitalOpps] = await Promise.all([
+  const [clients, projects, tasks, extrasLoad, opportunities, leads, capitalOpps] = await Promise.all([
     clientsP,
     withBudget(() => service.listAuthorizedProjects(principal), coreBudgetMs).then((rows) => rows || []),
     withBudget(() => service.listAuthorizedTasks(principal), coreBudgetMs).then((rows) => rows || []),
@@ -346,23 +420,28 @@ export async function searchSharePointPm(
       });
     }
   };
-  const extrasByCode = new Map<
-    string,
-    NonNullable<Awaited<ReturnType<SharePointPmService['listWorkspaceCollections']>>>
-  >();
-  for (const row of extrasRows as Array<{
-    client?: { clientCode: string };
-    code?: string;
-    extras?: Awaited<ReturnType<SharePointPmService['listWorkspaceCollections']>>;
-  }>) {
-    if (!row.extras) continue;
+  const extrasByCode = new Map<string, WorkspaceExtras>();
+  let documentsIndexUnfinished = extrasLoad.walkMissing;
+  for (const row of extrasLoad.rows) {
     const code = row.client?.clientCode || row.code;
-    if (code) extrasByCode.set(code, row.extras);
+    if (!code) continue;
+    const depends = dependsOnCommunicationsWalk(code);
+    // Timeout, throw, and a missing communications section are not a finished walk.
+    if (!row.extras?.communications) {
+      if (depends) documentsIndexUnfinished = true;
+      continue;
+    }
+    if (depends && row.extras.communications.status === 'SOURCE_UNAVAILABLE') {
+      documentsIndexUnfinished = true;
+    }
+    extrasByCode.set(code, row.extras);
   }
-  let documentsIndexUnfinished = false;
   for (const c of clients) {
     const extras = extrasByCode.get(c.clientCode);
-    if (!extras) continue;
+    if (!extras) {
+      if (dependsOnCommunicationsWalk(c.clientCode)) documentsIndexUnfinished = true;
+      continue;
+    }
     const communicationsUnfinished = extras.communications.status === 'SOURCE_UNAVAILABLE';
     if (communicationsUnfinished) documentsIndexUnfinished = true;
     if (!communicationsUnfinished) {
@@ -562,13 +641,6 @@ export async function searchSharePointPm(
   if (!documentsIndexUnfinished) return response;
   return {
     ...response,
-    documentsIndex: 'SOURCE_UNAVAILABLE',
-    documentsAvailability: 'SOURCE_UNAVAILABLE',
-    status: 'SOURCE_UNAVAILABLE',
-    indexComplete: false,
-    queried: false,
-    honestEmpty: false,
-    reason:
-      'HVCG_Communications file-index walk did not complete. documents=SOURCE_UNAVAILABLE. Search is not a complete index.',
+    ...unfinishedDocumentsIndexFields(),
   };
 }
