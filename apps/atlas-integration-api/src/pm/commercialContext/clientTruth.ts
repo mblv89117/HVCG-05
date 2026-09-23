@@ -30,7 +30,7 @@ import type {
   OperatorOperatingPicture,
 } from '../operatorDesk/types.ts';
 import { growth360ApprovalId } from '../../modules/ingest/campaignApproval.ts';
-import { gccObservationHonestyLine } from '../../modules/ingest/gccValueSignal.ts';
+import { gccObservationHonestyLine, redactFinancialDollars } from '../../modules/ingest/gccValueSignal.ts';
 import type { OperatorCommercialContext } from './types.ts';
 
 export const CLIENT_TRUTH_CONTRACT = 'atlas-client-truth.v1' as const;
@@ -331,6 +331,14 @@ export function applyOperatingHygieneToWorkspaceSnapshot(
 
 function looksCapital(text: string): boolean {
   return /capital|funding|loc\b|receivable|warehouse|buildout|lender/i.test(text);
+}
+
+/**
+ * Recovered filename label for the optional historical clause.
+ * Dollar figures are stripped so a filename is not an amount extraction.
+ */
+function historicalCapitalLabel(raw: string): string {
+  return redactFinancialDollars(raw.replace(/\s+/g, ' ').trim());
 }
 
 function queueFromTasks(
@@ -711,41 +719,56 @@ export function composeClientTruth(opts: {
     ],
   );
 
-  const capitalProjects = (workspace?.projects || []).filter((p) =>
-    looksCapital(`${p.projectType || ''} ${p.name || ''} ${p.nextAction || ''}`),
-  );
-  const capitalFromEngagement = looksCapital(workspace?.engagementType || '');
-  const capitalFromRecoveredProjects = recoveredProjects.some((p) => looksCapital(p.title));
+  // W2H: current capital context is entitled capital opportunities already on
+  // this composition. This path does not read HVCG_CapitalOpportunities.
+  // HVCG_Opportunities, engagement type, recovered HVS filenames, and keyword
+  // matches on HVCG_Projects titles are not that set, so an empty entitled
+  // set is capitalContext=MISSING.
+  const historicalLabels: string[] = [];
+  if (workspaceLoaded) {
+    const seen = new Set<string>();
+    const pushLabel = (raw: string) => {
+      const label = historicalCapitalLabel(raw);
+      if (!label || seen.has(label)) return;
+      seen.add(label);
+      historicalLabels.push(label);
+    };
+    for (const packet of recoveredCapital) pushLabel(packet.name);
+    for (const project of recoveredProjects) {
+      if (looksCapital(project.title)) pushLabel(project.title);
+    }
+  }
+  const historicalClause = historicalLabels.length
+    ? ` Historical/STALE_OR_UNCERTAIN recovered HVS filenames are not active capital: ${historicalLabels.slice(0, 4).join('; ')}. Amounts, lender, and funding status are not extracted.`
+    : '';
   const capitalContext = domain(
     'capitalContext',
-    capitalProjects.length || recoveredCapital.length || capitalFromEngagement || capitalFromRecoveredProjects
-      ? 'PARTIAL'
-      : 'MISSING',
-    capitalProjects.length || recoveredCapital.length || capitalFromRecoveredProjects
-      ? 'LIKELY'
-      : capitalFromEngagement
-        ? 'LIKELY'
-        : 'MISSING',
-    capitalProjects.length || recoveredCapital.length || capitalFromEngagement || capitalFromRecoveredProjects
-      ? 'Capital-related filenames or projects are indexed. Amounts, lender disposition, and funding status are not extracted and remain unstated.'
-      : 'No entitled capital context on this composition.',
+    'MISSING',
+    'MISSING',
+    `No entitled capital opportunity is on this composition. capitalContext=MISSING. Atlas does not invent capital, amounts, or lenders.${historicalClause}`,
     [
-      ...capitalProjects.slice(0, 4).map((p) => ({ source: 'HVCG_Projects', detail: `${p.id}:${p.name}` })),
-      ...recoveredCapital.slice(0, 4).map((p) => ({
+      {
+        source: 'client-truth',
+        detail: 'no entitled capital opportunity on this composition; capitalContext=MISSING',
+      },
+      ...historicalLabels.slice(0, 4).map((label) => ({
         source: 'hvs-recovered-capital',
-        detail: `${p.name} (amountsExtracted=false)`,
+        detail: `STALE_OR_UNCERTAIN:${label}`,
       })),
-      ...recoveredProjects
-        .filter((p) => looksCapital(p.title))
-        .slice(0, 4)
-        .map((p) => ({ source: 'hvs-recovered-projects', detail: p.title })),
     ],
   );
 
-  if (FORBIDDEN_CAPITAL_CLAIM.test(capitalContext.summary)) {
+  if (FORBIDDEN_CAPITAL_CLAIM.test(capitalContext.summary) || /\$/.test(capitalContext.summary)) {
     capitalContext.summary =
-      'Capital-related evidence is indexed. Atlas will not invent funding status, lender disposition, or requested amounts without entitled sourced fields.';
-    capitalContext.classification = 'NOT_CERTIFIED';
+      'No entitled capital opportunity is on this composition. capitalContext=MISSING. Atlas does not invent capital, amounts, lenders, or funding status.';
+    capitalContext.classification = 'MISSING';
+    capitalContext.completeness = 'MISSING';
+    capitalContext.provenance = [
+      {
+        source: 'client-truth',
+        detail: 'forbidden capital claim removed; capitalContext=MISSING',
+      },
+    ];
   }
 
   const contactCandidates = prepareContactCandidates(workspace);
