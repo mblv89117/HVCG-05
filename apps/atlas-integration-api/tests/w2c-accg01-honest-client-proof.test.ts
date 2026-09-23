@@ -278,8 +278,14 @@ describe('W2C ACCG01 honest real-client operator proof', () => {
     assert.equal(mapsToGetAttentionItems('Summarize Capital'), true);
     assert.equal(mapsToGetClientContext('Summarize Capital'), false);
     assert.equal(mapsToClientOperatingBriefIntent('Summarize Capital'), false);
-    assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), true);
     assert.equal(mapsToSearchAuthorizedKnowledge('What documents do we have for ACCG?'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('Documents'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('Approvals'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('Projects'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('Documents', 'ACCG01'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('Approvals', 'ACCG01'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('Projects', 'ACCG01'), true);
   });
 
   const CONCIERGE_QUESTIONS = [
@@ -389,7 +395,7 @@ describe('W2C ACCG01 honest real-client operator proof', () => {
     assert.equal(mapsToCapitalSubmissionHonestyIntent('Prepare capital submission for ACCG'), true);
     assert.equal(mapsToClientOperatingBriefIntent('What needs my approval for ACCG?'), false);
     assert.equal(mapsToApprovalCenterHonestyIntent('What needs my approval for ACCG?'), true);
-    assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), true);
     assert.equal(mapsToSearchAuthorizedKnowledge('What documents do we have for ACCG?'), true);
   });
 

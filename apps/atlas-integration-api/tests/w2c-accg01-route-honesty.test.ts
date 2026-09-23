@@ -41,6 +41,7 @@ class MemoryGraph implements PmGraphTransport {
   readonly lists = new Map<string, GraphListItem[]>();
   nextId = 1;
   etagN = 1;
+  commsMode: 'ok' | 'deny' | 'hang' = 'ok';
 
   constructor() {
     this.lists.set(PROJECTS, []);
@@ -64,6 +65,12 @@ class MemoryGraph implements PmGraphTransport {
   }
 
   async listItems(listId: string): Promise<GraphListPage> {
+    if (listId === COMMS && this.commsMode === 'deny') {
+      throw new PmHttpError(403, 'forbidden', 'file-index rejected');
+    }
+    if (listId === COMMS && this.commsMode === 'hang') {
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+    }
     return { items: this.lists.get(listId) || [] };
   }
 
@@ -197,11 +204,33 @@ function seedAccgWorkspace(graph: MemoryGraph, opts?: { includeAccgClient?: bool
 async function withW2cHub(
   entitlements: (oid: string | undefined) => string[],
   fn: (ctx: { base: string }) => Promise<void>,
-  opts?: { includeAccgClient?: boolean; authorizeClientError?: number },
+  opts?: {
+    includeAccgClient?: boolean;
+    authorizeClientError?: number;
+    commsMode?: 'ok' | 'deny' | 'hang';
+    deadlineMs?: number;
+    seedApprovalTask?: boolean;
+  },
 ) {
   const dir = mkdtempSync(join(tmpdir(), 'atlas-w2c-route-'));
   const graph = new MemoryGraph();
+  if (opts?.commsMode) graph.commsMode = opts.commsMode;
   seedAccgWorkspace(graph, { includeAccgClient: opts?.includeAccgClient });
+  if (opts?.seedApprovalTask) {
+    graph.seed(
+      TASKS,
+      {
+        Title: 'ACCG capital credit path',
+        ProjectIdLookupId: 10,
+        ClientCode: 'ACCG01',
+        TaskStatus: 'In Review',
+        Priority: 'High',
+        DueDate: '2026-10-01',
+        OwnerEmail: 'staff@hvcg.example',
+      },
+      '21',
+    );
+  }
   const prev = { ...process.env };
   process.env.NODE_ENV = 'production';
   process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
@@ -217,8 +246,14 @@ async function withW2cHub(
   process.env.INTEGRATION_PM_COMMUNICATIONS_LIST_ID = COMMS;
   process.env.INTEGRATION_PM_CONTACTS_LIST_ID = CONTACTS;
   process.env.AZURE_CLIENT_ID = MI;
+  process.env.INTEGRATION_ALLOWED_ORIGINS = [
+    'https://zealous-rock-0090c7e1e.7.azurestaticapps.net',
+    'http://127.0.0.1:5180',
+    'http://localhost:5180',
+  ].join(',');
   delete process.env.INTEGRATION_REQUIRE_AUTH;
   delete process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH;
+  if (opts?.deadlineMs) process.env.ATLAS_OPERATOR_BRIEF_DEADLINE_MS = String(opts.deadlineMs);
   const cfg: AppConfig = {
     ...loadConfig(),
     verifyAccessToken: verify,
@@ -281,6 +316,7 @@ async function askAtlas(base: string, question: string, token = 'staff', client?
       workspaceTruth?: string;
       portfolioFallback?: boolean;
       toolsInvoked?: string[];
+      pending?: boolean;
     };
     error?: string;
     code?: string;
@@ -514,7 +550,105 @@ describe('W2C ACCG01 route-level honest workspace truth', () => {
       assert.equal(both.status, 200);
       assert.match(both.body.workflowAnswer || '', /ambiguous|will not fall back/i);
       assert.equal(/PDG secret|Hart Family secret|weekly operating file/.test(both.body.workflowAnswer || ''), false);
+
+      const domainProjects = await askAtlas(base, 'Projects', 'staff', 'ACCG01');
+      assert.equal(domainProjects.status, 200);
+      assert.equal(domainProjects.body.runtime?.pending, false);
+      assert.match(domainProjects.body.workflowAnswer || '', new RegExp(ACCG_PROJECT));
+      assert.equal(/No entitled attention items/.test(domainProjects.body.workflowAnswer || ''), false);
+
+      const haveDocs = await askAtlas(base, 'What documents do we have for ACCG?');
+      assert.equal(haveDocs.status, 200);
+      assert.equal(haveDocs.body.runtime?.missionKey, CLIENT_OPERATING_BRIEF_MISSION_KEY);
+      assert.equal(haveDocs.body.runtime?.pending, false);
+      assert.match(haveDocs.body.workflowAnswer || '', /document/i);
+      assert.match(haveDocs.body.workflowAnswer || '', /capitalSubmit=false/);
+      assert.match(haveDocs.body.workflowAnswer || '', /canExecute=false/);
+      assert.equal(haveDocs.body.runtime?.toolsInvoked?.includes('applyApprovalAction'), false);
     });
+  });
+
+  it('document and approvals questions finish when file-index returns 403 or stalls', async () => {
+    const origin = 'https://zealous-rock-0090c7e1e.7.azurestaticapps.net';
+    await withW2cHub(
+      (oid) => (oid === USER_STAFF ? STAFF_CODES : ['ACCG01']),
+      async ({ base }) => {
+        const started = Date.now();
+        const documents = await askAtlas(base, 'Documents', 'staff', 'ACCG01');
+        assert.ok(Date.now() - started < 2000, 'document question must not stay pending');
+        assert.equal(documents.status, 200);
+        assert.equal(documents.body.runtime?.pending, false);
+        assert.match(documents.body.workflowAnswer || '', /SOURCE_UNAVAILABLE/);
+        assert.match(documents.body.workflowAnswer || '', /will not invent files/i);
+        assert.match(documents.body.workflowAnswer || '', /GLOBAL_AUTO_RESPOND=false/);
+        assert.match(documents.body.workflowAnswer || '', /capitalSubmit=false/);
+        assert.match(documents.body.workflowAnswer || '', /canExecute=false/);
+        assert.equal(/closing binder|PDG01|HFD01/.test(documents.body.workflowAnswer || ''), false);
+
+        const approvals = await askAtlas(base, 'What is the approvals brief for ACCG?');
+        assert.equal(approvals.status, 200);
+        assert.equal(approvals.body.runtime?.pending, false);
+        assert.match(approvals.body.workflowAnswer || '', /did not apply an approval action/);
+        assert.match(approvals.body.workflowAnswer || '', /ACCG capital credit path/);
+        assert.match(approvals.body.workflowAnswer || '', /capitalSubmit=false/);
+        assert.match(approvals.body.workflowAnswer || '', /canExecute=false/);
+        assert.equal(approvals.body.runtime?.toolsInvoked?.includes('applyApprovalAction'), false);
+        assert.equal(GLOBAL_AUTO_RESPOND, false);
+
+        const signed = await fetch(
+          `${base}/operator/runtime.json?question=${encodeURIComponent('Documents')}&client=ACCG01`,
+          { headers: { ...auth('staff'), origin } },
+        );
+        assert.equal(signed.status, 200);
+        assert.equal(signed.headers.get('access-control-allow-origin'), origin);
+
+        const unsigned = await fetch(
+          `${base}/operator/runtime.json?question=${encodeURIComponent('Documents')}`,
+          { headers: { origin } },
+        );
+        assert.equal(unsigned.status, 401);
+        assert.equal(unsigned.headers.get('access-control-allow-origin'), origin);
+
+        const forbidden = await fetch(
+          `${base}/operator/runtime.json?question=${encodeURIComponent('Approvals')}&client=ACCG01`,
+          { headers: { ...auth('client'), origin } },
+        );
+        assert.equal(forbidden.status, 403);
+        assert.equal(forbidden.headers.get('access-control-allow-origin'), origin);
+
+        const preflight = await fetch(`${base}/operator/runtime.json`, {
+          method: 'OPTIONS',
+          headers: {
+            origin,
+            'access-control-request-method': 'GET',
+            'access-control-request-headers': 'authorization,content-type',
+          },
+        });
+        assert.equal(preflight.status, 204);
+        assert.equal(preflight.headers.get('access-control-allow-origin'), origin);
+      },
+      { commsMode: 'deny', seedApprovalTask: true },
+    );
+
+    await withW2cHub(
+      (oid) => (oid === USER_STAFF ? STAFF_CODES : ['ACCG01']),
+      async ({ base }) => {
+        const started = Date.now();
+        const documents = await askAtlas(base, 'What documents exist for ACCG?');
+        const elapsed = Date.now() - started;
+        assert.ok(elapsed < 2000, `stalled file-index must still finish (${elapsed}ms)`);
+        assert.equal(documents.status, 200);
+        assert.equal(documents.body.runtime?.pending, false);
+        assert.match(documents.body.workflowAnswer || '', /SOURCE_UNAVAILABLE|will not invent files/i);
+
+        const approvals = await askAtlas(base, 'Approvals', 'staff', 'ACCG01');
+        assert.equal(approvals.status, 200);
+        assert.equal(approvals.body.runtime?.pending, false);
+        assert.match(approvals.body.workflowAnswer || '', /did not apply an approval action/);
+        assert.match(approvals.body.workflowAnswer || '', /GLOBAL_AUTO_RESPOND=false/);
+      },
+      { commsMode: 'hang', deadlineMs: 400, seedApprovalTask: true },
+    );
   });
 
   it('Graph/server workspace errors are SOURCE_UNAVAILABLE without silent workspace-less composition', async () => {

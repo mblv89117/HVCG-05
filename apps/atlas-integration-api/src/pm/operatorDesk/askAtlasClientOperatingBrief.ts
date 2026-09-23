@@ -25,6 +25,38 @@ export const CLIENT_OPERATING_BRIEF_MISSION_KEY = CLIENT_TRUTH_MISSION_KEY;
 export const CLIENT_OPERATING_BRIEF_KIND = 'client_operating_brief_honesty_v1' as const;
 export const WORKSPACE_TRUTH_SOURCE_UNAVAILABLE = 'SOURCE_UNAVAILABLE' as const;
 
+/**
+ * Finished document answer when the file-index read 403s, times out, or never returns.
+ * Does not invent filenames.
+ */
+export function documentIndexUnavailableAnswer(clientCode: string): string {
+  const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
+  return [
+    `Atlas cannot read the current ${code} document index (HVCG_Communications/file-index).`,
+    `Document availability is ${WORKSPACE_TRUTH_SOURCE_UNAVAILABLE}.`,
+    'Atlas will not invent files, filenames, or a closing checklist.',
+    'documents=SOURCE_UNAVAILABLE.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
+/**
+ * Finished approvals answer when the workspace/file-index read does not complete.
+ * Surfaces only lines already taken from approval/decision records. Does not apply an action.
+ */
+export function approvalsFinishedWithoutWorkspace(clientCode: string, pending: readonly string[]): string {
+  const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
+  const lines = pending.map((line) => line.trim()).filter(Boolean).slice(0, 8);
+  return [
+    `Approval snapshot for ${code} did not load a current workspace.`,
+    lines.length
+      ? `Pending decisions from existing approval surfaces: ${lines.join('; ')}.`
+      : 'No entitled pending approval items were visible on Approval Center.',
+    'Ask Atlas did not apply an approval action.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
 /** Current-operating-truth answer when the entitled live workspace cannot be loaded. */
 export function currentWorkspaceUnavailableAnswer(clientCode: string): string {
   const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
@@ -67,13 +99,20 @@ const CONCIERGE_PHRASE_MAP: Array<{ topic: ClientOperatingBriefTopic; pattern: R
   { topic: 'finance', pattern: /\bfinance picture\b|\bfinance brief\b/ },
   { topic: 'growth', pattern: /\bgrowth picture\b|\bgrowth brief\b/ },
   { topic: 'capital', pattern: /\bcapital context\b|\bcapital brief\b/ },
-  { topic: 'projects', pattern: /\bwhat projects\b|\bprojects are active\b|\bprojects brief\b|\bprojects domain\b/ },
+  {
+    topic: 'projects',
+    pattern:
+      /\bwhat projects\b|\bprojects are active\b|\bprojects brief\b|\bprojects domain\b|\bactive projects\b|\bwhat are the (?:active )?projects\b|^projects$/,
+  },
   {
     topic: 'documents',
     pattern:
-      /\bwhat documents exist\b|\bdocuments exist\b|\bdocument inventory\b|\bdocuments on the operating brief\b/,
+      /\bwhat documents exist\b|\bdocuments exist\b|\bdocument inventory\b|\bdocuments on the operating brief\b|\bwhat documents do we have\b|\bdocuments domain\b|\bdocument picture\b|\bdocument index\b|^documents$/,
   },
-  { topic: 'approvals', pattern: /\bapprovals brief\b|\bapproval brief\b/ },
+  {
+    topic: 'approvals',
+    pattern: /\bapprovals brief\b|\bapproval brief\b|\bapprovals domain\b|^approvals$|^approval center$/,
+  },
 ];
 
 function isCapitalSubmitOrPrepare(question: string): boolean {
@@ -85,6 +124,10 @@ const FOREIGN_CODE = /(?:^|[^A-Z0-9])(PDG01|ACCG01|CCB01|HFD01|KAVA01|CPL01|LIEN
 
 function normalize(question: string): string {
   return question.trim().replace(/\s+/g, ' ').replace(/[?!.]+$/g, '');
+}
+
+export function clientOperatingBriefTopic(question: string): ClientOperatingBriefTopic | null {
+  return detectTopic(question);
 }
 
 function detectTopic(question: string): ClientOperatingBriefTopic | null {
@@ -196,7 +239,53 @@ function authorityFooter(truth: ClientTruthModel): string {
   return `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=${truth.capitalSubmit}; canExecute=${truth.canExecute}.`;
 }
 
-function renderTopic(truth: ClientTruthModel, topic: ClientOperatingBriefTopic): string {
+export function collectPendingDecisionLines(opts: {
+  clientCode: string;
+  approvalItems?: ReadonlyArray<{
+    title?: string;
+    clientCode?: string;
+    status?: string;
+    requestedAction?: string;
+  }>;
+  workspace?: WorkspaceTruthSnapshot;
+}): string[] {
+  const scoped = opts.clientCode.trim().toUpperCase();
+  const lines: string[] = [];
+  const push = (line: string) => {
+    const text = line.replace(/\s+/g, ' ').trim();
+    if (!text || lines.includes(text)) return;
+    if (foreignCodesIn(text, scoped).length) return;
+    lines.push(text);
+  };
+  for (const item of opts.approvalItems || []) {
+    const status = (item.status || 'PENDING').toUpperCase();
+    if (status !== 'PENDING' && status !== 'DEFERRED') continue;
+    if (item.clientCode && item.clientCode.toUpperCase() !== scoped) continue;
+    const title = (item.title || '').trim();
+    if (!title) continue;
+    const action = (item.requestedAction || '').trim();
+    push(action && action !== title ? `${title} — ${action}` : title);
+  }
+  for (const row of opts.workspace?.decisionsRisks?.items || []) {
+    const title = typeof row.title === 'string' ? row.title.trim() : '';
+    const status = typeof row.status === 'string' ? row.status : '';
+    if (/complete|closed|rejected/i.test(status)) continue;
+    if (title) push(title);
+  }
+  for (const task of opts.workspace?.tasks || []) {
+    const needs =
+      task.requiresApproval === true ||
+      /approval|needs_review|needs_owner_approval|decision/i.test(task.status || '');
+    if (needs && task.title) push(task.title);
+  }
+  return lines.slice(0, 8);
+}
+
+function renderTopic(
+  truth: ClientTruthModel,
+  topic: ClientOperatingBriefTopic,
+  pendingDecisions?: readonly string[],
+): string {
   switch (topic) {
     case 'operating_brief':
       return renderBrief(truth);
@@ -215,6 +304,7 @@ function renderTopic(truth: ClientTruthModel, topic: ClientOperatingBriefTopic):
         truth.projects.summary,
         truth.answers.workingOn.text,
         `projects=${truth.projects.completeness}.`,
+        'Atlas does not invent projects that are absent from the entitled workspace.',
         authorityFooter(truth),
       ].join(' ');
     case 'changed':
@@ -228,6 +318,7 @@ function renderTopic(truth: ClientTruthModel, topic: ClientOperatingBriefTopic):
         truth.answers.documentsExist.text,
         `Missing: ${truth.answers.documentsMissing.text}`,
         `documents=${truth.documents.completeness}.`,
+        'Filenames are not invented beyond the entitled index.',
         authorityFooter(truth),
       ].join(' ');
     case 'capital':
@@ -237,9 +328,17 @@ function renderTopic(truth: ClientTruthModel, topic: ClientOperatingBriefTopic):
         authorityFooter(truth),
       ].join(' ');
     case 'owner_decisions':
+      return [
+        truth.answers.ownerApproval.text,
+        'Ask Atlas did not apply an approval action.',
+        authorityFooter(truth),
+      ].join(' ');
     case 'approvals':
       return [
         truth.answers.ownerApproval.text,
+        pendingDecisions?.length
+          ? `Pending decisions: ${pendingDecisions.slice(0, 8).join('; ')}.`
+          : 'No additional entitled pending approval items were visible on Approval Center or workspace decisions.',
         'Ask Atlas did not apply an approval action.',
         authorityFooter(truth),
       ].join(' ');
@@ -283,6 +382,7 @@ export function answerClientOperatingBrief(
     commercial?: OperatorCommercialContext;
     picture?: OperatorOperatingPicture;
     workspace?: WorkspaceTruthSnapshot;
+    pendingDecisions?: readonly string[];
   },
 ): string {
   const topic = detectTopic(question);
@@ -320,7 +420,7 @@ export function answerClientOperatingBrief(
     return 'Client truth composition did not stay on the asked ClientCode. Fail closed.';
   }
 
-  const text = renderTopic(composed, topic);
+  const text = renderTopic(composed, topic, opts.pendingDecisions);
   const leaked = foreignCodesIn(text, scope.clientCode);
   if (leaked.length) {
     return `Ask Atlas refused to emit a cross-client operating answer (foreign=${leaked.join(',')}).`;

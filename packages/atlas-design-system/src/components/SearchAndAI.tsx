@@ -670,7 +670,10 @@ export function GlobalAICommandPanel({
     }
     const lower = trimmed.toLowerCase();
     if (lower.includes('bank') && onNavigateHint) onNavigateHint('/banking');
-    else if (lower.includes('document') && onNavigateHint) onNavigateHint('/documents');
+    // A live Ask Atlas document question must not also open /documents.
+    // That page re-reads HVCG_Communications/file-index and a CORS/403 there
+    // leaves the operator waiting while runtime.json is still in flight.
+    else if (lower.includes('document') && onNavigateHint && !onRunPrompt) onNavigateHint('/documents');
     else if (lower.includes('client') && onNavigateHint) onNavigateHint('/clients');
     else if (lower.includes('financial') && onNavigateHint) onNavigateHint('/financials');
     else if (lower.includes('capital') && onNavigateHint) onNavigateHint('/capital');

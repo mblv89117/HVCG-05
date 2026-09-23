@@ -1222,24 +1222,31 @@ export async function fetchOperatorRuntime(
   const params = new URLSearchParams();
   params.set('question', question.trim());
   if (opts?.clientCode?.trim()) params.set('clientCode', opts.clientCode.trim());
-  return hubFetchJson<{
-    operatorDesk?: {
-      askAtlas?: {
-        items?: Array<{
-          state: string;
-          client?: string;
-          clientCode?: string;
-          classification: string;
-          why: string;
-          basedOn: string;
-        }>;
-        honestEmpty?: boolean;
+  // Hub document/approval answers are deadlined. Abort so the drawer cannot stay on Running.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 35_000);
+  try {
+    return await hubFetchJson<{
+      operatorDesk?: {
+        askAtlas?: {
+          items?: Array<{
+            state: string;
+            client?: string;
+            clientCode?: string;
+            classification: string;
+            why: string;
+            basedOn: string;
+          }>;
+          honestEmpty?: boolean;
+        };
       };
-    };
-    workflowDraft?: WorkflowDraftPayload;
-    workflowAnswer?: string;
-    runtime?: Record<string, unknown>;
-  }>(auth, `/operator/runtime.json?${params.toString()}`);
+      workflowDraft?: WorkflowDraftPayload;
+      workflowAnswer?: string;
+      runtime?: Record<string, unknown>;
+    }>(auth, `/operator/runtime.json?${params.toString()}`, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function postWorkflowDraftAction(

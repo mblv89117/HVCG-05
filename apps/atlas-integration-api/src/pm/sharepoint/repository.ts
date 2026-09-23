@@ -392,11 +392,20 @@ export class SharePointPmService {
     const items = (await this.listCache.getOrLoad(listId, async () => {
       const pages: GraphListItem[] = [];
       let nextLink: string | undefined;
-      do {
+      const seenLinks = new Set<string>();
+      // File-index lists can be thousands of rows. A repeated nextLink must not
+      // spin until the platform kills runtime.json (browser then reports CORS/403).
+      const maxPages = 80;
+      for (let pageNo = 0; pageNo < maxPages; pageNo += 1) {
+        if (nextLink) {
+          if (seenLinks.has(nextLink)) break;
+          seenLinks.add(nextLink);
+        }
         const page = await this.graph.listItems(listId, { nextLink, top: 100 });
         pages.push(...page.items);
+        if (!page.nextLink) break;
         nextLink = page.nextLink;
-      } while (nextLink);
+      }
       return pages;
     })) as GraphListItem[];
     return filter ? items.filter((item) => itemMatchesFieldsFilter(item, filter)) : items;

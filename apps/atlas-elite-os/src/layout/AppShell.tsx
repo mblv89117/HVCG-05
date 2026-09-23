@@ -697,6 +697,11 @@ export function AppShell() {
             }
             return summarizeAskAtlasPrompt(prompt, askAtlasItems, null);
           } catch (err) {
+            const aborted =
+              err instanceof Error && (err.name === 'AbortError' || /aborted/i.test(err.message));
+            if (aborted) {
+              return 'Ask Atlas did not receive a finished Hub answer before the request deadline. No files were invented and no approval action was applied.';
+            }
             return summarizeAskAtlasPrompt(
               prompt,
               askAtlasItems,
