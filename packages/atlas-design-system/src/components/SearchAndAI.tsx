@@ -669,9 +669,12 @@ export function GlobalAICommandPanel({
       setResponseActions([]);
       setLastPrompt(trimmed);
     }
-    // Live Ask Atlas (onRunPrompt) must not leave the drawer for capital or
-    // document questions. /documents re-reads HVCG_Communications/file-index;
-    // /capital is Capital Command Center and is not an Ask Atlas answer.
+    // Live Ask Atlas (onRunPrompt) must not leave the drawer for bank, client,
+    // financial, document, or capital questions. Those keyword routes are the
+    // dev-stub panel only. /banking is Plaid Banking Connections; /clients and
+    // /financials are module pages; /documents re-reads
+    // HVCG_Communications/file-index; /capital is Capital Command Center.
+    // None of those pages is an Ask Atlas answer.
     const navigatePath = aiCommandNavigatePath(trimmed, { liveAskAtlas: Boolean(onRunPrompt) });
     if (navigatePath && onNavigateHint) onNavigateHint(navigatePath);
   };
