@@ -13,6 +13,7 @@ import type {
   LiveClientPilotBrief,
   OperatorCommercialContext,
 } from './types.ts';
+import { growth360ApprovalId } from '../../modules/ingest/campaignApproval.ts';
 
 export type { LiveClientPilotAction, LiveClientPilotBrief };
 
@@ -88,13 +89,18 @@ export function buildLiveClientPilotBrief(
   for (const attr of ctx.gtm.attributions) {
     const campaign = attr.lineage.campaignId || 'campaign';
     const source = attr.lineage.source || 'growth_360';
-    whatIsHappening.push(`Growth360 attribution recorded (${source} · ${campaign}).`);
+    const approvalId = growth360ApprovalId(attr.idempotencyKey);
+    whatIsHappening.push(
+      `Growth360 attribution recorded (${source} · ${campaign}). Approval ${approvalId} at /approvals and /clients/${clientCode}.`,
+    );
     whyItMatters.push('Growth360 observation is available in Atlas without opening Growth360 for routine status.');
     whatChanged.push(`Growth360 attribution recorded at ${attr.recordedAt}.`);
-    known.push(`Growth360 attribution on record for ${clientCode} (canExecute remains false).`);
+    known.push(
+      `Growth360 attribution on record for ${clientCode} (${approvalId}; canExecute remains false).`,
+    );
     provenance.push({
       source: 'growth360-module-ingest',
-      detail: `idempotencyKey=${attr.idempotencyKey}; source=${source}; campaignId=${attr.lineage.campaignId || 'n/a'}`,
+      detail: `approvalId=${approvalId}; idempotencyKey=${attr.idempotencyKey}; source=${source}; campaignId=${attr.lineage.campaignId || 'n/a'}`,
     });
     nextActions.push({
       text: `Review Growth360 ${campaign} attribution and PREPARE a growth follow-up checklist (no paid launch).`,

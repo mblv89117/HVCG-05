@@ -43,6 +43,13 @@ import {
   type WorkflowSummary,
 } from './workflows.ts';
 import { listVisibleAgentActivity } from './activityLedger.ts';
+import { getIdentityRegistry } from '../../identity/registry.ts';
+import {
+  GROWTH360_OWNER_DECISION_RESULT,
+  growth360ApprovalId,
+  listGrowth360ApprovalRequests,
+  type Growth360ApprovalRequest,
+} from '../../modules/ingest/campaignApproval.ts';
 
 export const APPROVAL_CENTER_CONTRACT = 'atlas-hub-approvals.v1' as const;
 
@@ -96,7 +103,14 @@ export type ApprovalListItem = {
   materialSummary?: string;
   actions: Array<'approve' | 'reject' | 'defer' | 'cancel' | 'open_context'>;
   href?: string;
-  source: 'task' | 'workflow_gate' | 'workflow_authority' | 'onboarding' | 'ledger_blocked';
+  source:
+    | 'task'
+    | 'workflow_gate'
+    | 'workflow_authority'
+    | 'onboarding'
+    | 'business_memory'
+    | 'ledger_blocked'
+    | 'growth_360';
 };
 
 export type ApprovalDetail = ApprovalListItem & {
@@ -342,6 +356,60 @@ function onboardingAttentionItem(
   };
 }
 
+function growth360ApprovalItem(
+  request: Growth360ApprovalRequest,
+  overlay: ApprovalOverlayRecord | null,
+): ApprovalListItem {
+  const clientCode = request.envelope.clientCode;
+  const mapping = getIdentityRegistry().getByClientCode(clientCode);
+  const approvalId = growth360ApprovalId(request.idempotencyKey);
+  const status = mergeStatus(overlay, true);
+  const requestedAt = request.receivedAt || request.envelope.timestamp;
+  const campaignId = request.fields.campaignId;
+  const requestId = request.fields.requestId;
+  const requestedAction =
+    request.fields.requestedAction ||
+    `Review 360 campaign approval request ${requestId}`;
+  const ageHours = Number.isNaN(Date.parse(requestedAt))
+    ? undefined
+    : Math.round((Date.now() - Date.parse(requestedAt)) / 3600000);
+  return {
+    approvalId,
+    title: campaignId ? `360 campaign approval ${campaignId}` : `360 campaign approval ${requestId}`,
+    approvalType: '360 campaign approval',
+    category: 'MARKETING',
+    status,
+    clientCode,
+    clientName: mapping?.displayName,
+    requestedAction,
+    requestedBy: request.envelope.actor || 'growth_360',
+    originatingSystem: 'growth_360',
+    policyClass: 'OWNER_GATED',
+    policyReason:
+      '360 campaign approval is observation-only. The owner decision is recorded in Atlas. 360 campaign mutation is not performed. canExecute remains false.',
+    evidenceStatus: 'CONFIRMED',
+    requestedAt,
+    ageHours,
+    executionState: overlay?.executionState ?? 'NOT_STARTED',
+    materialSummary: [
+      overlay?.executionResult,
+      `requestId=${requestId}`,
+      campaignId ? `campaignId=${campaignId}` : '',
+      'canExecute=false',
+      `/clients/${clientCode}`,
+      '/approvals',
+    ]
+      .filter(Boolean)
+      .join('; '),
+    actions:
+      status === 'PENDING' || status === 'DEFERRED'
+        ? ['approve', 'reject', 'defer', 'cancel', 'open_context']
+        : ['open_context'],
+    href: `/clients/${encodeURIComponent(clientCode)}`,
+    source: 'growth_360',
+  };
+}
+
 function businessMemoryAttentionItem(
   record: {
     clientCode: string;
@@ -473,6 +541,16 @@ export function buildApprovalCenter(opts: {
     });
   }
 
+  for (const request of listGrowth360ApprovalRequests(opts.dataDir)) {
+    if (!callerMaySeeClient(opts.principal, request.envelope.clientCode)) continue;
+    const approvalId = growth360ApprovalId(request.idempotencyKey);
+    if (seen.has(approvalId)) continue;
+    const overlayRec = getApprovalOverlayRecord(overlay, approvalId);
+    const item = growth360ApprovalItem(request, overlayRec);
+    seen.add(item.approvalId);
+    items.push(item);
+  }
+
   const ledger = listVisibleAgentActivity({
     dataDir: opts.dataDir,
     principal: opts.principal,
@@ -550,7 +628,19 @@ export function getApprovalDetail(opts: {
   const fingerprint = overlayRec?.parameterFingerprint ?? shaFingerprint({ approvalId: opts.approvalId, title: item.title });
 
   let detailExtra: Partial<ApprovalDetail> = {};
-  if (item.workflowId) {
+  if (item.source === 'growth_360') {
+    detailExtra = {
+      expectedEffectIfApproved: GROWTH360_OWNER_DECISION_RESULT,
+      expectedEffectIfRejected: GROWTH360_OWNER_DECISION_RESULT,
+      confirmationSummary: GROWTH360_OWNER_DECISION_RESULT,
+      evidence: [
+        'Signed 360.campaign_approval.v1 observe ingest. canExecute remains false.',
+        item.clientCode ? `Client context: /clients/${item.clientCode}` : '',
+        'Approval Center: /approvals',
+        item.materialSummary ? `Note: ${item.materialSummary}` : '',
+      ].filter(Boolean),
+    };
+  } else if (item.workflowId) {
     const wfDetail = getWorkflowDetail({
       cfg: opts.cfg,
       principal: opts.principal,
@@ -701,6 +791,7 @@ export async function applyApprovalAction(opts: {
       rejectedAt: now,
       rejectedBy: opts.principal.userId,
       rejectedReason: opts.reason?.trim(),
+      ...(detail.source === 'growth_360' ? { executionResult: GROWTH360_OWNER_DECISION_RESULT } : {}),
       relatedActivityIds: existing?.relatedActivityIds ?? [],
       updatedAt: now,
     };
@@ -801,6 +892,42 @@ export async function applyApprovalAction(opts: {
   }
 
   // approve
+  if (detail.source === 'growth_360') {
+    const record: ApprovalOverlayRecord = {
+      approvalId: opts.approvalId,
+      status: 'APPROVED',
+      executionState: 'NOT_STARTED',
+      parameterFingerprint: fingerprint,
+      approvedParameterFingerprint: fingerprint,
+      approvedAt: now,
+      approvedBy: opts.principal.userId,
+      executionResult: GROWTH360_OWNER_DECISION_RESULT,
+      relatedActivityIds: existing?.relatedActivityIds ?? [],
+      updatedAt: now,
+    };
+    upsertApprovalOverlayRecord(overlay, record);
+    writeApprovalOverlay(approvalDir, overlay);
+    await appendApprovalLifecycle({
+      dataDir: opts.dataDir,
+      principal: opts.principal,
+      event: 'APPROVAL_APPROVED',
+      approvalId: opts.approvalId,
+      title: detail.title,
+      clientCode: detail.clientCode,
+      detail: GROWTH360_OWNER_DECISION_RESULT,
+    });
+    return {
+      ok: true,
+      detail: getApprovalDetail({
+        cfg: opts.cfg,
+        principal: opts.principal,
+        dataDir: opts.dataDir,
+        approvalId: opts.approvalId,
+        ownerApprovalTasks: opts.ownerApprovalTasks,
+      })!,
+    };
+  }
+
   if (detail.source === 'task' && opts.sharepoint) {
     const taskId = opts.approvalId.replace(/^task:/, '');
     const existing = await opts.sharepoint.authorizeTask(opts.principal, taskId);

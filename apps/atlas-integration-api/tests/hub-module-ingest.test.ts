@@ -114,7 +114,141 @@ describe('Wave 3 module ingest', () => {
       }),
     );
     assert.equal(r.ok, false);
-    if (!r.ok) assert.equal(r.code, 'PAID_EXECUTE_FORBIDDEN');
+    if (!r.ok) {
+      assert.equal(r.status, 400);
+      assert.equal(r.code, 'PAID_EXECUTE_FORBIDDEN');
+    }
+  });
+
+  it('fail-closes Hart slug mismatch and unmapped 360 clients', () => {
+    const hart = handleModuleEnvelope(
+      envelope360({
+        clientCode: 'PDG01',
+        payload: { canExecute: false, organizationSlug: 'hart-family-dental' },
+      }),
+    );
+    assert.equal(hart.ok, false);
+    if (!hart.ok) {
+      assert.equal(hart.status, 403);
+      assert.equal(hart.code, 'HART_CLIENTCODE_REQUIRED');
+    }
+
+    const unknown = handleModuleEnvelope(envelope360({ clientCode: 'ZZZZ99' }));
+    assert.equal(unknown.ok, false);
+    if (!unknown.ok) assert.equal(unknown.status, 403);
+
+    const accgHart = handleModuleEnvelope(
+      envelope360({
+        clientCode: 'ACCG01',
+        idempotencyKey: '360|accg-hart',
+        payload: { canExecute: false, organizationSlug: 'hart-family-dental' },
+      }),
+    );
+    assert.equal(accgHart.ok, false);
+    if (!accgHart.ok) assert.equal(accgHart.status, 403);
+
+    const accg = handleModuleEnvelope(
+      envelope360({
+        clientCode: 'ACCG01',
+        idempotencyKey: '360|accg',
+        payload: { canExecute: false },
+      }),
+    );
+    assert.equal(accg.ok, false);
+    if (!accg.ok) {
+      assert.equal(accg.status, 403);
+      assert.equal(accg.code, 'GROWTH360_UNMAPPED');
+    }
+
+    for (const clientCode of ['MRI01', 'SYN01', 'T360A']) {
+      const fixture = handleModuleEnvelope(
+        envelope360({
+          clientCode,
+          idempotencyKey: `360|${clientCode}`,
+          payload: { canExecute: false },
+        }),
+      );
+      assert.equal(fixture.ok, false);
+      if (!fixture.ok) assert.equal(fixture.status, 403);
+    }
+  });
+
+  it('allow-lists 360 payload fields and dual-resolves the verified HFD01 org', () => {
+    const smuggledCode = handleModuleEnvelope(
+      envelope360({
+        payload: {
+          canExecute: false,
+          organizationSlug: 'hart-family-dental',
+          clientCode: 'ACCG01',
+        },
+      }),
+    );
+    assert.equal(smuggledCode.ok, false);
+    if (!smuggledCode.ok) {
+      assert.equal(smuggledCode.status, 400);
+      assert.equal(smuggledCode.code, 'PAYLOAD_FIELD_NOT_ALLOWED');
+    }
+
+    const secondOrg = handleModuleEnvelope(
+      envelope360({
+        payload: {
+          canExecute: false,
+          organizationSlug: 'hart-family-dental',
+          organizationId: '99cdffba-3cf2-4343-9e4a-3dca42ff4711',
+          gccOrganizationId: 'org-prodigy-games-llc',
+        },
+      }),
+    );
+    assert.equal(secondOrg.ok, false);
+    if (!secondOrg.ok) assert.equal(secondOrg.status, 400);
+
+    const nestedExecute = handleModuleEnvelope(
+      envelope360({
+        payload: {
+          canExecute: false,
+          organizationSlug: 'hart-family-dental',
+          campaignId: { canExecute: true },
+        },
+      }),
+    );
+    assert.equal(nestedExecute.ok, false);
+    if (!nestedExecute.ok) assert.equal(nestedExecute.status, 400);
+
+    const stringExecute = handleModuleEnvelope(
+      envelope360({
+        payload: { canExecute: 'true', organizationSlug: 'hart-family-dental' },
+      }),
+    );
+    assert.equal(stringExecute.ok, false);
+    if (!stringExecute.ok) assert.equal(stringExecute.code, 'PAID_EXECUTE_FORBIDDEN');
+
+    const wrongOrg = handleModuleEnvelope(
+      envelope360({
+        payload: {
+          canExecute: false,
+          organizationSlug: 'hart-family-dental',
+          organizationId: '00000000-0000-0000-0000-000000000000',
+        },
+      }),
+    );
+    assert.equal(wrongOrg.ok, false);
+    if (!wrongOrg.ok) {
+      assert.equal(wrongOrg.status, 403);
+      assert.equal(wrongOrg.code, 'GROWTH360_ORG_CLIENTCODE_MISMATCH');
+    }
+
+    const both = handleModuleEnvelope(
+      envelope360({
+        payload: {
+          canExecute: false,
+          organizationSlug: 'hart-family-dental',
+          organizationId: '99cdffba-3cf2-4343-9e4a-3dca42ff4711',
+          campaignId: 'camp-1',
+          requestedAction: 'Review the spring campaign draft',
+        },
+      }),
+    );
+    assert.equal(both.ok, true);
   });
 
   it('accepts GCC observation for SYN01 with mapped org', () => {

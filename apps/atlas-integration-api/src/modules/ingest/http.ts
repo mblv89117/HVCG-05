@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { buildModuleKeyRing, verifyModuleIngestHmac, type ModuleKeyRing } from './hmac.ts';
 import { handleModuleEnvelope } from './handlers.ts';
 import { resolveModuleIngestBackend, upsertModuleIngest } from './backend.ts';
+import { recordGrowth360ApprovalContinuity } from './campaignApproval.ts';
 import { projectModuleEnvelopeToOverlay } from './projectToCommercialOverlay.ts';
 
 function send(res: ServerResponse, status: number, body: unknown, origin?: string | null): void {
@@ -110,6 +111,16 @@ export async function handleModuleIngestRoutes(opts: {
       opts.origin,
     );
     return true;
+  }
+
+  try {
+    recordGrowth360ApprovalContinuity({
+      dataDir: opts.dataDir,
+      envelope: handled.envelope,
+      receivedAt: stored.record.receivedAt,
+    });
+  } catch {
+    // Durable accept already succeeded. The continuity index is a read model.
   }
 
   let projection: { projected: boolean; kind?: string; replay?: boolean; fixtureOnly?: boolean } = {

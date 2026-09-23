@@ -20,6 +20,7 @@ import type {
   PersistedAttribution,
 } from '../../pm/commercialContext/types.ts';
 import { loadOverlay, saveOverlay } from '../../pm/commercialContext/store.ts';
+import { evaluateCampaignApproval } from './campaignApproval.ts';
 
 const FIXTURE_CODES = new Set(['MRI01', 'SYN01', 'T360A']);
 
@@ -99,11 +100,12 @@ export function applyEnvelopeToOverlay(
     if (existing) {
       return { projected: true, kind: 'attribution-lineage.v1', replay: true, fixtureOnly, overlay };
     }
-    if (fixtureOnly) {
+    const accepted = evaluateCampaignApproval(envelope);
+    if (fixtureOnly || !accepted.ok) {
       return { projected: false, kind: 'attribution-lineage.v1', fixtureOnly, overlay };
     }
-    const slug = asString(envelope.payload.organizationSlug, 255);
-    const campaignId = asString(envelope.payload.campaignId, 255);
+    const slug = accepted.organizationSlug;
+    const campaignId = accepted.campaignId;
     const next: PersistedAttribution = {
       contractVersion: 'attribution-lineage.v1',
       clientCode: envelope.clientCode,
