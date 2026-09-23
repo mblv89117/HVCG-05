@@ -186,6 +186,8 @@ import {
   collectPendingDecisionLines,
   currentWorkspaceUnavailableAnswer,
   documentIndexUnavailableAnswer,
+  financeAnswerWhenWorkspaceUnavailable,
+  isFinanceScopedOperatingTopic,
   mapsToClientOperatingBriefIntent,
   WORKSPACE_TRUTH_SOURCE_UNAVAILABLE,
 } from './askAtlasClientOperatingBrief.ts';
@@ -480,6 +482,8 @@ async function readEventJson(req: IncomingMessage): Promise<Record<string, unkno
  * Client-scoped Documents / Approvals / Projects (and the rest of the concierge
  * brief) finish before the operator desk walks HVCG_Communications/file-index.
  * A Graph 403 or a stalled nextLink must still return a finished answer.
+ * Finance questions still quote a hydrated GCC value-signal when workspace
+ * truth is SOURCE_UNAVAILABLE. They do not invent workspace substitutes.
  * Approval lines come from Approval Center and workspace decisions. This path
  * never calls applyApprovalAction.
  */
@@ -587,7 +591,21 @@ async function finishClientOperatingBriefBeforeDesk(opts: {
     workspaceTruth = WORKSPACE_TRUTH_SOURCE_UNAVAILABLE;
     if (topic === 'documents') briefAnswer = documentIndexUnavailableAnswer(scoped);
     else if (topic === 'approvals') briefAnswer = approvalsFinishedWithoutWorkspace(scoped, pendingDecisions);
-    else briefAnswer = currentWorkspaceUnavailableAnswer(scoped);
+    else if (isFinanceScopedOperatingTopic(topic)) {
+      try {
+        commercial = await withDeadline(
+          readCommercialContextAsync({
+            dataDir: opts.cfg.dataDir,
+            principal: opts.principal,
+            clientCode: scoped,
+          }),
+          deadline,
+        );
+      } catch {
+        commercial = undefined;
+      }
+      briefAnswer = financeAnswerWhenWorkspaceUnavailable(scoped, commercial);
+    } else briefAnswer = currentWorkspaceUnavailableAnswer(scoped);
   } else {
     briefAnswer = answerClientOperatingBrief(opts.question, {
       entitledCodes: entitled,
