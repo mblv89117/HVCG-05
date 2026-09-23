@@ -26,6 +26,7 @@ import {
 } from '@fluentui/react-icons';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useEffect, useId, useRef, useState } from 'react';
+import { aiCommandNavigatePath } from './aiCommandNavigate';
 
 export interface SearchResult {
   id: string;
@@ -668,15 +669,11 @@ export function GlobalAICommandPanel({
       setResponseActions([]);
       setLastPrompt(trimmed);
     }
-    const lower = trimmed.toLowerCase();
-    if (lower.includes('bank') && onNavigateHint) onNavigateHint('/banking');
-    // A live Ask Atlas document question must not also open /documents.
-    // That page re-reads HVCG_Communications/file-index and a CORS/403 there
-    // leaves the operator waiting while runtime.json is still in flight.
-    else if (lower.includes('document') && onNavigateHint && !onRunPrompt) onNavigateHint('/documents');
-    else if (lower.includes('client') && onNavigateHint) onNavigateHint('/clients');
-    else if (lower.includes('financial') && onNavigateHint) onNavigateHint('/financials');
-    else if (lower.includes('capital') && onNavigateHint) onNavigateHint('/capital');
+    // Live Ask Atlas (onRunPrompt) must not leave the drawer for capital or
+    // document questions. /documents re-reads HVCG_Communications/file-index;
+    // /capital is Capital Command Center and is not an Ask Atlas answer.
+    const navigatePath = aiCommandNavigatePath(trimmed, { liveAskAtlas: Boolean(onRunPrompt) });
+    if (navigatePath && onNavigateHint) onNavigateHint(navigatePath);
   };
 
   return (
