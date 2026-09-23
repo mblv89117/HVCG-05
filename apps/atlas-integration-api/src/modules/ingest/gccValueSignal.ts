@@ -88,17 +88,50 @@ function optionalText(
   return { ok: true, value: trimmed };
 }
 
-/** Strip currency amounts and a supplied impact figure from observation text. */
-export function redactFinancialDollars(text: string, impact?: number): string {
-  let out = text.replace(/\$\s?\d[\d,]*(?:\.\d+)?/g, '');
-  if (typeof impact === 'number' && Number.isFinite(impact) && impact !== 0) {
-    const abs = String(Math.abs(impact));
-    const grouped = abs.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    for (const token of abs === grouped ? [abs] : [abs, grouped]) {
-      const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      out = out.replace(new RegExp(`(?<![\\d.])${escaped}(?![\\d.])`, 'g'), '');
-    }
+const CURRENCY_CODES = 'USD|EUR|GBP|CAD|AUD|NZD|CHF|JPY';
+const MONEY_NUMBER = '\\d{1,3}(?:,\\d{3})+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?';
+const CASH_WORD = 'runway|cash|forecast';
+const CASH_UNIT = 'months?|days?|weeks?|years?';
+
+function stripImpactFigure(text: string, impact: number): string {
+  const abs = String(Math.abs(impact));
+  const grouped = abs.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const tokens = abs === grouped ? [abs] : [abs, grouped];
+  let out = text;
+  for (const token of tokens) {
+    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    out = out.replace(new RegExp(`(?<![\\d.,])${escaped}(?:\\.\\d+)?(?!\\d)`, 'g'), '');
   }
+  return out;
+}
+
+/** Remove cash/runway/forecast amounts so a phrase cannot remain as a finance fact. */
+function neutralizeCashRunwayAmounts(text: string): string {
+  const leading = new RegExp(
+    `\\b(?:${CASH_WORD})\\b(?:\\s+(?:of|on|hand|balance|is|at))*\\s+(?:${MONEY_NUMBER})(?:\\s+(?:${CASH_UNIT}))?`,
+    'gi',
+  );
+  const trailing = new RegExp(
+    `\\b(?:${MONEY_NUMBER})(?:\\s+(?:${CASH_UNIT}))?\\s+(?:${CASH_WORD})\\b`,
+    'gi',
+  );
+  return text.replace(leading, '').replace(trailing, '');
+}
+
+/**
+ * Strip currency amounts from observation text.
+ * Finding and evidence stay as words. Dollar figures, including decimals,
+ * currency codes, and cash/runway amounts, do not.
+ */
+export function redactFinancialDollars(text: string, impact?: number): string {
+  let out = text.replace(new RegExp(`\\$[ \\t]{0,2}(?:${MONEY_NUMBER})`, 'g'), '');
+  out = out.replace(new RegExp(`\\b(?:${CURRENCY_CODES})[ \\t]{0,2}(?:${MONEY_NUMBER})`, 'gi'), '');
+  out = neutralizeCashRunwayAmounts(out);
+  if (typeof impact === 'number' && Number.isFinite(impact) && impact !== 0) {
+    out = stripImpactFigure(out, impact);
+  }
+  out = out.replace(/\b\d{1,3}(?:,\d{3})+(?:\.\d+)?\b/g, '');
+  out = out.replace(/\b\d{4,}(?:\.\d+)?\b/g, '');
   return out.replace(/\s{2,}/g, ' ').trim();
 }
 

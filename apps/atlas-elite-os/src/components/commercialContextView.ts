@@ -1,4 +1,5 @@
 import type { DeskCommercialContext, OperatorCommercialContext } from '../integrations/hub/pmApi';
+import { redactGccObservationSummary } from './gccObservationRedaction';
 
 export interface CommercialLaneCopy {
   title: string;
@@ -76,7 +77,7 @@ export function commercialContextCopy(
 
   const gccLines =
     operator?.gcc.signals.map((s) => {
-      const summary = (s.summary || '').replace(/\$\s?\d[\d,]*(?:\.\d+)?/g, '').replace(/\s{2,}/g, ' ').trim();
+      const summary = redactGccObservationSummary(s.summary || '');
       return [
         s.signalType.replace(/_/g, ' '),
         s.severity,

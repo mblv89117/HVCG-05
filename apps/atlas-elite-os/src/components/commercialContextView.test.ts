@@ -48,7 +48,8 @@ describe('CommercialContextPanel copy', () => {
             clientCode: 'SYN01',
             signalType: 'expansion_opportunity',
             severity: 'medium',
-            summary: 'Recorded expansion signal $424,242',
+            summary:
+              'Recorded expansion signal 424242.00 424,242.00 USD 424,242.00 usd424242 $  424,242 424242 runway 6 months cash 12500',
             emittedAt: '2026-08-22T00:00:00.000Z',
           },
         ],
@@ -69,8 +70,23 @@ describe('CommercialContextPanel copy', () => {
     const copy = commercialContextCopy(ctx);
     assert.equal(copy.lanes[0].available, true);
     assert.ok(copy.lanes[0].lines.some((line) => line.includes('Recorded expansion signal')));
-    assert.equal(JSON.stringify(copy.lanes[0].lines).includes('424242'), false);
-    assert.equal(JSON.stringify(copy.lanes[0].lines).includes('$'), false);
+    const eliteText = JSON.stringify(copy.lanes[0].lines);
+    for (const shape of [
+      '424242.00',
+      '424,242.00',
+      '424,242',
+      '424242',
+      'USD',
+      'usd',
+      '$',
+      '12500',
+      'runway 6 months cash 12500',
+      'runway 6',
+      '6 months',
+      'cash 12500',
+    ]) {
+      assert.equal(eliteText.includes(shape), false, shape);
+    }
     assert.ok(copy.lanes[0].lines.some((line) => /observation-only/.test(line) && /copiesLedger=false/.test(line) && /canExecute=false/.test(line) && /not a certified ledger/.test(line)));
     assert.ok(copy.lanes[1].lines.some((line) => line.includes('Observation-only MRI')));
     assert.ok(copy.lanes[2].lines.some((line) => line.includes('cmp-gtm-001')));

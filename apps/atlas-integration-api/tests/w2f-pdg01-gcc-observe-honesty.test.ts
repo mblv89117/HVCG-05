@@ -21,9 +21,31 @@ import { resetIdentityRegistry } from '../src/identity/registry.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 
 const IMPACT = 424242;
-const FINDING = `Vendor concentration is elevated ${IMPACT} and $424,242`;
-const EVIDENCE = 'Three suppliers cover most recurring delivery';
+const FINDING =
+  'Vendor concentration is elevated 424242.00 424,242.00 USD 424,242.00 usd424242 $  424,242 and $424,242';
+const EVIDENCE = 'Three suppliers cover most recurring delivery runway 6 months cash 12500';
 const SUMMARY = 'Delivery depends on a small supplier set';
+const LEAK_SHAPES = [
+  '424242.00',
+  '424,242.00',
+  '424,242',
+  '424242',
+  'USD',
+  'usd',
+  '$',
+  '12500',
+  '12,500',
+  'runway 6 months cash 12500',
+  'runway 6',
+  '6 months',
+  'cash 12500',
+];
+
+function assertMoneyShapesAbsent(text: string, label: string): void {
+  for (const shape of LEAK_SHAPES) {
+    assert.equal(text.includes(shape), false, `${label} still contains ${shape}`);
+  }
+}
 
 function principal(codes: string[]): AtlasPrincipal {
   return {
@@ -97,8 +119,8 @@ describe('W2F PDG01 GCC observe-honesty', () => {
     assert.equal(signal.copiesLedger, false);
     assert.match(signal.summary || '', /Delivery depends on a small supplier set/);
     assert.match(signal.summary || '', /Finding: Vendor concentration is elevated and/);
-    assert.equal((signal.summary || '').includes('$'), false);
     assert.match(signal.summary || '', /Evidence: Three suppliers cover most recurring delivery/);
+    assertMoneyShapesAbsent(signal.summary || '', 'projected summary');
     assert.equal(JSON.stringify(signal).includes(String(IMPACT)), false);
     assert.equal(JSON.stringify(signal).includes('org-apex'), false);
     assert.equal('financialImpact' in signal, false);
@@ -122,6 +144,7 @@ describe('W2F PDG01 GCC observe-honesty', () => {
     assert.match(truth.financialContext.summary, /Not a certified ledger/);
     assert.equal(JSON.stringify(truth).includes(String(IMPACT)), false);
     assert.equal(JSON.stringify(truth).includes('org-apex'), false);
+    assertMoneyShapesAbsent(truth.financialContext.summary, 'client truth');
 
     const finance = financeAnswer('PDG01', ctx);
     assert.match(finance, /signalType=constraint/);
@@ -134,7 +157,7 @@ describe('W2F PDG01 GCC observe-honesty', () => {
     assert.match(finance, /not a certified ledger/i);
     assert.equal(finance.includes(String(IMPACT)), false);
     assert.equal(finance.includes('org-apex'), false);
-    assert.equal(finance.includes('$'), false);
+    assertMoneyShapesAbsent(finance, 'ask atlas finance');
 
     const brief = buildLiveClientPilotBrief(ctx);
     const briefText = [...brief.whatIsHappening, ...brief.known, ...brief.unknown].join('\n');
@@ -146,7 +169,63 @@ describe('W2F PDG01 GCC observe-honesty', () => {
     assert.match(briefText, /Not a certified ledger/);
     assert.equal(briefText.includes(String(IMPACT)), false);
     assert.equal(briefText.includes('org-apex'), false);
+    assertMoneyShapesAbsent(briefText, 'live client');
     assert.equal(truth.canExecute, false);
+  });
+
+  it('drops decimal, spaced, currency-code, and cash/runway amounts even when financialImpact is omitted', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'w2f-omit-'));
+    const omitted = gccEnvelope({
+      idempotencyKey: 'gcc|PDG01|w2f|omit-impact',
+      sourceRecordId: 'gcc-pdg-omit',
+      payload: {
+        organizationId: 'org-prodigy-games-llc',
+        signalType: 'engagement_health',
+        summary: 'Text note only',
+        finding: 'bare 424242 and $  424,242 plus 424242.00 and 424,242.00 and USD 424,242.00 and usd424242',
+        evidence: 'runway 6 months cash 12500',
+        autoProvision: false,
+      },
+    });
+    delete omitted.payload.financialImpact;
+    const handled = handleModuleEnvelope(omitted);
+    assert.equal(handled.ok, true);
+    if (!handled.ok) return;
+    assert.equal('financialImpact' in handled.envelope.payload, false);
+    assert.equal(projectModuleEnvelopeToOverlay(dir, handled.envelope).projected, true);
+    const signal = loadOverlay(dir).gccSignals[0]!;
+    assert.equal(signal.copiesLedger, false);
+    assert.match(signal.summary || '', /Text note only/);
+    assert.match(signal.summary || '', /Finding: bare and plus and and and/);
+    assert.equal((signal.summary || '').includes('Evidence:'), false);
+    assertMoneyShapesAbsent(signal.summary || '', 'omitted-impact summary');
+
+    const ctx = buildOperatorCommercialContext({
+      principal: principal(['PDG01', 'ACCG01', 'HFD01']),
+      overlay: loadOverlay(dir),
+      clientCode: 'PDG01',
+    });
+    const truth = composeClientTruth({ clientCode: 'PDG01', commercial: ctx });
+    assert.equal('failClosed' in truth, false);
+    if ('failClosed' in truth) return;
+    assert.equal(truth.canExecute, false);
+    assertMoneyShapesAbsent(truth.financialContext.summary, 'omitted-impact client truth');
+    const finance = financeAnswer('PDG01', ctx);
+    assert.match(finance, /signalType=engagement_health/);
+    assert.match(finance, /Text note only/);
+    assert.match(finance, /copiesLedger=false/);
+    assert.match(finance, /canExecute=false/);
+    assertMoneyShapesAbsent(finance, 'omitted-impact ask atlas');
+    const briefText = [
+      ...buildLiveClientPilotBrief(ctx).whatIsHappening,
+      ...buildLiveClientPilotBrief(ctx).known,
+      ...buildLiveClientPilotBrief(ctx).unknown,
+    ].join('\n');
+    assert.match(briefText, /Text note only/);
+    assert.match(briefText, /copiesLedger=false/);
+    assert.match(briefText, /canExecute=false/);
+    assertMoneyShapesAbsent(briefText, 'omitted-impact live client');
+    assert.equal(listGrowth360ApprovalRequests(dir).length, 0);
   });
 
   it('fail-closes HFD01, ACCG01, fixtures, and other unmapped production codes', () => {
