@@ -384,7 +384,10 @@ function renderTopic(
     case 'capital':
       return [
         `${truth.clientCode} capitalContext=${truth.capitalContext.completeness}/${truth.capitalContext.classification}.`,
+        'Current capital context uses entitled capital opportunities already on this composition only.',
+        'Recovered HVS filenames and keyword matches on HVCG_Projects titles are not active capital.',
         truth.answers.capital.text,
+        'Amounts, lender, and funding status remain unstated.',
         authorityFooter(truth),
       ].join(' ');
     case 'owner_decisions':
