@@ -1,8 +1,7 @@
 /**
- * Ask Atlas capital questions must stay in the drawer.
- * The word "capital" is not a route to Capital Command Center when a live
- * Hub runner is attached. Hub workflowAnswer (including capitalContext=MISSING)
- * is what the drawer displays.
+ * Ask Atlas bank, client, financial, document, and capital questions must stay
+ * in the drawer when a live Hub runner is attached. Keyword routes belong to
+ * the dev-stub panel only. Hub workflowAnswer is what the drawer displays.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -15,8 +14,18 @@ const root = dirname(fileURLToPath(import.meta.url));
 const CAPITAL_CONTEXT = 'What is the current capital context for ACCG01?';
 const CAPITAL_OPPORTUNITY = 'What capital opportunities are open for ACCG01?';
 const PROJECTS = 'What are the current active projects for ACCG01?';
+const PDG01_FINANCIALS = 'What does Atlas know about PDG01 financials?';
+const ACCG01_DOCUMENTS = 'What documents exist for client ACCG01?';
+const ACCG01_BANK = 'What bank accounts are connected for ACCG01?';
+const PDG01_FINANCE_PICTURE = 'What is the finance picture for PDG01?';
 
 describe('Ask Atlas keyword navigation', () => {
+  it('keeps live financial, document, and bank questions in the drawer', () => {
+    assert.equal(aiCommandNavigatePath(PDG01_FINANCIALS, { liveAskAtlas: true }), null);
+    assert.equal(aiCommandNavigatePath(ACCG01_DOCUMENTS, { liveAskAtlas: true }), null);
+    assert.equal(aiCommandNavigatePath(ACCG01_BANK, { liveAskAtlas: true }), null);
+  });
+
   it('keeps live capital-context and capital-opportunity questions in the drawer', () => {
     assert.equal(aiCommandNavigatePath(CAPITAL_CONTEXT, { liveAskAtlas: true }), null);
     assert.equal(aiCommandNavigatePath(CAPITAL_OPPORTUNITY, { liveAskAtlas: true }), null);
@@ -27,7 +36,16 @@ describe('Ask Atlas keyword navigation', () => {
     assert.equal(aiCommandNavigatePath(PROJECTS, { liveAskAtlas: false }), null);
   });
 
-  it('still keyword-routes capital only for the dev stub panel', () => {
+  it('does not treat a finance-picture question as the financials route', () => {
+    assert.equal(aiCommandNavigatePath(PDG01_FINANCE_PICTURE, { liveAskAtlas: true }), null);
+    assert.equal(aiCommandNavigatePath(PDG01_FINANCE_PICTURE, { liveAskAtlas: false }), null);
+  });
+
+  it('still keyword-routes the dev stub panel when no live runner is attached', () => {
+    assert.equal(aiCommandNavigatePath(ACCG01_BANK, { liveAskAtlas: false }), '/banking');
+    assert.equal(aiCommandNavigatePath(ACCG01_DOCUMENTS, { liveAskAtlas: false }), '/documents');
+    assert.equal(aiCommandNavigatePath('Open client ACCG01', { liveAskAtlas: false }), '/clients');
+    assert.equal(aiCommandNavigatePath(PDG01_FINANCIALS, { liveAskAtlas: false }), '/financials');
     assert.equal(aiCommandNavigatePath('Open capital pipeline', { liveAskAtlas: false }), '/capital');
   });
 
