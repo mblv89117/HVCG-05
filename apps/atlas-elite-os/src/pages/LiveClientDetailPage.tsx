@@ -126,8 +126,18 @@ function StatusOrDash({ raw }: { raw?: string | null }) {
   return <Caption1>—</Caption1>;
 }
 
+function workspaceErrorSubtitle(message: string): string {
+  if (/list walk stopped before the list was complete/i.test(message)) {
+    return 'SharePoint list walk incomplete';
+  }
+  return 'Sign in required';
+}
+
 function sectionHonesty(section?: WorkspaceSection): string {
   if (!section) return 'Hub did not include this source on the workspace payload.';
+  if (section.status === 'SOURCE_UNAVAILABLE') {
+    return section.reason || 'This source walk did not complete. It is not an empty list.';
+  }
   if (!section.queried) {
     return (
       section.reason ||
@@ -229,19 +239,19 @@ function WorkspaceSectionCard({
   emptyTitle: string;
 }) {
   const items = section?.items || [];
-  const showItems = Boolean(section?.queried && items.length);
+  const showItems = Boolean(section?.queried && items.length && section?.status !== 'SOURCE_UNAVAILABLE');
+  const sectionLabel =
+    section?.status === 'SOURCE_UNAVAILABLE'
+      ? 'Unavailable'
+      : section?.queried
+        ? `${items.length} entitled`
+        : 'Not queried';
   return (
     <AtlasCard
       title={title}
       subtitle={subtitle}
       density="compact"
-      headerAction={
-        <StatusChip
-          label={section?.queried ? `${items.length} entitled` : 'Not queried'}
-          tone={showItems ? 'info' : 'neutral'}
-          size="sm"
-        />
-      }
+      headerAction={<StatusChip label={sectionLabel} tone={showItems ? 'info' : 'neutral'} size="sm" />}
     >
       {showItems ? (
         items.map((item, index) => <WorkspaceItemRow key={workspaceItemId(item, index)} item={item} index={index} />)
@@ -458,7 +468,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
 
   if (error && !workspace && !busy) {
     return (
-      <ModuleScaffold title="Client" subtitle="Sign in required" showPendingBanner={false}>
+      <ModuleScaffold title="Client" subtitle={workspaceErrorSubtitle(error)} showPendingBanner={false}>
         <ErrorState
           title="Client workspace unavailable"
           description={error}
@@ -970,7 +980,9 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         )}
       </AtlasCard>
 
-      {workspace.documents.queried && workspace.documents.items.length > 0 ? (
+      {workspace.documents.status !== 'SOURCE_UNAVAILABLE' &&
+      workspace.documents.queried &&
+      workspace.documents.items.length > 0 ? (
         <AtlasCard
           title="Authorized document links"
           subtitle="Opens original SharePoint / OneDrive file — Atlas does not move or delete source files"

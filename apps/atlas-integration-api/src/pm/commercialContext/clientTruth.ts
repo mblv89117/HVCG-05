@@ -138,12 +138,39 @@ export type WorkspaceTruthSnapshot = {
     queried: boolean;
     items: Array<{ id: string; title: string; source?: string; kind?: string; clientCode?: string }>;
     reason?: string;
+    /** Set when the file-index walk did not finish. Not MISSING and not INDEXED. */
+    availability?: 'SOURCE_UNAVAILABLE';
   };
-  communications?: { queried: boolean; items: Array<Record<string, unknown>>; reason?: string };
-  meetings?: { queried: boolean; items: Array<Record<string, unknown>>; reason?: string };
-  engagements?: { queried: boolean; items: Array<Record<string, unknown>>; reason?: string };
-  contacts?: { queried: boolean; items: Array<Record<string, unknown>>; reason?: string };
-  decisionsRisks?: { queried: boolean; items: Array<Record<string, unknown>>; reason?: string };
+  communications?: {
+    queried: boolean;
+    items: Array<Record<string, unknown>>;
+    reason?: string;
+    status?: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND' | 'BLOCKED_AMBIGUOUS_IDENTITY' | 'SOURCE_UNAVAILABLE';
+  };
+  meetings?: {
+    queried: boolean;
+    items: Array<Record<string, unknown>>;
+    reason?: string;
+    status?: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND' | 'BLOCKED_AMBIGUOUS_IDENTITY' | 'SOURCE_UNAVAILABLE';
+  };
+  engagements?: {
+    queried: boolean;
+    items: Array<Record<string, unknown>>;
+    reason?: string;
+    status?: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND' | 'BLOCKED_AMBIGUOUS_IDENTITY' | 'SOURCE_UNAVAILABLE';
+  };
+  contacts?: {
+    queried: boolean;
+    items: Array<Record<string, unknown>>;
+    reason?: string;
+    status?: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND' | 'BLOCKED_AMBIGUOUS_IDENTITY' | 'SOURCE_UNAVAILABLE';
+  };
+  decisionsRisks?: {
+    queried: boolean;
+    items: Array<Record<string, unknown>>;
+    reason?: string;
+    status?: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND' | 'BLOCKED_AMBIGUOUS_IDENTITY' | 'SOURCE_UNAVAILABLE';
+  };
   timeline?: Array<{ at: string; kind: string; title: string; source: string; id: string }>;
   nextActions?: Array<{ text: string; evidence?: Array<{ source: string; kind?: string; id: string; field?: string }> }>;
   /** Present when Hub workspace applied operating-record hygiene. */
@@ -233,7 +260,7 @@ export function workspaceSnapshotFromPayload(payload: {
   client?: { clientCode: string; displayName?: string; clientStage?: string; engagementType?: string };
   projects?: WorkspaceTruthSnapshot['projects'];
   tasks?: WorkspaceTruthSnapshot['tasks'];
-  documents?: WorkspaceTruthSnapshot['documents'];
+  documents?: WorkspaceTruthSnapshot['documents'] & { status?: string };
   communications?: WorkspaceTruthSnapshot['communications'];
   meetings?: WorkspaceTruthSnapshot['meetings'];
   engagements?: WorkspaceTruthSnapshot['engagements'];
@@ -252,7 +279,19 @@ export function workspaceSnapshotFromPayload(payload: {
     engagementType: payload.overview?.engagementType || payload.client?.engagementType,
     projects: payload.projects,
     tasks: payload.tasks,
-    documents: payload.documents,
+    documents: payload.documents
+      ? {
+          queried: payload.documents.queried,
+          items: payload.documents.availability === 'SOURCE_UNAVAILABLE' || payload.documents.status === 'SOURCE_UNAVAILABLE'
+            ? []
+            : payload.documents.items,
+          reason: payload.documents.reason,
+          availability:
+            payload.documents.availability === 'SOURCE_UNAVAILABLE' || payload.documents.status === 'SOURCE_UNAVAILABLE'
+              ? 'SOURCE_UNAVAILABLE'
+              : undefined,
+        }
+      : undefined,
     communications: payload.communications,
     meetings: payload.meetings,
     engagements: payload.engagements,
@@ -586,43 +625,71 @@ export function composeClientTruth(opts: {
     ],
   );
 
-  const contactsDomain = domain(
-    'contacts',
-    contactCount > 0 ? 'PARTIAL' : 'MISSING',
-    contactCount > 0 ? 'CONFIRMED' : 'MISSING',
-    contactCount > 0
-      ? `${contactCount} entitled HVCG_Contacts row(s) on this ClientCode.`
-      : 'No entitled HVCG_Contacts rows. Atlas does not invent contacts.',
-    [
-      {
-        source: workspace?.contacts?.queried ? 'HVCG_Contacts' : 'HVCG_Contacts',
-        detail: workspace?.contacts
-          ? workspace.contacts.queried
-            ? `queried; count=${contactCount}`
-            : workspace.contacts.reason || 'Contacts list not queried.'
-          : 'SharePoint workspace contacts were not supplied on this composition.',
-      },
-    ],
-  );
+  const contactsUnavailable = workspace?.contacts?.status === 'SOURCE_UNAVAILABLE';
+  const contactsDomain = contactsUnavailable
+    ? domain(
+        'contacts',
+        'NOT_CERTIFIED',
+        'NOT_CERTIFIED',
+        'HVCG_Contacts walk did not complete. contacts=SOURCE_UNAVAILABLE. Atlas does not invent contacts.',
+        [
+          {
+            source: 'HVCG_Contacts',
+            detail: workspace?.contacts?.reason || 'contacts walk did not complete',
+          },
+        ],
+      )
+    : domain(
+        'contacts',
+        contactCount > 0 ? 'PARTIAL' : 'MISSING',
+        contactCount > 0 ? 'CONFIRMED' : 'MISSING',
+        contactCount > 0
+          ? `${contactCount} entitled HVCG_Contacts row(s) on this ClientCode.`
+          : 'No entitled HVCG_Contacts rows. Atlas does not invent contacts.',
+        [
+          {
+            source: 'HVCG_Contacts',
+            detail: workspace?.contacts
+              ? workspace.contacts.queried
+                ? `queried; count=${contactCount}`
+                : workspace.contacts.reason || 'Contacts list not queried.'
+              : 'SharePoint workspace contacts were not supplied on this composition.',
+          },
+        ],
+      );
 
-  const engagementsDomain = domain(
-    'engagements',
-    engagementCount > 0 || workspace?.engagementType ? 'PARTIAL' : 'MISSING',
-    engagementCount > 0 || workspace?.engagementType ? 'CONFIRMED' : knowledge ? 'LIKELY' : 'MISSING',
-    engagementCount > 0
-      ? `${engagementCount} entitled HVCG_Engagements row(s).`
-      : workspace?.engagementType
-        ? `EngagementTypePrimary on HVCG_Clients is ${workspace.engagementType}. No entitled engagement rows.`
-        : knowledge?.hvcgResponsibilities.some((r) => /engagement|agreement/i.test(r.title))
-          ? 'Recovered engagement/agreement filenames exist. Live Hub engagement rows are not confirmed.'
-          : 'No entitled engagement rows and no recovered engagement filenames.',
-    [
-      {
-        source: engagementCount > 0 ? 'HVCG_Engagements' : 'HVCG_Clients',
-        detail: workspace?.engagementType || `count=${engagementCount}`,
-      },
-    ],
-  );
+  const engagementsUnavailable = workspace?.engagements?.status === 'SOURCE_UNAVAILABLE';
+  const engagementsDomain = engagementsUnavailable
+    ? domain(
+        'engagements',
+        'NOT_CERTIFIED',
+        'NOT_CERTIFIED',
+        'HVCG_Engagements walk did not complete. engagements=SOURCE_UNAVAILABLE. Atlas does not invent engagements.',
+        [
+          {
+            source: 'HVCG_Engagements',
+            detail: workspace?.engagements?.reason || 'engagements walk did not complete',
+          },
+        ],
+      )
+    : domain(
+        'engagements',
+        engagementCount > 0 || workspace?.engagementType ? 'PARTIAL' : 'MISSING',
+        engagementCount > 0 || workspace?.engagementType ? 'CONFIRMED' : knowledge ? 'LIKELY' : 'MISSING',
+        engagementCount > 0
+          ? `${engagementCount} entitled HVCG_Engagements row(s).`
+          : workspace?.engagementType
+            ? `EngagementTypePrimary on HVCG_Clients is ${workspace.engagementType}. No entitled engagement rows.`
+            : knowledge?.hvcgResponsibilities.some((r) => /engagement|agreement/i.test(r.title))
+              ? 'Recovered engagement/agreement filenames exist. Live Hub engagement rows are not confirmed.'
+              : 'No entitled engagement rows and no recovered engagement filenames.',
+        [
+          {
+            source: engagementCount > 0 ? 'HVCG_Engagements' : 'HVCG_Clients',
+            detail: workspace?.engagementType || `count=${engagementCount}`,
+          },
+        ],
+      );
 
   // W2G: current/active projects are hygiene-kept HVCG_Projects only.
   // An empty post-hygiene set is MISSING. Recovered HVS filenames are never that list.
@@ -674,8 +741,11 @@ export function composeClientTruth(opts: {
   // for this ClientCode only. An empty index is MISSING even when recovered HVS
   // filenames exist. Those names, if shown, stay Historical/STALE_OR_UNCERTAIN.
   // A SharePoint library URL pointer is not a complete file inventory.
-  const documentTitles = fileIndex.titles;
-  const staleRecoveredDocNames =
+  const fileIndexUnavailable = workspace?.documents?.availability === 'SOURCE_UNAVAILABLE';
+  const documentTitles = fileIndexUnavailable ? [] : fileIndex.titles;
+  const staleRecoveredDocNames = fileIndexUnavailable
+    ? []
+    :
     workspaceLoaded && documentCount === 0
       ? [
           ...new Set(
@@ -692,18 +762,19 @@ export function composeClientTruth(opts: {
     fileIndex.libraryPointer && documentCount === 0
       ? ' A SharePoint library URL pointer is not a complete file inventory.'
       : '';
-  const documentsSummary =
-    (documentCount > 0
-      ? `${documentCount} entitled HVCG_Communications/file-index row(s). Current index: ${documentTitles.slice(0, 8).join('; ')}. Binaries remain in M365.`
-      : workspaceLoaded
-        ? 'No entitled HVCG_Communications/file-index rows. documents=MISSING. Atlas does not invent filenames.'
-        : 'No entitled HVCG_Communications/file-index rows. documents=MISSING. Atlas will not substitute recovered HVS filenames for the current document index.') +
-    libraryClause +
-    staleDocsClause;
+  const documentsSummary = fileIndexUnavailable
+    ? 'Atlas cannot read the current document index (HVCG_Communications/file-index). Document availability is SOURCE_UNAVAILABLE. documents=SOURCE_UNAVAILABLE. Atlas will not invent files, filenames, or a closing checklist.'
+    : (documentCount > 0
+        ? `${documentCount} entitled HVCG_Communications/file-index row(s). Current index: ${documentTitles.slice(0, 8).join('; ')}. Binaries remain in M365.`
+        : workspaceLoaded
+          ? 'No entitled HVCG_Communications/file-index rows. documents=MISSING. Atlas does not invent filenames.'
+          : 'No entitled HVCG_Communications/file-index rows. documents=MISSING. Atlas will not substitute recovered HVS filenames for the current document index.') +
+      libraryClause +
+      staleDocsClause;
   const documentsDomain = domain(
     'documents',
-    documentCount > 0 ? 'INDEXED' : 'MISSING',
-    documentCount > 0 ? 'CONFIRMED' : 'MISSING',
+    fileIndexUnavailable ? 'NOT_CERTIFIED' : documentCount > 0 ? 'INDEXED' : 'MISSING',
+    fileIndexUnavailable ? 'NOT_CERTIFIED' : documentCount > 0 ? 'CONFIRMED' : 'MISSING',
     documentsSummary,
     [
       ...documentTitles.slice(0, 8).map((title) => ({
@@ -712,9 +783,11 @@ export function composeClientTruth(opts: {
       })),
       {
         source: FILE_INDEX_SOURCE,
-        detail: workspaceLoaded
-          ? `entitled file-index count=${documentCount}; documents=${documentCount > 0 ? 'INDEXED' : 'MISSING'}`
-          : 'no successful workspace load; documents=MISSING',
+        detail: fileIndexUnavailable
+          ? 'file-index walk did not complete; partial rows are not an index; documents=SOURCE_UNAVAILABLE'
+          : workspaceLoaded
+            ? `entitled file-index count=${documentCount}; documents=${documentCount > 0 ? 'INDEXED' : 'MISSING'}`
+            : 'no successful workspace load; documents=MISSING',
       },
       ...(fileIndex.libraryPointer
         ? [
@@ -731,20 +804,36 @@ export function composeClientTruth(opts: {
     ],
   );
 
-  const communicationsDomain = domain(
-    'communications',
-    commsCount > 0 ? 'INDEXED' : workspace?.communications && !workspace.communications.queried ? 'MISSING' : 'MISSING',
-    commsCount > 0 ? 'CONFIRMED' : 'MISSING',
-    commsCount > 0
-      ? `${commsCount} entitled communication index row(s).`
-      : 'No entitled communication index rows on this composition. Atlas does not invent threads.',
-    [
-      {
-        source: 'HVCG_Communications',
-        detail: workspace?.communications?.reason || `queried=${Boolean(workspace?.communications?.queried)}; count=${commsCount}`,
-      },
-    ],
-  );
+  const communicationsUnavailable = workspace?.communications?.status === 'SOURCE_UNAVAILABLE';
+  const communicationsDomain = communicationsUnavailable
+    ? domain(
+        'communications',
+        'NOT_CERTIFIED',
+        'NOT_CERTIFIED',
+        'HVCG_Communications walk did not complete. communications=SOURCE_UNAVAILABLE. Atlas does not invent threads from a partial walk.',
+        [
+          {
+            source: 'HVCG_Communications',
+            detail: workspace?.communications?.reason || 'communications walk did not complete',
+          },
+        ],
+      )
+    : domain(
+        'communications',
+        commsCount > 0 ? 'INDEXED' : 'MISSING',
+        commsCount > 0 ? 'CONFIRMED' : 'MISSING',
+        commsCount > 0
+          ? `${commsCount} entitled communication index row(s).`
+          : 'No entitled communication index rows on this composition. Atlas does not invent threads.',
+        [
+          {
+            source: 'HVCG_Communications',
+            detail:
+              workspace?.communications?.reason ||
+              `queried=${Boolean(workspace?.communications?.queried)}; count=${commsCount}`,
+          },
+        ],
+      );
 
   const gccQuotes = gccSignals.slice(0, 4).map((s) => gccObservationHonestyLine(s));
   const financialContext = domain(

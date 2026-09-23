@@ -15,7 +15,6 @@
  */
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
-import type { PmSearchHit } from '../sharepoint/search.ts';
 import {
   getClientContext,
   loadClientContext,
@@ -56,7 +55,6 @@ import {
   type AtlasAuthorizedSearch,
   type AtlasClientContext,
   type OperatorOperatingPicture,
-  type OperatorSearchHit,
 } from './types.ts';
 
 export const ATLAS_HUB_RUNTIME_AGENT = ASK_ATLAS_RUNTIME_AGENT;
@@ -425,7 +423,7 @@ function searchToolContext(opts: {
   now?: string;
   searchQuery?: string;
   deskSearch?: ToolGatewayContext['deskSearch'];
-  entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+  entitledSearch?: ToolGatewayContext['entitledSearch'];
   requestDocumentPreview?: ToolGatewayContext['requestDocumentPreview'];
 }): ToolGatewayContext {
   return {
@@ -447,12 +445,7 @@ export function runAtlasHubRuntime(opts: {
   now?: string;
   searchQuery?: string;
   explicitClientCode?: string;
-  deskSearch?: {
-    q: string;
-    hitCount: number;
-    hits: Array<OperatorSearchHit & { source?: string }>;
-    ran: boolean;
-  };
+  deskSearch?: ToolGatewayContext['deskSearch'];
   entitledIndexHits?: ToolGatewayContext['entitledIndexHits'];
   dataDir?: string;
 }): AtlasHubRuntimeResult {
@@ -643,7 +636,7 @@ export async function runAtlasClientContextRuntime(opts: {
   clientCode?: string;
   clientQuery?: string;
   deskSearch?: ToolGatewayContext['deskSearch'];
-  entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+  entitledSearch?: ToolGatewayContext['entitledSearch'];
   entitledIndexHits?: ToolGatewayContext['entitledIndexHits'];
   dataDir?: string;
 }): Promise<AtlasHubRuntimeResult> {
@@ -688,7 +681,7 @@ export async function runAtlasSearchRuntime(opts: {
   now?: string;
   searchQuery?: string;
   deskSearch?: ToolGatewayContext['deskSearch'];
-  entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+  entitledSearch?: ToolGatewayContext['entitledSearch'];
   requestDocumentPreview?: ToolGatewayContext['requestDocumentPreview'];
 }): Promise<AtlasHubRuntimeResult> {
   const question = (opts.question || '').trim();

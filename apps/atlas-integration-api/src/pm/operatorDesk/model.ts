@@ -26,6 +26,7 @@ import {
   recoveredClientsKnowledgeOperationalized,
 } from '../sharepoint/hvsRecoveredClientRecords.ts';
 import { buildAskAtlasAnswer } from './askAtlas.ts';
+import type { DocumentsIndexSignal } from '../sharepoint/search.ts';
 import { OPERATOR_DESK_CONTRACT, type OperatorClientJourney, type OperatorDeskModel, type OperatorOperatingItem, type OperatorOperatingPicture, type OperatorQueueItem } from './types.ts';
 
 function textOf(value: unknown, ...keys: string[]): string {
@@ -415,6 +416,8 @@ export function buildOperatorDeskModel(input: {
   searchQuery?: string;
   searchHits?: Array<{ id: string; title: string; kind?: string; href?: string; clientCode?: string }>;
   searchRan?: boolean;
+  /** Unfinished communications file index. Omitted when the walk finished. */
+  searchDocumentsIndex?: DocumentsIndexSignal;
   attentionItems?: OperatorQueueItem[];
   realClientsNeedingAttention?: number;
   operatingPicture?: OperatorOperatingPicture;
@@ -474,6 +477,7 @@ export function buildOperatorDeskModel(input: {
       hitCount: input.searchHits?.length ?? 0,
       hits: (input.searchHits || []).slice(0, 25),
       ran: Boolean(input.searchRan),
+      ...(input.searchDocumentsIndex ?? {}),
     },
   };
 }

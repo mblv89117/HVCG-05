@@ -21,7 +21,8 @@ import type { SharePointClient, SharePointPmService, SharePointProject, SharePoi
 export type CompletenessStatus =
   | 'COMPLETE'
   | 'PARTIAL_SOURCE_DATA_NOT_FOUND'
-  | 'BLOCKED_AMBIGUOUS_IDENTITY';
+  | 'BLOCKED_AMBIGUOUS_IDENTITY'
+  | 'SOURCE_UNAVAILABLE';
 
 export interface CompletenessCell {
   status: CompletenessStatus;
@@ -74,7 +75,7 @@ export interface ClientWorkspacePayload {
     webUrl?: string;
     kind: string;
     source: string;
-  }>;
+  }> & { availability?: 'SOURCE_UNAVAILABLE' };
   communications: WorkspaceSection<Record<string, unknown>>;
   meetings: WorkspaceSection<Record<string, unknown>>;
   engagements: WorkspaceSection<Record<string, unknown>>;
@@ -102,6 +103,18 @@ export interface ClientWorkspacePayload {
   documentRequestPathProvisioned: boolean;
   workspaceProvisioning: 'not_started' | 'staged' | 'ready' | 'blocked_pending_owner';
   entraGroupProvisioned: false;
+}
+
+function sectionCell(section: {
+  status: CompletenessStatus | 'SOURCE_UNAVAILABLE';
+  queried: boolean;
+  items: unknown[];
+  reason?: string;
+}): CompletenessCell {
+  if (section.status === 'SOURCE_UNAVAILABLE') {
+    return { status: 'SOURCE_UNAVAILABLE', queried: false, count: 0, reason: section.reason };
+  }
+  return cell(section.queried, section.items.length, section.reason);
 }
 
 function cell(
@@ -260,37 +273,48 @@ export async function buildSharePointClientWorkspace(
     ...extras.decisionsRisks,
     items: decisionHygiene.operating,
   };
-  const fileIndex = extras.communications.items.filter((i) => isFileIndexRow(i));
-  const documents: ClientWorkspacePayload['documents'] = {
-    status:
-      extras.communications.queried || client.sharePointLibraryUrl
-        ? 'COMPLETE'
-        : 'PARTIAL_SOURCE_DATA_NOT_FOUND',
-    queried: extras.communications.queried || Boolean(client.sharePointLibraryUrl),
-    items: [
-      ...(client.sharePointLibraryUrl
-        ? [
-            {
-              id: `library-${client.clientCode}`,
-              title: 'Client SharePoint library',
-              webUrl: client.sharePointLibraryUrl,
-              kind: 'library',
-              source: 'HVCG_Clients.SharePointLibraryUrl',
-            },
-          ]
-        : []),
-      ...fileIndex.map((i) => ({
-        id: String(i.id),
-        title: String(i.title || i.id),
-        webUrl: typeof i.webUrl === 'string' ? i.webUrl : undefined,
-        kind: String(i.summary || '').includes('RESTRICTED') ? 'restricted-file' : 'file',
-        source: 'HVCG_Communications/file-index',
-      })),
-    ],
-    reason: extras.communications.queried
-      ? 'HIGH-confidence file metadata + source link from HVCG/HVS libraries. Binaries stay in M365.'
-      : 'No SharePointLibraryUrl on HVCG_Clients and document lists are not granted to Hub.',
-  };
+  const fileIndexUnavailable = extras.communications.status === 'SOURCE_UNAVAILABLE';
+  const fileIndex = fileIndexUnavailable ? [] : extras.communications.items.filter((i) => isFileIndexRow(i));
+  const documents: ClientWorkspacePayload['documents'] = fileIndexUnavailable
+    ? {
+        status: 'SOURCE_UNAVAILABLE',
+        queried: false,
+        items: [],
+        availability: 'SOURCE_UNAVAILABLE',
+        reason:
+          extras.communications.reason ||
+          'HVCG_Communications file-index walk did not complete. documents=SOURCE_UNAVAILABLE.',
+      }
+    : {
+        status:
+          extras.communications.queried || client.sharePointLibraryUrl
+            ? 'COMPLETE'
+            : 'PARTIAL_SOURCE_DATA_NOT_FOUND',
+        queried: extras.communications.queried || Boolean(client.sharePointLibraryUrl),
+        items: [
+          ...(client.sharePointLibraryUrl
+            ? [
+                {
+                  id: `library-${client.clientCode}`,
+                  title: 'Client SharePoint library',
+                  webUrl: client.sharePointLibraryUrl,
+                  kind: 'library',
+                  source: 'HVCG_Clients.SharePointLibraryUrl',
+                },
+              ]
+            : []),
+          ...fileIndex.map((i) => ({
+            id: String(i.id),
+            title: String(i.title || i.id),
+            webUrl: typeof i.webUrl === 'string' ? i.webUrl : undefined,
+            kind: String(i.summary || '').includes('RESTRICTED') ? 'restricted-file' : 'file',
+            source: 'HVCG_Communications/file-index',
+          })),
+        ],
+        reason: extras.communications.queried
+          ? 'HIGH-confidence file metadata + source link from HVCG/HVS libraries. Binaries stay in M365.'
+          : 'No SharePointLibraryUrl on HVCG_Clients and document lists are not granted to Hub.',
+      };
   const { statements, nextActions } = deriveBrief({ client, projects, tasks });
   const rawOpen = rawTasks.filter(openTask);
   const hygiene = summarizeHygiene({
@@ -307,18 +331,16 @@ export async function buildSharePointClientWorkspace(
     client,
     completeness: {
       identity: cell(true, 1),
-      contacts: cell(extras.contacts.queried, extras.contacts.items.length, extras.contacts.reason),
-      engagements: cell(extras.engagements.queried, extras.engagements.items.length, extras.engagements.reason),
+      contacts: sectionCell(extras.contacts),
+      engagements: sectionCell(extras.engagements),
       projects: cell(true, projects.length),
       tasks: cell(true, open.length),
-      documents: cell(documents.queried, documents.items.length, documents.reason),
-      communications: cell(
-        extras.communications.queried,
-        extras.communications.items.length,
-        extras.communications.reason,
-      ),
-      meetings: cell(extras.meetings.queried, extras.meetings.items.length, extras.meetings.reason),
-      deliverables: cell(extras.deliverables.queried, extras.deliverables.items.length, extras.deliverables.reason),
+      documents: fileIndexUnavailable
+        ? { status: 'SOURCE_UNAVAILABLE', queried: false, count: 0, reason: documents.reason }
+        : cell(documents.queried, documents.items.length, documents.reason),
+      communications: sectionCell(extras.communications),
+      meetings: sectionCell(extras.meetings),
+      deliverables: sectionCell(extras.deliverables),
       timeline: cell(true, projects.length + tasks.length),
       currentBrief: cell(true, statements.length),
       sourceProvenance: cell(true, 1, 'SharePoint HVCG_* via Hub Graph Selected grants'),
@@ -347,7 +369,7 @@ export async function buildSharePointClientWorkspace(
     contacts: extras.contacts,
     timeline: [
       ...buildTimeline(projects, tasks),
-      ...extras.communications.items
+      ...(fileIndexUnavailable ? [] : extras.communications.items)
         .filter((i) => typeof i.date === 'string' && i.date)
         .map((i) => ({
           at: String(i.date),

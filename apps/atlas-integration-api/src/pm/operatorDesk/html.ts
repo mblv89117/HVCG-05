@@ -252,12 +252,21 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
       return `<li>${esc(bits.join(' · '))}</li>`;
     })
     .join('');
+  const indexUnfinished =
+    model.search.documentsIndex === 'SOURCE_UNAVAILABLE' || model.search.indexComplete === false;
+  const unfinishedNotice = indexUnfinished
+    ? `<p class="empty">documents=SOURCE_UNAVAILABLE. The file-index walk did not finish. This search is not a complete index.</p>`
+    : '';
   const searchHits = model.search.ran
-    ? model.search.hits.length
-      ? `<ul>${model.search.hits
-          .map((hit) => `<li><span class="kind">${esc(hit.kind || 'hit')}</span> ${esc(hit.title)}${hit.clientCode ? ` · ${esc(hit.clientCode)}` : ''}</li>`)
-          .join('')}</ul>`
-      : `<p class="empty">No entitled matches for “${esc(model.search.q)}”. Atlas does not invent results.</p>`
+    ? `${unfinishedNotice}${
+        model.search.hits.length
+          ? `<ul>${model.search.hits
+              .map((hit) => `<li><span class="kind">${esc(hit.kind || 'hit')}</span> ${esc(hit.title)}${hit.clientCode ? ` · ${esc(hit.clientCode)}` : ''}</li>`)
+              .join('')}</ul>`
+          : indexUnfinished
+            ? ''
+            : `<p class="empty">No entitled matches for “${esc(model.search.q)}”. Atlas does not invent results.</p>`
+      }`
     : `<p class="empty">Enter at least two characters. Search is entitled and fail-closed.</p>`;
   const op = model.operatingPicture;
   const realWork = flatQueues(op.queues);

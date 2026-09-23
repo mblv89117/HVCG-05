@@ -317,11 +317,28 @@ export function leadNeedsFollowUp(lead: SharePointLead, today = new Date().toISO
 }
 
 export type WorkspaceCollectionResult = {
-  status: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND';
+  status: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND' | 'SOURCE_UNAVAILABLE';
   queried: boolean;
   items: Array<Record<string, unknown>>;
   reason?: string;
 };
+
+/**
+ * Comparison key for a Graph nextLink. Host case and default port only.
+ * Query bytes stay intact so two skiptokens are not collapsed.
+ * Never log or return this value.
+ */
+function canonicalNextLinkKey(raw: string): string {
+  try {
+    const url = new URL(raw);
+    url.hash = '';
+    url.hostname = url.hostname.toLowerCase();
+    if (url.port === '443') url.port = '';
+    return url.toString();
+  } catch {
+    return raw;
+  }
+}
 
 function asString(v: unknown): string | undefined {
   if (typeof v === 'string' && v.trim()) return v.trim();
@@ -388,27 +405,70 @@ export class SharePointPmService {
     return patched;
   }
 
+  private listKeyFor(listId: string): string {
+    const id = listId.trim().toLowerCase();
+    const pairs: Array<[string | undefined, string]> = [
+      [this.settings.clientsListId, 'HVCG_Clients'],
+      [this.settings.projectsListId, 'HVCG_Projects'],
+      [this.settings.tasksListId, 'HVCG_Tasks'],
+      [this.settings.milestonesListId, 'HVCG_Milestones'],
+      [this.settings.leadsListId, 'HVCG_Leads'],
+      [this.settings.communicationsListId, 'HVCG_Communications'],
+      [this.settings.meetingsListId, 'HVCG_Meetings'],
+      [this.settings.engagementsListId, 'HVCG_Engagements'],
+      [this.settings.deliverablesListId, 'HVCG_Deliverables'],
+      [this.settings.decisionsListId, 'HVCG_Decisions'],
+      [this.settings.risksListId, 'HVCG_Risks'],
+      [this.settings.contactsListId, 'HVCG_Contacts'],
+      [this.settings.vendorsListId, 'HVCG_Vendors'],
+      [this.settings.referralsListId, 'HVCG_Referrals'],
+      [this.settings.opportunitiesListId, 'HVCG_Opportunities'],
+    ];
+    for (const [configured, key] of pairs) {
+      if (configured && configured.trim().toLowerCase() === id) return key;
+    }
+    return 'configured_list';
+  }
+
+  /**
+   * Full list walk. A repeated nextLink, a page that does not advance, or the
+   * page cap throws. The cache stores only a finished walk.
+   * maxPages stays 80 and $top stays 100 — a huge list stays fail-closed.
+   */
+  private async walkAllPages(listId: string, listKey: string): Promise<GraphListItem[]> {
+    const pages: GraphListItem[] = [];
+    let nextLink: string | undefined;
+    const seenRequestKeys = new Set<string>();
+    const maxPages = 80;
+    let pagesFetched = 0;
+    let previousIds = '';
+    const truncated = (reason: 'repeated_next_link' | 'page_cap'): never => {
+      throw new ListWalkTruncatedError({ reason, listKey, pagesFetched });
+    };
+    for (let pageNo = 0; pageNo < maxPages; pageNo += 1) {
+      const requestKey = nextLink ? canonicalNextLinkKey(nextLink) : `first:${listId}`;
+      if (seenRequestKeys.has(requestKey)) truncated('repeated_next_link');
+      seenRequestKeys.add(requestKey);
+      const page = await this.graph.listItems(listId, { nextLink, top: 100 });
+      pagesFetched += 1;
+      const ids = page.items
+        .map((item) => item.id)
+        .sort()
+        .join('\n');
+      if (ids.length > 0 && ids === previousIds) truncated('repeated_next_link');
+      previousIds = ids;
+      pages.push(...page.items);
+      if (!page.nextLink) return pages;
+      const returnedKey = canonicalNextLinkKey(page.nextLink);
+      if (returnedKey === requestKey || seenRequestKeys.has(returnedKey)) truncated('repeated_next_link');
+      nextLink = page.nextLink;
+    }
+    return truncated('page_cap');
+  }
+
   private async listAll(listId: string, filter?: string): Promise<GraphListItem[]> {
-    const items = (await this.listCache.getOrLoad(listId, async () => {
-      const pages: GraphListItem[] = [];
-      let nextLink: string | undefined;
-      const seenLinks = new Set<string>();
-      // File-index lists can be thousands of rows. A repeated nextLink or the
-      // page cap is an incomplete walk: throw so the cache does not store a
-      // partial page set as a TTL success and callers cannot mark COMPLETE.
-      const maxPages = 80;
-      for (let pageNo = 0; pageNo < maxPages; pageNo += 1) {
-        if (nextLink) {
-          if (seenLinks.has(nextLink)) throw new ListWalkTruncatedError('repeated_next_link');
-          seenLinks.add(nextLink);
-        }
-        const page = await this.graph.listItems(listId, { nextLink, top: 100 });
-        pages.push(...page.items);
-        if (!page.nextLink) return pages;
-        nextLink = page.nextLink;
-      }
-      throw new ListWalkTruncatedError('page_cap');
-    })) as GraphListItem[];
+    const listKey = this.listKeyFor(listId);
+    const items = (await this.listCache.getOrLoad(listId, () => this.walkAllPages(listId, listKey))) as GraphListItem[];
     return filter ? items.filter((item) => itemMatchesFieldsFilter(item, filter)) : items;
   }
 
@@ -557,6 +617,61 @@ export class SharePointPmService {
     };
   }
 
+  /** Optional list failed. No partial rows. Does not fail sibling sections. */
+  private unavailableCollection(listName: string, err: unknown): WorkspaceCollectionResult {
+    const safeName = /^HVCG_[A-Za-z0-9_]{1,40}$/.test(listName) ? listName : 'configured_list';
+    if (err instanceof ListWalkTruncatedError) {
+      return {
+        status: 'SOURCE_UNAVAILABLE',
+        queried: false,
+        items: [],
+        reason: `${safeName} list walk did not complete. reason=${err.reason}; pagesFetched=${err.pagesFetched}. Section is SOURCE_UNAVAILABLE.`,
+      };
+    }
+    return {
+      status: 'SOURCE_UNAVAILABLE',
+      queried: false,
+      items: [],
+      reason: `${safeName} could not be read. Section is SOURCE_UNAVAILABLE.`,
+    };
+  }
+
+  private combineDecisionsRisks(
+    decisions: WorkspaceCollectionResult,
+    risks: WorkspaceCollectionResult,
+  ): WorkspaceCollectionResult {
+    if (decisions.status === 'SOURCE_UNAVAILABLE' || risks.status === 'SOURCE_UNAVAILABLE') {
+      const reason = [decisions, risks]
+        .filter((row) => row.status === 'SOURCE_UNAVAILABLE')
+        .map((row) => row.reason)
+        .filter((line): line is string => Boolean(line))
+        .join(' ');
+      return {
+        status: 'SOURCE_UNAVAILABLE',
+        queried: false,
+        items: [],
+        reason:
+          reason ||
+          'HVCG_Decisions / HVCG_Risks list walk did not complete. Section is SOURCE_UNAVAILABLE.',
+      };
+    }
+    const decisionItems = [...decisions.items, ...risks.items];
+    if (decisions.queried || risks.queried) {
+      return {
+        status: 'COMPLETE',
+        queried: true,
+        items: decisionItems,
+        reason:
+          !decisions.queried || !risks.queried
+            ? [!decisions.queried ? decisions.reason : '', !risks.queried ? risks.reason : '']
+                .filter(Boolean)
+                .join(' ')
+            : undefined,
+      };
+    }
+    return this.ungranted('HVCG_Decisions / HVCG_Risks');
+  }
+
   private mapWorkspaceItems(
     items: GraphListItem[],
     clientCode: string,
@@ -643,8 +758,12 @@ export class SharePointPmService {
       listName: string,
     ): Promise<WorkspaceCollectionResult> => {
       if (!listId) return this.ungranted(listName);
-      const items = this.mapWorkspaceItems(await this.listAll(listId), clientCode, listName);
-      return { status: 'COMPLETE', queried: true, items };
+      try {
+        const items = this.mapWorkspaceItems(await this.listAll(listId), clientCode, listName);
+        return { status: 'COMPLETE', queried: true, items };
+      } catch (err) {
+        return this.unavailableCollection(listName, err);
+      }
     };
     const [communications, meetings, engagements, deliverables, decisions, risks, contacts] = await Promise.all([
       load(this.settings.communicationsListId, 'HVCG_Communications'),
@@ -655,23 +774,14 @@ export class SharePointPmService {
       load(this.settings.risksListId, 'HVCG_Risks'),
       load(this.settings.contactsListId, 'HVCG_Contacts'),
     ]);
-    // Combined presentation section — each item retains its originating sourceList/entityType.
-    const decisionItems = [...decisions.items, ...risks.items];
-    const decisionsRisks: WorkspaceCollectionResult =
-      decisions.queried || risks.queried
-        ? {
-            status: 'COMPLETE',
-            queried: true,
-            items: decisionItems,
-            reason:
-              !decisions.queried || !risks.queried
-                ? [!decisions.queried ? decisions.reason : '', !risks.queried ? risks.reason : '']
-                    .filter(Boolean)
-                    .join(' ')
-                : undefined,
-          }
-        : this.ungranted('HVCG_Decisions / HVCG_Risks');
-    return { communications, meetings, engagements, deliverables, decisionsRisks, contacts };
+    return {
+      communications,
+      meetings,
+      engagements,
+      deliverables,
+      decisionsRisks: this.combineDecisionsRisks(decisions, risks),
+      contacts,
+    };
   }
 
   async listWorkspaceCollectionsForSearch(
@@ -687,8 +797,32 @@ export class SharePointPmService {
       clientCodes.filter((code) => isCanonicalClientCode(code) && principal.allowedClientIds.includes(code)),
     );
     const load = async (listId: string | undefined, listName: string) => {
-      if (!listId) return { listName, items: [] as GraphListItem[], queried: false as const };
-      return { listName, items: await this.listAll(listId), queried: true as const };
+      if (!listId) {
+        return {
+          listName,
+          items: [] as GraphListItem[],
+          queried: false as const,
+          unavailable: false as const,
+          failure: undefined as unknown,
+        };
+      }
+      try {
+        return {
+          listName,
+          items: await this.listAll(listId),
+          queried: true as const,
+          unavailable: false as const,
+          failure: undefined as unknown,
+        };
+      } catch (err) {
+        return {
+          listName,
+          items: [] as GraphListItem[],
+          queried: false as const,
+          unavailable: true as const,
+          failure: err,
+        };
+      }
     };
     const [communications, meetings, engagements, deliverables, decisions, risks, contacts] = await Promise.all([
       load(this.settings.communicationsListId, 'HVCG_Communications'),
@@ -701,7 +835,14 @@ export class SharePointPmService {
     ]);
     const out = new Map<string, Awaited<ReturnType<SharePointPmService['listWorkspaceCollections']>>>();
     for (const code of entitled) {
-      const pack = (row: { items: GraphListItem[]; queried: boolean; listName: string }): WorkspaceCollectionResult => {
+      const pack = (row: {
+        items: GraphListItem[];
+        queried: boolean;
+        listName: string;
+        unavailable: boolean;
+        failure: unknown;
+      }): WorkspaceCollectionResult => {
+        if (row.unavailable) return this.unavailableCollection(row.listName, row.failure);
         if (!row.queried) return this.ungranted(row.listName);
         return {
           status: 'COMPLETE',
@@ -709,17 +850,12 @@ export class SharePointPmService {
           items: this.mapWorkspaceItems(row.items, code, row.listName),
         };
       };
-      const decisionItems = [...pack(decisions).items, ...pack(risks).items];
-      const decisionsRisks: WorkspaceCollectionResult =
-        decisions.queried || risks.queried
-          ? { status: 'COMPLETE', queried: true, items: decisionItems }
-          : this.ungranted('HVCG_Decisions / HVCG_Risks');
       out.set(code, {
         communications: pack(communications),
         meetings: pack(meetings),
         engagements: pack(engagements),
         deliverables: pack(deliverables),
-        decisionsRisks,
+        decisionsRisks: this.combineDecisionsRisks(pack(decisions), pack(risks)),
         contacts: pack(contacts),
       });
     }

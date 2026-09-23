@@ -22,7 +22,7 @@ import { requestIndexedDocumentPreview } from '../sharepoint/fabric/documentPrev
 import { createFabricGraphClient } from '../sharepoint/fabric/graph.ts';
 import { buildSharePointCommandCenter } from '../sharepoint/http.ts';
 import type { SharePointPmService } from '../sharepoint/repository.ts';
-import { searchSharePointPm } from '../sharepoint/search.ts';
+import { documentsIndexSignal, searchSharePointPm } from '../sharepoint/search.ts';
 import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from '../sharepoint/token.ts';
 import { renderOperatorDeskHtml, renderUnsignedOperatorDesk } from './html.ts';
 import { listEntitledAttention, realClientsNeedingAttention } from '../sharepoint/attention.ts';
@@ -398,6 +398,7 @@ async function loadSharePointDesk(opts: {
     commercialContext,
     searchQuery: q,
     searchRan,
+    searchDocumentsIndex: documentsIndexSignal(found),
     searchHits: found.results.map((hit) => ({
       id: hit.id,
       title: hit.title,
@@ -585,6 +586,9 @@ async function finishClientOperatingBriefBeforeDesk(opts: {
     ? collectPendingDecisionLines({ clientCode: scoped, approvalItems, workspace })
     : [];
 
+  const fileIndexUnavailable =
+    workspace?.documents?.availability === 'SOURCE_UNAVAILABLE' ||
+    workspace?.communications?.status === 'SOURCE_UNAVAILABLE';
   let briefAnswer: string;
   let workspaceTruth: typeof WORKSPACE_TRUTH_SOURCE_UNAVAILABLE | undefined;
   if (workspaceFailed && scoped) {
@@ -606,6 +610,9 @@ async function finishClientOperatingBriefBeforeDesk(opts: {
       }
       briefAnswer = financeAnswerWhenWorkspaceUnavailable(scoped, commercial);
     } else briefAnswer = currentWorkspaceUnavailableAnswer(scoped);
+  } else if (fileIndexUnavailable && scoped && (topic === 'documents' || topic === 'missing_documents')) {
+    workspaceTruth = WORKSPACE_TRUTH_SOURCE_UNAVAILABLE;
+    briefAnswer = documentIndexUnavailableAnswer(scoped);
   } else {
     briefAnswer = answerClientOperatingBrief(opts.question, {
       entitledCodes: entitled,

@@ -373,6 +373,9 @@ export interface PmDocumentsResponse {
   documents: OperatingDocument[];
   sourceKind?: string;
   unavailableReason?: string;
+  /** Set when the file-index walk did not finish. Not an honest empty inventory. */
+  documentsAvailability?: 'SOURCE_UNAVAILABLE';
+  indexComplete?: false;
 }
 
 export interface OperatorDeskActivity {
@@ -449,6 +452,8 @@ function normalizeDocumentsValue(value: unknown): {
   documents: OperatingDocument[];
   sourceKind?: string;
   unavailableReason?: string;
+  documentsAvailability?: 'SOURCE_UNAVAILABLE';
+  indexComplete?: false;
 } {
   if (Array.isArray(value)) {
     return {
@@ -458,16 +463,25 @@ function normalizeDocumentsValue(value: unknown): {
   const rec = asRecord(value);
   if (!rec) return { documents: [], unavailableReason: 'documents payload unavailable' };
   const sourceKind = asString(rec.kind);
-  const items = Array.isArray(rec.items) ? rec.items : [];
+  const indexUnfinished =
+    rec.availability === 'SOURCE_UNAVAILABLE' || rec.status === 'SOURCE_UNAVAILABLE';
+  const items = indexUnfinished || !Array.isArray(rec.items) ? [] : rec.items;
+  const statedReason = asString(rec.reason);
   return {
     documents: items
       .map((row) => normalizeDocument(row, sourceKind))
       .filter((row): row is OperatingDocument => Boolean(row)),
     sourceKind,
-    unavailableReason:
-      items.length === 0 && rec.empty === true
+    unavailableReason: indexUnfinished
+      ? statedReason && /SOURCE_UNAVAILABLE/.test(statedReason)
+        ? statedReason
+        : 'documents=SOURCE_UNAVAILABLE'
+      : items.length === 0 && rec.empty === true
         ? 'authorized source returned no document items'
         : undefined,
+    ...(indexUnfinished
+      ? { documentsAvailability: 'SOURCE_UNAVAILABLE' as const, indexComplete: false as const }
+      : {}),
   };
 }
 
@@ -490,6 +504,12 @@ export function normalizePmDocumentsResponse(body: unknown): PmDocumentsResponse
     documents: normalized.documents,
     sourceKind: normalized.sourceKind,
     unavailableReason: normalized.unavailableReason,
+    ...(normalized.documentsAvailability
+      ? {
+          documentsAvailability: normalized.documentsAvailability,
+          indexComplete: false as const,
+        }
+      : {}),
   };
 }
 
@@ -715,7 +735,8 @@ export interface LeadConversionResult {
 export type WorkspaceCompletenessStatus =
   | 'COMPLETE'
   | 'PARTIAL_SOURCE_DATA_NOT_FOUND'
-  | 'BLOCKED_AMBIGUOUS_IDENTITY';
+  | 'BLOCKED_AMBIGUOUS_IDENTITY'
+  | 'SOURCE_UNAVAILABLE';
 
 export interface WorkspaceCompletenessCell {
   status: WorkspaceCompletenessStatus;
@@ -1337,10 +1358,18 @@ export async function fetchWorkflowTemplateDetail(auth: AtlasHubAuthHeaders, tem
 export async function searchPm(auth: AtlasHubAuthHeaders, query: string) {
   const q = query.trim().slice(0, 120);
   if (q.length < 2) return { query: q, results: [] as PmSearchHit[], scope: 'entitled' as const };
-  return hubFetchJson<{ query: string; results: PmSearchHit[]; scope: 'entitled' | 'manny_tenant' }>(
-    auth,
-    `/api/pm/search?q=${encodeURIComponent(q)}`,
-  );
+  return hubFetchJson<{
+    query: string;
+    results: PmSearchHit[];
+    scope: 'entitled' | 'manny_tenant';
+    documentsIndex?: 'SOURCE_UNAVAILABLE';
+    documentsAvailability?: 'SOURCE_UNAVAILABLE';
+    status?: 'SOURCE_UNAVAILABLE';
+    indexComplete?: false;
+    queried?: false;
+    honestEmpty?: false;
+    reason?: string;
+  }>(auth, `/api/pm/search?q=${encodeURIComponent(q)}`);
 }
 
 export type ApprovalListItem = {
