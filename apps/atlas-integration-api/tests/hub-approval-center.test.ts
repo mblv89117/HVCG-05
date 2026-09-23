@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { loadConfig, type AppConfig } from '../src/config.ts';
@@ -19,6 +19,42 @@ import {
 } from '../src/pm/operatorDesk/approvalCenter.ts';
 import { listWorkflowCenter } from '../src/pm/operatorDesk/workflows.ts';
 import { isOperatorApprovalsPath } from '../src/pm/operatorDesk/types.ts';
+import { upsertIngest } from '../src/modules/ingest/store.ts';
+import {
+  GROWTH360_OWNER_DECISION_RESULT,
+  growth360ApprovalId,
+  recordGrowth360ApprovalContinuity,
+} from '../src/modules/ingest/campaignApproval.ts';
+import { readApprovalOverlay, resolveApprovalStateDir } from '../src/pm/operatorDesk/approvalState.ts';
+import type { AtlasIntegrationEnvelope } from '@hvcg/atlas-integration-contracts';
+
+const HFD_GROWTH360_ORG = '99cdffba-3cf2-4343-9e4a-3dca42ff4711';
+
+function hfdEnvelope(partial: Partial<AtlasIntegrationEnvelope> = {}): AtlasIntegrationEnvelope {
+  const now = '2026-09-22T12:00:00.000Z';
+  return {
+    clientCode: 'HFD01',
+    source: 'growth_360',
+    sourceRecordId: 'req-1',
+    schemaVersion: '360_campaign_approval_v1',
+    eventType: '360.campaign_approval.v1',
+    timestamp: now,
+    provenance: { system: 'growth_360', observedAt: now, confidence: 'VERIFIED' },
+    confidence: 'VERIFIED',
+    correlationId: 'corr-360',
+    idempotencyKey: 'growth360|HFD01|approval|1',
+    actor: '360-observe',
+    authorityClass: 'OBSERVE',
+    payload: {
+      canExecute: false,
+      organizationSlug: 'hart-family-dental',
+      organizationId: HFD_GROWTH360_ORG,
+      campaignId: 'camp-hfd-1',
+      requestedAction: 'Review spring campaign draft',
+    },
+    ...partial,
+  };
+}
 
 function staffPrincipal(userId: string, clients: string[]): AtlasPrincipal {
   return {
@@ -161,6 +197,200 @@ describe('approval center', () => {
       assert.equal(defer.status, 200);
       const body = (await defer.json()) as { approvalCenter: { detail: { status: string } } };
       assert.equal(body.approvalCenter.detail.status, 'DEFERRED');
+    });
+  });
+
+  it('shows one HFD01 360 approval and does not duplicate a replay', async () => {
+    await withHub(async () => ['HFD01'], async ({ dir, cfg }) => {
+      const env = hfdEnvelope();
+      const first = upsertIngest({ dataDir: dir, keyId: 'growth360', envelope: env });
+      const replay = upsertIngest({ dataDir: dir, keyId: 'growth360', envelope: env });
+      assert.equal(first.replay, false);
+      assert.equal(replay.replay, true);
+      recordGrowth360ApprovalContinuity({
+        dataDir: dir,
+        envelope: env,
+        receivedAt: env.timestamp,
+      });
+      const principal = staffPrincipal('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', ['HFD01']);
+      const center = buildApprovalCenter({ cfg, principal, dataDir: dir });
+      const growth = center.items.filter((item) => item.source === 'growth_360');
+      assert.equal(growth.length, 1);
+      const item = growth[0]!;
+      assert.equal(item.clientCode, 'HFD01');
+      assert.equal(item.category, 'MARKETING');
+      assert.equal(item.originatingSystem, 'growth_360');
+      assert.equal(item.approvalId, growth360ApprovalId(env.idempotencyKey));
+      assert.equal(item.href, '/clients/HFD01');
+      assert.match(item.materialSummary || '', /\/approvals/);
+      assert.match(item.materialSummary || '', /requestId=req-1/);
+      assert.equal(item.requestedAction, 'Review spring campaign draft');
+      assert.ok(item.actions.includes('approve'));
+      assert.ok(item.actions.includes('reject'));
+      assert.ok(item.actions.includes('defer'));
+      assert.ok(item.actions.includes('cancel'));
+      const hart = center.items.find((row) => row.workflowId === 'hart.cmo.cycle');
+      assert.ok(hart);
+      assert.equal(hart?.source, 'workflow_gate');
+      assert.notEqual(hart?.approvalId, item.approvalId);
+      const again = buildApprovalCenter({ cfg, principal, dataDir: dir });
+      assert.equal(again.items.filter((row) => row.source === 'growth_360').length, 1);
+    });
+  });
+
+  it('fail-closes unmapped, fixture, and cross-client 360 rows', async () => {
+    await withHub(async () => ['HFD01', 'ACCG01'], async ({ dir, cfg }) => {
+      upsertIngest({ dataDir: dir, keyId: 'growth360', envelope: hfdEnvelope() });
+      upsertIngest({
+        dataDir: dir,
+        keyId: 'growth360',
+        envelope: hfdEnvelope({
+          clientCode: 'ACCG01',
+          sourceRecordId: 'accg-req',
+          idempotencyKey: 'growth360|ACCG01|approval|1',
+          payload: { canExecute: false },
+        }),
+      });
+      upsertIngest({
+        dataDir: dir,
+        keyId: 'growth360',
+        envelope: hfdEnvelope({
+          clientCode: 'MRI01',
+          sourceRecordId: 'mri-req',
+          idempotencyKey: 'growth360|MRI01|approval|1',
+          payload: { canExecute: false, organizationSlug: 'hart-family-dental' },
+        }),
+      });
+      upsertIngest({
+        dataDir: dir,
+        keyId: 'growth360',
+        envelope: hfdEnvelope({
+          idempotencyKey: 'growth360|HFD01|paid|1',
+          sourceRecordId: 'paid-req',
+          payload: { canExecute: true, organizationSlug: 'hart-family-dental', organizationId: HFD_GROWTH360_ORG },
+        }),
+      });
+      const hfd = buildApprovalCenter({
+        cfg,
+        principal: staffPrincipal('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', ['HFD01']),
+        dataDir: dir,
+      });
+      const growth = hfd.items.filter((item) => item.source === 'growth_360');
+      assert.equal(growth.length, 1);
+      assert.equal(growth[0]?.clientCode, 'HFD01');
+      assert.equal(
+        hfd.items.some((item) => item.clientCode === 'ACCG01' || item.clientCode === 'MRI01'),
+        false,
+      );
+
+      const accg = buildApprovalCenter({
+        cfg,
+        principal: staffPrincipal('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', ['ACCG01']),
+        dataDir: dir,
+      });
+      assert.equal(accg.items.some((item) => item.clientCode === 'HFD01' || item.source === 'growth_360'), false);
+    });
+  });
+
+  it('records an Atlas-only approve without canExecute or outbound mutation', async () => {
+    await withHub(async () => ['HFD01'], async ({ base, dir, auth }) => {
+      const env = hfdEnvelope();
+      upsertIngest({ dataDir: dir, keyId: 'growth360', envelope: env });
+      const approvalId = growth360ApprovalId(env.idempotencyKey);
+      const before = readFileSync(join(dir, 'module-ingest', 'events.json'), 'utf8');
+      const originalFetch = globalThis.fetch;
+      const outbound: string[] = [];
+      globalThis.fetch = (async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+        if (!/^http:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(url)) outbound.push(url);
+        return originalFetch(input, init);
+      }) as typeof fetch;
+      try {
+        const approved = await fetch(`${base}/operator/approvals.json`, {
+          method: 'POST',
+          headers: { ...auth, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'approve', approvalId }),
+        });
+        assert.equal(approved.status, 200);
+        const body = (await approved.json()) as {
+          approvalCenter: {
+            detail: {
+              status: string;
+              executionState: string;
+              expectedEffectIfApproved: string;
+              confirmationSummary?: string;
+              href?: string;
+            };
+          };
+        };
+        assert.equal(body.approvalCenter.detail.status, 'APPROVED');
+        assert.equal(body.approvalCenter.detail.executionState, 'NOT_STARTED');
+        assert.equal(body.approvalCenter.detail.expectedEffectIfApproved, GROWTH360_OWNER_DECISION_RESULT);
+        assert.equal(body.approvalCenter.detail.confirmationSummary, GROWTH360_OWNER_DECISION_RESULT);
+        assert.equal(body.approvalCenter.detail.href, '/clients/HFD01');
+        assert.doesNotMatch(JSON.stringify(body), /Live external mutation remains policy-gated/);
+        assert.doesNotMatch(JSON.stringify(body), /Governed action executed or workflow resumed/);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+      assert.deepEqual(outbound, []);
+      const after = readFileSync(join(dir, 'module-ingest', 'events.json'), 'utf8');
+      assert.equal(after, before);
+      const stored = JSON.parse(after) as {
+        byIdempotencyKey: Record<string, { envelope: { payload: { canExecute?: boolean } } }>;
+      };
+      assert.equal(stored.byIdempotencyKey[env.idempotencyKey]?.envelope.payload.canExecute, false);
+      const overlay = readApprovalOverlay(resolveApprovalStateDir(dir));
+      const record = overlay.records.find((row) => row.approvalId === approvalId);
+      assert.ok(record);
+      assert.equal(record?.executionResult, GROWTH360_OWNER_DECISION_RESULT);
+      assert.equal(record?.executionState, 'NOT_STARTED');
+      assert.equal(record?.status, 'APPROVED');
+      assert.equal(JSON.stringify(overlay).includes('"canExecute":true'), false);
+    });
+  });
+
+  it('records an Atlas-only reject and keeps canExecute false', async () => {
+    await withHub(async () => ['HFD01'], async ({ base, dir, auth }) => {
+      const env = hfdEnvelope({ idempotencyKey: 'growth360|HFD01|approval|reject', sourceRecordId: 'req-reject' });
+      upsertIngest({ dataDir: dir, keyId: 'growth360', envelope: env });
+      const approvalId = growth360ApprovalId(env.idempotencyKey);
+      const rejected = await fetch(`${base}/operator/approvals.json`, {
+        method: 'POST',
+        headers: { ...auth, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject', approvalId, reason: 'Not this cycle' }),
+      });
+      assert.equal(rejected.status, 200);
+      const body = (await rejected.json()) as {
+        approvalCenter: { detail: { status: string; expectedEffectIfRejected: string; executionState: string } };
+      };
+      assert.equal(body.approvalCenter.detail.status, 'REJECTED');
+      assert.equal(body.approvalCenter.detail.executionState, 'NOT_STARTED');
+      assert.equal(body.approvalCenter.detail.expectedEffectIfRejected, GROWTH360_OWNER_DECISION_RESULT);
+      const overlay = readApprovalOverlay(resolveApprovalStateDir(dir));
+      const record = overlay.records.find((row) => row.approvalId === approvalId);
+      assert.equal(record?.executionResult, GROWTH360_OWNER_DECISION_RESULT);
+      assert.notEqual(record?.executionState, 'EXECUTED');
+      const stored = JSON.parse(readFileSync(join(dir, 'module-ingest', 'events.json'), 'utf8')) as {
+        byIdempotencyKey: Record<string, { envelope: { payload: { canExecute?: boolean } } }>;
+      };
+      assert.equal(stored.byIdempotencyKey[env.idempotencyKey]?.envelope.payload.canExecute, false);
+    });
+  });
+
+  it('shows a continuity-index request when the durable json store is empty', async () => {
+    await withHub(async () => ['HFD01'], async ({ dir, cfg }) => {
+      const env = hfdEnvelope({ idempotencyKey: 'growth360|HFD01|continuity|1', sourceRecordId: 'req-cont' });
+      recordGrowth360ApprovalContinuity({ dataDir: dir, envelope: env, receivedAt: env.timestamp });
+      const center = buildApprovalCenter({
+        cfg,
+        principal: staffPrincipal('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', ['HFD01']),
+        dataDir: dir,
+      });
+      const growth = center.items.filter((item) => item.source === 'growth_360');
+      assert.equal(growth.length, 1);
+      assert.equal(growth[0]?.approvalId, growth360ApprovalId(env.idempotencyKey));
+      assert.equal(growth[0]?.clientCode, 'HFD01');
     });
   });
 });

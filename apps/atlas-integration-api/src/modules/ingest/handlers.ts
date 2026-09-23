@@ -3,11 +3,11 @@ import {
   EVENT_GCC_SYN01_OBSERVATION,
   EVENT_GCC_VALUE_SIGNAL,
   EVENT_MRI_FINDINGS,
-  SCHEMA_360_CAMPAIGN_APPROVAL,
   validateEnvelope,
   type AtlasIntegrationEnvelope,
 } from '@hvcg/atlas-integration-contracts';
 import { getIdentityRegistry } from '../../identity/registry.ts';
+import { evaluateCampaignApproval } from './campaignApproval.ts';
 
 export type HandlerResult =
   | { ok: true; envelope: AtlasIntegrationEnvelope; notes: string[] }
@@ -86,31 +86,8 @@ export function handleModuleEnvelope(raw: unknown): HandlerResult {
   }
 
   if (envelope.eventType === EVENT_360_CAMPAIGN_APPROVAL) {
-    if (envelope.schemaVersion !== SCHEMA_360_CAMPAIGN_APPROVAL) {
-      return {
-        ok: false,
-        status: 400,
-        code: 'SCHEMA_MISMATCH',
-        message: 'Expected 360_campaign_approval_v1.',
-      };
-    }
-    if (envelope.payload.canExecute === true) {
-      return {
-        ok: false,
-        status: 400,
-        code: 'PAID_EXECUTE_FORBIDDEN',
-        message: '360 campaign execute remains prohibited at Hub ingest.',
-      };
-    }
-    const slug = envelope.payload.organizationSlug;
-    if (slug === 'hart-family-dental' && envelope.clientCode !== 'HFD01') {
-      return {
-        ok: false,
-        status: 403,
-        code: 'HART_CLIENTCODE_REQUIRED',
-        message: 'Hart Family Dental requires ClientCode HFD01.',
-      };
-    }
+    const decision = evaluateCampaignApproval(envelope);
+    if (!decision.ok) return decision;
     notes.push('360_approval_received_execute_false');
     return { ok: true, envelope, notes };
   }

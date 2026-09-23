@@ -29,6 +29,7 @@ import type {
   OperatorOperatingItem,
   OperatorOperatingPicture,
 } from '../operatorDesk/types.ts';
+import { growth360ApprovalId } from '../../modules/ingest/campaignApproval.ts';
 import type { OperatorCommercialContext } from './types.ts';
 
 export const CLIENT_TRUTH_CONTRACT = 'atlas-client-truth.v1' as const;
@@ -664,13 +665,14 @@ export function composeClientTruth(opts: {
     ],
   );
 
+  const growthApprovalIds = gtm.slice(0, 4).map((a) => growth360ApprovalId(a.idempotencyKey));
   const growthContext = domain(
     'growthContext',
     has360Org || gtm.length ? (has360Org ? 'PARTIAL' : 'NOT_CERTIFIED') : 'NOT_CERTIFIED',
     gtm.length && has360Org ? 'CONFIRMED' : 'NOT_CERTIFIED',
     has360Org
       ? gtm.length
-        ? `Growth360 organization is mapped. ${gtm.length} observation-only attribution(s) on record. canExecute remains false.`
+        ? `Growth360 organization is mapped. ${gtm.length} observation-only attribution(s) on record. Approval Center ${growthApprovalIds.join(', ')}. canExecute remains false.`
         : 'Growth360 organization is mapped. No attribution is currently projected. growthContext is not a certified 360 operating dataset.'
       : 'No verified 360 organization mapping. growthContext is NOT_CERTIFIED. Atlas does not invent Atlas Growth certification or create a 360 org.',
     [
@@ -680,6 +682,10 @@ export function composeClientTruth(opts: {
           ? `growth360OrganizationId=${identity?.growth360OrganizationId || 'n/a'}; slug=${identity?.growth360Slug || 'n/a'}`
           : 'growth360OrganizationId is null on the production identity seed.',
       },
+      ...gtm.slice(0, 4).map((a) => ({
+        source: 'growth360-module-ingest',
+        detail: `approvalId=${growth360ApprovalId(a.idempotencyKey)}; idempotencyKey=${a.idempotencyKey}; href=/approvals; client=/clients/${clientCode}`,
+      })),
     ],
   );
 

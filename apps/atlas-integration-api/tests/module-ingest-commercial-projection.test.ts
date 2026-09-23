@@ -4,8 +4,22 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { projectModuleEnvelopeToOverlay } from '../src/modules/ingest/projectToCommercialOverlay.ts';
-import { overlayPath } from '../src/pm/commercialContext/store.ts';
+import { growth360ApprovalId } from '../src/modules/ingest/campaignApproval.ts';
+import { overlayPath, loadOverlay } from '../src/pm/commercialContext/store.ts';
+import { buildOperatorCommercialContext } from '../src/pm/commercialContext/build.ts';
+import { composeClientTruth } from '../src/pm/commercialContext/clientTruth.ts';
+import { buildLiveClientPilotBrief } from '../src/pm/commercialContext/liveClientPilot.ts';
 import type { AtlasIntegrationEnvelope } from '@hvcg/atlas-integration-contracts';
+import type { AtlasPrincipal } from '../src/middleware/auth.ts';
+
+function hfdPrincipal(): AtlasPrincipal {
+  return {
+    userId: 'projection-test',
+    organizationId: 'org-hvcg',
+    allowedClientIds: ['HFD01'],
+    roles: ['HVCG Team Member'],
+  };
+}
 
 function base(partial: Partial<AtlasIntegrationEnvelope> = {}): AtlasIntegrationEnvelope {
   const now = new Date().toISOString();
@@ -70,5 +84,64 @@ describe('module ingest commercial projection', () => {
     assert.equal(projectModuleEnvelopeToOverlay(dir, env).replay, true);
     const overlay = JSON.parse(readFileSync(overlayPath(dir), 'utf8'));
     assert.equal(overlay.attributions.length, 1);
+  });
+
+  it('does not entitle fixture codes, ACCG01, or canExecute true', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-overlay-'));
+    for (const clientCode of ['MRI01', 'SYN01', 'T360A', 'ACCG01']) {
+      const result = projectModuleEnvelopeToOverlay(
+        dir,
+        base({
+          clientCode,
+          idempotencyKey: `growth360|${clientCode}|no-entitle`,
+          payload: { organizationSlug: 'hart-family-dental', canExecute: false, campaignId: 'c1' },
+        }),
+      );
+      assert.equal(result.projected, false);
+    }
+    const paid = projectModuleEnvelopeToOverlay(
+      dir,
+      base({
+        idempotencyKey: 'growth360|HFD01|paid',
+        payload: { organizationSlug: 'hart-family-dental', canExecute: true, campaignId: 'c-paid' },
+      }),
+    );
+    assert.equal(paid.projected, false);
+    const overlay = loadOverlay(dir);
+    assert.equal(overlay.attributions.length, 0);
+    assert.equal(
+      overlay.attributions.some((row: { clientCode?: string }) =>
+        ['MRI01', 'SYN01', 'T360A', 'ACCG01'].includes(row.clientCode || ''),
+      ),
+      false,
+    );
+  });
+
+  it('points ClientTruth and Live Client growth lines at the same approval id', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-overlay-'));
+    const env = base();
+    assert.equal(projectModuleEnvelopeToOverlay(dir, env).projected, true);
+    const overlay = loadOverlay(dir);
+    const ctx = buildOperatorCommercialContext({
+      principal: hfdPrincipal(),
+      overlay,
+      clientCode: 'HFD01',
+    });
+    const approvalId = growth360ApprovalId(env.idempotencyKey);
+    const truth = composeClientTruth({ clientCode: 'HFD01', commercial: ctx });
+    assert.equal('failClosed' in truth, false);
+    if ('failClosed' in truth) return;
+    assert.equal(truth.canExecute, false);
+    assert.match(truth.growthContext.summary, /canExecute remains false/);
+    assert.ok(truth.growthContext.summary.includes(approvalId));
+    assert.ok(truth.growthContext.provenance.some((row) => row.detail.includes(`approvalId=${approvalId}`)));
+    assert.ok(truth.answers.growthKnown?.text.includes(approvalId));
+    const brief = buildLiveClientPilotBrief(ctx);
+    assert.ok(
+      brief.whatIsHappening.some(
+        (line) => line.includes(approvalId) && line.includes('/approvals') && line.includes('/clients/HFD01'),
+      ),
+    );
+    assert.ok(brief.known.some((line) => line.includes(approvalId) && /canExecute remains false/.test(line)));
   });
 });
