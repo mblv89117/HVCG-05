@@ -26,6 +26,9 @@ import { createListItemCache } from '../src/pm/sharepoint/listCache.ts';
 import { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
 import type { SharePointPmSettings } from '../src/pm/sharepoint/settings.ts';
 import { buildSharePointClientWorkspace } from '../src/pm/sharepoint/workspace.ts';
+import { buildKnowledgeOperatingPicture } from '../src/pm/sharepoint/knowledgeOperating.ts';
+import { searchSharePointPm } from '../src/pm/sharepoint/search.ts';
+import type { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
 import { FILE_INDEX_MARKER } from '../src/pm/sharepoint/fabric/fileIndex.ts';
 
 const SITE =
@@ -195,6 +198,110 @@ function truthFor(workspace: Awaited<ReturnType<typeof buildSharePointClientWork
   if ('failClosed' in truth) throw new Error('unexpected fail closed');
   return { snapshot, truth };
 }
+
+describe('W2I-R1 unfinished communications index is not a finished inventory', () => {
+  it('truncated communications cannot become honestEmpty, INDEXED, or validated recovery', async () => {
+    const library = 'https://contoso.sharepoint.com/sites/ACCG';
+    const communications = {
+      status: 'SOURCE_UNAVAILABLE' as const,
+      queried: false,
+      items: [
+        {
+          id: 'partial',
+          title: PARTIAL_TITLE,
+          summary: FILE_INDEX_MARKER,
+          webUrl: `${library}/partial.pdf`,
+          sourceItemId: 'file:partial',
+        },
+      ],
+      reason:
+        'HVCG_Communications list walk did not complete. reason=page_cap; pagesFetched=80. Section is SOURCE_UNAVAILABLE.',
+    };
+    const extras = {
+      communications,
+      meetings: {
+        status: 'COMPLETE' as const,
+        queried: true,
+        items: [{ id: 'm1', title: 'ACCG kickoff partial notes', summary: 'agenda' }],
+      },
+      engagements: { status: 'COMPLETE' as const, queried: true, items: [] },
+      deliverables: { status: 'COMPLETE' as const, queried: true, items: [] },
+      decisionsRisks: { status: 'COMPLETE' as const, queried: true, items: [] },
+      contacts: { status: 'COMPLETE' as const, queried: true, items: [] },
+    };
+    const service = {
+      listAuthorizedClients: async () => [
+        {
+          id: 'ACCG01',
+          itemId: '1',
+          clientCode: 'ACCG01',
+          displayName: 'ACCG Inc.',
+          source: 'sharepoint' as const,
+          sharePointLibraryUrl: library,
+        },
+        {
+          id: 'PDG01',
+          itemId: '2',
+          clientCode: 'PDG01',
+          displayName: 'PDG',
+          source: 'sharepoint' as const,
+        },
+      ],
+      listAuthorizedProjects: async () => [],
+      listAuthorizedTasks: async () => [],
+      listWorkspaceCollections: async () => extras,
+      listWorkspaceCollectionsForSearch: async () =>
+        new Map([
+          ['ACCG01', extras],
+          ['PDG01', extras],
+        ]),
+    } as unknown as SharePointPmService;
+    const picture = await buildKnowledgeOperatingPicture(service, principal, {
+      hvsDataAccess: 'BLOCKED',
+    });
+    assert.equal(picture.documents.availability, 'SOURCE_UNAVAILABLE');
+    assert.equal(picture.documents.status, 'SOURCE_UNAVAILABLE');
+    assert.equal(picture.documents.queried, false);
+    assert.equal(picture.documents.honestEmpty, false);
+    assert.equal(picture.documents.empty, false);
+    assert.equal(picture.honestEmpty, false);
+    assert.deepEqual(picture.documents.items, []);
+    assert.deepEqual(picture.documents.clientsQueried, []);
+    assert.deepEqual(picture.documents.unfinishedClientCodes, ['ACCG01', 'PDG01']);
+    const ledgerText = JSON.stringify(picture.documents);
+    assert.match(ledgerText, /documents=SOURCE_UNAVAILABLE/);
+    assert.equal(/documents=MISSING|documents=INDEXED/.test(ledgerText), false);
+    assert.equal(ledgerText.includes('Client SharePoint library'), false);
+    assert.equal(ledgerText.includes(PARTIAL_TITLE), false);
+    assert.equal(ledgerText.includes(library), false);
+    for (const code of ['ACCG01', 'PDG01']) {
+      const hub = picture.recoveryLedger.find(
+        (row) => row.clientCode === code && row.source.includes('hub_sharepoint_mi'),
+      );
+      assert.ok(hub, code);
+      assert.equal(hub?.indexed, false);
+      assert.equal(hub?.accessible, false);
+      assert.equal(hub?.validated, false);
+      assert.match(hub?.exceptions || '', /SOURCE_UNAVAILABLE/);
+      assert.equal(/documents=MISSING|documents=INDEXED/.test(hub?.exceptions || ''), false);
+    }
+
+    const found = await searchSharePointPm(service, principal, 'partial');
+    assert.equal(found.documentsIndex, 'SOURCE_UNAVAILABLE');
+    assert.equal(found.documentsAvailability, 'SOURCE_UNAVAILABLE');
+    assert.equal(found.status, 'SOURCE_UNAVAILABLE');
+    assert.equal(found.indexComplete, false);
+    assert.equal(found.queried, false);
+    assert.equal(found.honestEmpty, false);
+    assert.equal(found.results.some((hit) => hit.kind === 'document' || hit.title === PARTIAL_TITLE), false);
+    assert.equal(found.results.some((hit) => hit.source === 'HVCG_Communications/file-index'), false);
+    assert.ok(found.results.some((hit) => hit.kind === 'meeting' && hit.title.includes('kickoff')));
+    const searchText = JSON.stringify(found);
+    assert.match(searchText, /SOURCE_UNAVAILABLE/);
+    assert.equal(/documents=MISSING|documents=INDEXED/.test(searchText), false);
+    assert.equal(searchText.includes(PARTIAL_TITLE), false);
+  });
+});
 
 describe('W2I-R1 list walk diagnostics and isolation', () => {
   it('503 body names the list, reason, and pagesFetched and omits links, tokens, and titles', () => {
@@ -563,6 +670,14 @@ describe('W2I-R1 workspace route honesty', () => {
     const capped = new WalkGraph();
     capped.mode = 'page_cap';
     capped.modeList = COMMS;
+    capped.lists.set(CLIENTS, [
+      item('1', {
+        Title: 'ACCG Inc.',
+        ClientCode: 'ACCG01',
+        SharePointLibraryUrl: 'https://contoso.sharepoint.com/sites/ACCG',
+      }),
+      item('2', { Title: 'PDG', ClientCode: 'PDG01' }),
+    ]);
     await withHub(capped, async (base) => {
       const first = await ask(base, 'What documents exist for ACCG?');
       assert.equal(first.status, 200);
@@ -592,6 +707,89 @@ describe('W2I-R1 workspace route honesty', () => {
       assert.equal(wsBody.workspace.documents.availability, 'SOURCE_UNAVAILABLE');
       assert.equal(wsBody.workspace.documents.items.some((row) => row.title === PARTIAL_TITLE), false);
       assert.equal(wsBody.workspace.projects.some((row) => row.name === 'PDG secret work'), false);
+
+      const docsRes = await fetch(`${base}/api/pm/documents`, { headers: auth('staff') });
+      assert.equal(docsRes.status, 200);
+      const docsBody = (await docsRes.json()) as {
+        documents: {
+          availability?: string;
+          status?: string;
+          queried: boolean;
+          honestEmpty: boolean;
+          empty: boolean;
+          clientsQueried: string[];
+          unfinishedClientCodes: string[];
+          items: Array<{ title: string; source?: string; provenanceLabel?: string }>;
+        };
+      };
+      assert.equal(docsBody.documents.availability, 'SOURCE_UNAVAILABLE');
+      assert.equal(docsBody.documents.status, 'SOURCE_UNAVAILABLE');
+      assert.equal(docsBody.documents.queried, false);
+      assert.equal(docsBody.documents.honestEmpty, false);
+      assert.equal(docsBody.documents.empty, false);
+      assert.deepEqual(docsBody.documents.items, []);
+      assert.equal(docsBody.documents.clientsQueried.includes('ACCG01'), false);
+      assert.equal(docsBody.documents.unfinishedClientCodes.includes('ACCG01'), true);
+      const docsText = JSON.stringify(docsBody);
+      assert.match(docsText, /documents=SOURCE_UNAVAILABLE/);
+      assert.equal(/documents=MISSING|documents=INDEXED/.test(docsText), false);
+      assert.equal(docsText.includes('Client SharePoint library'), false);
+      assert.equal(docsText.includes(PARTIAL_TITLE), false);
+      assert.equal(/"canExecute":true|"capitalSubmit":true/.test(docsText), false);
+
+      const knowledgeRes = await fetch(`${base}/api/pm/knowledge`, { headers: auth('staff') });
+      assert.equal(knowledgeRes.status, 200);
+      const knowledgeBody = (await knowledgeRes.json()) as {
+        knowledge: {
+          honestEmpty: boolean;
+          documents: { honestEmpty: boolean; availability?: string; items: Array<{ title: string }> };
+          recoveryLedger: Array<{
+            source: string;
+            clientCode: string;
+            indexed: boolean;
+            accessible: boolean;
+            validated: boolean;
+          }>;
+        };
+      };
+      assert.equal(knowledgeBody.knowledge.documents.availability, 'SOURCE_UNAVAILABLE');
+      assert.equal(knowledgeBody.knowledge.documents.honestEmpty, false);
+      assert.equal(knowledgeBody.knowledge.honestEmpty, false);
+      assert.equal(knowledgeBody.knowledge.documents.items.length, 0);
+      const hubRow = knowledgeBody.knowledge.recoveryLedger.find(
+        (row) => row.clientCode === 'ACCG01' && row.source.includes('hub_sharepoint_mi'),
+      );
+      assert.ok(hubRow);
+      assert.equal(hubRow?.indexed, false);
+      assert.equal(hubRow?.accessible, false);
+      assert.equal(hubRow?.validated, false);
+      assert.equal(/documents=MISSING|documents=INDEXED/.test(JSON.stringify(knowledgeBody.knowledge.documents)), false);
+
+      const searchRes = await fetch(`${base}/api/pm/search?q=${encodeURIComponent('partial')}`, {
+        headers: auth('staff'),
+      });
+      assert.equal(searchRes.status, 200);
+      const searchBody = (await searchRes.json()) as {
+        documentsIndex?: string;
+        documentsAvailability?: string;
+        status?: string;
+        indexComplete?: boolean;
+        queried?: boolean;
+        honestEmpty?: boolean;
+        results: Array<{ kind: string; title: string; source?: string }>;
+      };
+      assert.equal(searchBody.documentsIndex, 'SOURCE_UNAVAILABLE');
+      assert.equal(searchBody.documentsAvailability, 'SOURCE_UNAVAILABLE');
+      assert.equal(searchBody.status, 'SOURCE_UNAVAILABLE');
+      assert.equal(searchBody.indexComplete, false);
+      assert.equal(searchBody.queried, false);
+      assert.equal(searchBody.honestEmpty, false);
+      assert.equal(searchBody.results.some((hit) => hit.kind === 'document' || hit.title === PARTIAL_TITLE), false);
+      assert.equal(searchBody.results.some((hit) => hit.source === 'HVCG_Communications/file-index'), false);
+      const searchText = JSON.stringify(searchBody);
+      assert.match(searchText, /SOURCE_UNAVAILABLE/);
+      assert.equal(/documents=MISSING|documents=INDEXED/.test(searchText), false);
+      assert.equal(/"indexComplete":true/.test(searchText), false);
     });
 
     const meetings = new WalkGraph();
@@ -615,6 +813,26 @@ describe('W2I-R1 workspace route honesty', () => {
       assert.equal(wsBody.workspace.meetings.status, 'SOURCE_UNAVAILABLE');
       assert.match(wsBody.workspace.meetings.reason || '', /HVCG_Meetings/);
       assert.equal(wsBody.workspace.documents.availability, undefined);
+
+      const docsRes = await fetch(`${base}/api/pm/documents`, { headers: auth('staff') });
+      const docsBody = (await docsRes.json()) as {
+        documents: { availability?: string; honestEmpty: boolean; items: Array<{ title: string }> };
+      };
+      assert.equal(docsBody.documents.availability, undefined);
+      assert.equal(docsBody.documents.honestEmpty, false);
+      assert.ok(docsBody.documents.items.some((row) => row.title === ACCG_FILE));
+      const searchRes = await fetch(`${base}/api/pm/search?q=${encodeURIComponent('correspondence')}`, {
+        headers: auth('staff'),
+      });
+      const searchBody = (await searchRes.json()) as {
+        documentsIndex?: string;
+        indexComplete?: boolean;
+        results: Array<{ kind: string; title: string }>;
+      };
+      assert.equal(searchBody.documentsIndex, undefined);
+      assert.equal(searchBody.indexComplete, undefined);
+      assert.ok(searchBody.results.some((hit) => hit.kind === 'document' && hit.title === ACCG_FILE));
+      assert.equal((JSON.stringify(searchBody)).includes(PDG_FILE), false);
     });
   });
 
@@ -627,6 +845,22 @@ describe('W2I-R1 workspace route honesty', () => {
       assert.equal(/documents=SOURCE_UNAVAILABLE|documents=INDEXED/.test(documents.body.workflowAnswer || ''), false);
       assert.equal((documents.body.workflowAnswer || '').includes(PDG_FILE), false);
       assert.match(documents.body.workflowAnswer || '', /canExecute=false/);
+
+      const docsRes = await fetch(`${base}/api/pm/documents`, { headers: auth('staff') });
+      const docsBody = (await docsRes.json()) as {
+        documents: { honestEmpty: boolean; queried: boolean; availability?: string; items: unknown[] };
+      };
+      assert.equal(docsBody.documents.honestEmpty, true);
+      assert.equal(docsBody.documents.queried, true);
+      assert.equal(docsBody.documents.availability, undefined);
+      assert.equal(docsBody.documents.items.length, 0);
+      const searchRes = await fetch(`${base}/api/pm/search?q=${encodeURIComponent('correspondence')}`, {
+        headers: auth('staff'),
+      });
+      const searchBody = (await searchRes.json()) as { documentsIndex?: string; indexComplete?: boolean; results: unknown[] };
+      assert.equal(searchBody.documentsIndex, undefined);
+      assert.equal(searchBody.indexComplete, undefined);
+      assert.equal(searchBody.results.length, 0);
     });
 
     const filled = new WalkGraph();

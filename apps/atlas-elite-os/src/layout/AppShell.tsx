@@ -387,6 +387,8 @@ export function AppShell() {
       void searchPm(hubAuth, q)
         .then((found) => {
           if (cancelled) return;
+          const indexUnfinished =
+            found.documentsIndex === 'SOURCE_UNAVAILABLE' || found.indexComplete === false;
           setHubHits(
             (found.results || []).map((hit) => ({
               id: `hub-${hit.kind}-${hit.id}`,
@@ -395,6 +397,11 @@ export function AppShell() {
               subtitle: hit.clientCode || undefined,
               to: hubHitTo(hit),
             })),
+          );
+          setHubSearchError(
+            indexUnfinished
+              ? 'documents=SOURCE_UNAVAILABLE. The file-index walk did not finish. This search is not a complete index.'
+              : null,
           );
           setHubSearchBusy(false);
         })

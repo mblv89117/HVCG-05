@@ -407,9 +407,14 @@ function recoveryFromEntitled(input: {
       .map((row) => row.clientCode),
   );
 
+  const unfinishedCodes = new Set(input.ledger.unfinishedClientCodes);
   for (const client of input.clients) {
     const classified = classifyHubClientRow(client);
-    const indexed = input.ledger.clientsQueried.includes(client.clientCode);
+    const walkUnfinished =
+      unfinishedCodes.has(client.clientCode) ||
+      (input.ledger.availability === 'SOURCE_UNAVAILABLE' &&
+        !input.ledger.clientsQueried.includes(client.clientCode));
+    const indexed = !walkUnfinished && input.ledger.clientsQueried.includes(client.clientCode);
     const customer = classified.customerRecord;
     rows.push({
       source: 'hub_sharepoint_mi / HVCG_Clients',
@@ -417,17 +422,23 @@ function recoveryFromEntitled(input: {
       clientCode: client.clientCode,
       dataType: classified.classification,
       discovered: true,
-      accessible: true,
+      accessible: !walkUnfinished,
       indexed,
       classified: true,
       operationalized: customer && operationalized.has(client.clientCode),
-      validated: true,
-      exceptions: customer
-        ? client.sharePointLibraryUrl
+      validated: !walkUnfinished,
+      exceptions: walkUnfinished
+        ? 'HVCG_Communications file-index walk did not complete. documents=SOURCE_UNAVAILABLE.'
+        : customer
+          ? client.sharePointLibraryUrl
+            ? ''
+            : 'No SharePointLibraryUrl on entitled row'
+          : 'Synthetic QA — not a customer record',
+      blocker: walkUnfinished
+        ? 'File-index walk did not complete. Not indexed, accessible, or validated from this walk.'
+        : customer
           ? ''
-          : 'No SharePointLibraryUrl on entitled row'
-        : 'Synthetic QA — not a customer record',
-      blocker: customer ? '' : 'SYN01 is not operationalized as a client',
+          : 'SYN01 is not operationalized as a client',
       provenance: 'CONFIRMED',
     });
   }
@@ -550,6 +561,7 @@ export async function buildKnowledgeOperatingPicture(
   }
   const recoveredDocuments = hvsDataAccess === 'BLOCKED' ? [] : hvsRecoveredDocuments();
   const recoveryLedger = recoveryFromEntitled({ clients, ledger, queues });
+  const indexUnfinished = ledger.availability === 'SOURCE_UNAVAILABLE';
   return {
     kind: 'knowledge_operating_picture_v1',
     source: 'sharepoint_hub_mi',
@@ -578,7 +590,7 @@ export async function buildKnowledgeOperatingPicture(
       hvsDataAccess === 'BLOCKED' ? [] : recoveredClientsKnowledgeOperationalized(),
     hvsActionableClientKnowledge:
       hvsDataAccess === 'BLOCKED' ? [] : hvsActionableClientKnowledge(),
-    honestEmpty: realClientsOperationalized.length === 0,
+    honestEmpty: indexUnfinished ? false : realClientsOperationalized.length === 0,
   };
 }
 

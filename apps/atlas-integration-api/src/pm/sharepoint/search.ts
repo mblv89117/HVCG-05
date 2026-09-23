@@ -193,12 +193,27 @@ function leadHref(id: string): string {
   return item ? `/leads/${encodeURIComponent(item)}` : '/leads';
 }
 
+export type PmSearchResponse = {
+  query: string;
+  results: PmSearchHit[];
+  scope: 'entitled' | 'manny_tenant';
+  /** Set when the communications file index did not finish. Absent on a finished walk. */
+  documentsIndex?: 'SOURCE_UNAVAILABLE';
+  documentsAvailability?: 'SOURCE_UNAVAILABLE';
+  status?: 'SOURCE_UNAVAILABLE';
+  /** Present and false only when the file index is unfinished. Never true. */
+  indexComplete?: false;
+  queried?: false;
+  honestEmpty?: false;
+  reason?: string;
+};
+
 export async function searchSharePointPm(
   service: SearchPmService,
   principal: AtlasPrincipal,
   rawQuery: string,
   opts?: { extrasBudgetMs?: number; coreBudgetMs?: number },
-): Promise<{ query: string; results: PmSearchHit[]; scope: 'entitled' | 'manny_tenant' }> {
+): Promise<PmSearchResponse> {
   const query = rawQuery.trim().slice(0, 120);
   if (query.length < 2) return { query, results: [], scope: 'entitled' };
   const q = query.toLowerCase();
@@ -344,9 +359,13 @@ export async function searchSharePointPm(
     const code = row.client?.clientCode || row.code;
     if (code) extrasByCode.set(code, row.extras);
   }
+  let documentsIndexUnfinished = false;
   for (const c of clients) {
     const extras = extrasByCode.get(c.clientCode);
     if (!extras) continue;
+    const communicationsUnfinished = extras.communications.status === 'SOURCE_UNAVAILABLE';
+    if (communicationsUnfinished) documentsIndexUnfinished = true;
+    if (!communicationsUnfinished) {
     for (const item of extras.communications.items) {
       const title = String(item.title || '');
       const hay = [title, item.summary].filter(Boolean).join(' ').toLowerCase();
@@ -406,6 +425,7 @@ export async function searchSharePointPm(
         ...(attachment?.contentType ? { contentType: attachment.contentType } : {}),
         ...(typeof attachment?.size === 'number' ? { size: attachment.size } : {}),
       });
+    }
     }
     pushCollection(extras.meetings.items, 'meeting', 'HVCG_Meetings', c.clientCode);
     pushCollection(extras.engagements.items, 'engagement', 'HVCG_Engagements', c.clientCode);
@@ -504,7 +524,7 @@ export async function searchSharePointPm(
         source: 'HVCG_Lenders',
       });
     }
-    const files = await bestEffort(() => service.listIndexedFiles(), []);
+    const files = documentsIndexUnfinished ? [] : await bestEffort(() => service.listIndexedFiles(), []);
     for (const f of files) {
       if (f.clientCode) continue;
       const hay = [f.title, f.summary].filter(Boolean).join(' ').toLowerCase();
@@ -534,5 +554,21 @@ export async function searchSharePointPm(
       });
     }
   }
-  return { query, results: results.slice(0, SEARCH_CAP), scope: manny ? 'manny_tenant' : 'entitled' };
+  const response: PmSearchResponse = {
+    query,
+    results: results.slice(0, SEARCH_CAP),
+    scope: manny ? 'manny_tenant' : 'entitled',
+  };
+  if (!documentsIndexUnfinished) return response;
+  return {
+    ...response,
+    documentsIndex: 'SOURCE_UNAVAILABLE',
+    documentsAvailability: 'SOURCE_UNAVAILABLE',
+    status: 'SOURCE_UNAVAILABLE',
+    indexComplete: false,
+    queried: false,
+    honestEmpty: false,
+    reason:
+      'HVCG_Communications file-index walk did not complete. documents=SOURCE_UNAVAILABLE. Search is not a complete index.',
+  };
 }

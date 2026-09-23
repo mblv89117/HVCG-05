@@ -27,27 +27,48 @@ export type KnowledgeLedgerItem = {
   };
 };
 
-export async function buildKnowledgeLedger(
-  service: SharePointPmService,
-  principal: AtlasPrincipal,
-): Promise<{
+const FILE_INDEX_UNFINISHED =
+  'HVCG_Communications file-index walk did not complete. documents=SOURCE_UNAVAILABLE.';
+
+export type KnowledgeLedger = {
   kind: 'knowledge_ledger_v1';
   source: 'sharepoint_hub_mi';
   graphSitesSearch: false;
   binariesInAtlas: false;
-  queried: true;
+  /** False when any entitled communications walk is unfinished. */
+  queried: boolean;
+  /** ClientCodes whose communications walk finished. Unfinished walks are omitted. */
   clientsQueried: string[];
+  unfinishedClientCodes: string[];
   count: number;
+  /** True only for a finished walk that returned no ledger rows. */
   empty: boolean;
   items: KnowledgeLedgerItem[];
+  /** True only for a finished empty index. An unfinished walk is not an empty inventory. */
   honestEmpty: boolean;
-}> {
+  availability?: 'SOURCE_UNAVAILABLE';
+  status?: 'SOURCE_UNAVAILABLE';
+  reason?: string;
+};
+
+export async function buildKnowledgeLedger(
+  service: SharePointPmService,
+  principal: AtlasPrincipal,
+): Promise<KnowledgeLedger> {
   const clients = await service.listAuthorizedClients(principal);
   const items: KnowledgeLedgerItem[] = [];
   const clientsQueried: string[] = [];
+  const unfinishedClientCodes: string[] = [];
+  const reasons = new Set<string>();
   for (const client of clients) {
-    clientsQueried.push(client.clientCode);
     const classified = classifyHubClientRow(client);
+    const extras = await service.listWorkspaceCollections(principal, client.clientCode);
+    if (extras.communications.status === 'SOURCE_UNAVAILABLE') {
+      unfinishedClientCodes.push(client.clientCode);
+      reasons.add(extras.communications.reason || FILE_INDEX_UNFINISHED);
+      continue;
+    }
+    clientsQueried.push(client.clientCode);
     if (client.sharePointLibraryUrl) {
       items.push({
         id: `library-${client.clientCode}`,
@@ -67,7 +88,6 @@ export async function buildKnowledgeLedger(
         },
       });
     }
-    const extras = await service.listWorkspaceCollections(principal, client.clientCode);
     for (const row of extras.communications.items) {
       if (!isFileIndexRow(row)) continue;
       items.push({
@@ -90,16 +110,32 @@ export async function buildKnowledgeLedger(
       });
     }
   }
+  const indexUnfinished = unfinishedClientCodes.length > 0;
+  const finishedEmpty = !indexUnfinished && items.length === 0;
+  const unfinishedReason = [...reasons].join(' ').trim();
+  const reason = /documents=SOURCE_UNAVAILABLE/.test(unfinishedReason)
+    ? unfinishedReason
+    : unfinishedReason
+      ? `${unfinishedReason} documents=SOURCE_UNAVAILABLE.`
+      : FILE_INDEX_UNFINISHED;
   return {
     kind: 'knowledge_ledger_v1',
     source: 'sharepoint_hub_mi',
     graphSitesSearch: false,
     binariesInAtlas: false,
-    queried: true,
+    queried: !indexUnfinished,
     clientsQueried,
+    unfinishedClientCodes,
     count: items.length,
-    empty: items.length === 0,
+    empty: finishedEmpty,
     items,
-    honestEmpty: items.length === 0,
+    honestEmpty: finishedEmpty,
+    ...(indexUnfinished
+      ? {
+          availability: 'SOURCE_UNAVAILABLE' as const,
+          status: 'SOURCE_UNAVAILABLE' as const,
+          reason,
+        }
+      : {}),
   };
 }

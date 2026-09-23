@@ -26,6 +26,7 @@ export function DocumentsOperatingPage() {
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([]);
   const [sites, setSites] = useState<{ commandCenter: string; clients: string } | null>(null);
   const [restrictedOmitted, setRestrictedOmitted] = useState(0);
+  const [indexUnfinished, setIndexUnfinished] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -56,6 +57,7 @@ export function DocumentsOperatingPage() {
         fetchClient360(auth).catch(() => ({ clients: [] as Array<{ id: string; displayName: string }> })),
       ]);
       setDocs(docRes.documents || []);
+      setIndexUnfinished(docRes.documentsAvailability === 'SOURCE_UNAVAILABLE');
       setRestrictedOmitted(docRes.restrictedOmitted || 0);
       setSites(docRes.sharePointSites || null);
       setClients(
@@ -67,6 +69,7 @@ export function DocumentsOperatingPage() {
     } catch (err) {
       setError(String(err));
       setDocs([]);
+      setIndexUnfinished(false);
     } finally {
       setLoading(false);
     }
@@ -193,6 +196,11 @@ export function DocumentsOperatingPage() {
 
       {loading ? (
         <Spinner label="Loading documents…" />
+      ) : indexUnfinished ? (
+        <EmptyState
+          title="Document index unavailable"
+          description="documents=SOURCE_UNAVAILABLE. The file-index walk did not finish. Atlas will not treat this as an empty or complete inventory."
+        />
       ) : docs.length === 0 ? (
         <EmptyState
           title="No documents linked yet"

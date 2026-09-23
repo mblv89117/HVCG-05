@@ -121,6 +121,36 @@ describe('PM documents response normalization', () => {
     });
     assert.deepEqual(res.documents, []);
     assert.equal(res.unavailableReason, 'authorized source returned no document items');
+    assert.equal(res.documentsAvailability, undefined);
+  });
+
+  it('does not treat a truncated file index as an honest empty or library-only inventory', () => {
+    const res = normalizePmDocumentsResponse({
+      documents: {
+        kind: 'knowledge_ledger_v1',
+        empty: true,
+        honestEmpty: true,
+        availability: 'SOURCE_UNAVAILABLE',
+        status: 'SOURCE_UNAVAILABLE',
+        items: [
+          {
+            id: 'library-ACCG01',
+            clientCode: 'ACCG01',
+            title: 'Client SharePoint library',
+            kind: 'library',
+            source: 'HVCG_Clients.SharePointLibraryUrl',
+            provenanceLabel: 'CONFIRMED',
+            webUrl: 'https://contoso.sharepoint.com/sites/ACCG',
+          },
+        ],
+      },
+    });
+    assert.deepEqual(res.documents, []);
+    assert.equal(res.documentsAvailability, 'SOURCE_UNAVAILABLE');
+    assert.equal(res.indexComplete, false);
+    assert.match(res.unavailableReason || '', /SOURCE_UNAVAILABLE/);
+    assert.equal(/no document items|honest empty/i.test(res.unavailableReason || ''), false);
+    assert.equal(/documents=MISSING|documents=INDEXED/.test(res.unavailableReason || ''), false);
   });
 
   it('does not normalize unauthorized Hub failures into visible documents', () => {

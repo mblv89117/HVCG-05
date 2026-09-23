@@ -74,8 +74,15 @@ export function KnowledgePage() {
         try {
           const found = await searchPm(auth, q);
           if (cancelled) return;
+          const indexUnfinished =
+            found.documentsIndex === 'SOURCE_UNAVAILABLE' || found.indexComplete === false;
           setHits(found.results || []);
-          setScope(found.scope || '');
+          setScope(indexUnfinished ? '' : found.scope || '');
+          if (indexUnfinished) {
+            setError(
+              'documents=SOURCE_UNAVAILABLE. The file-index walk did not finish. Search is not a complete index.',
+            );
+          }
         } catch (err) {
           if (cancelled) return;
           setHits([]);
@@ -178,7 +185,11 @@ export function KnowledgePage() {
               }}
               placeholder="Search Atlas…"
               idleLabel="Type at least two characters. Hub returns only entitled records — empty is a real answer."
-              emptyLabel="No authorized matches in your entitled SharePoint scope."
+              emptyLabel={
+                error?.includes('SOURCE_UNAVAILABLE')
+                  ? 'documents=SOURCE_UNAVAILABLE. This search is not a complete file index.'
+                  : 'No authorized matches in your entitled SharePoint scope.'
+              }
               loadingLabel="Searching entitled records…"
               inputLabel="Authorized knowledge search"
               listLabel="Authorized search results"
