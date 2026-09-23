@@ -1,7 +1,10 @@
 /**
  * OData helpers for Hub-side list-item matching.
- * Graph list GETs never receive $filter (Lists.SelectedOperations.Selected
- * rejects field filters as 403). Hub applies these predicates in memory.
+ * Generic Graph list GETs do not receive caller $filter strings
+ * (Lists.SelectedOperations.Selected rejects field filters as 403).
+ * Hub applies those predicates in memory.
+ * HVCG_Meetings client reads may send one indexed ClientCode equality
+ * built here from a canonical code, not from a caller OData string.
  * Never interpolate unsanitized caller strings into Graph URLs.
  */
 

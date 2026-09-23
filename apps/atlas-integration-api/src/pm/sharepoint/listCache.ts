@@ -6,7 +6,9 @@
  * - Cached values are raw Graph items; callers must apply authorization after load.
  * - Short TTL + size cap limit stale privileged metadata exposure.
  * - In-flight dedupe collapses duplicate concurrent Graph list fetches.
- * - Graph $filter is never used (Lists.SelectedOperations.Selected → 403).
+ * - Cache keys are whole-list ids. A ClientCode-scoped meetings walk must not
+ *   be stored here (it is not the full list).
+ * - Generic Graph $filter is not used (Lists.SelectedOperations.Selected → 403).
  */
 
 export type GraphListItemLike = {

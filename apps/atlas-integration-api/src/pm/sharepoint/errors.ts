@@ -24,7 +24,7 @@ export function pmInfrastructureError(
   return new PmHttpError(503, code, message, 'unavailable');
 }
 
-export type ListWalkTruncationReason = 'repeated_next_link' | 'page_cap';
+export type ListWalkTruncationReason = 'repeated_next_link' | 'page_cap' | 'scope_not_honored';
 
 /** Configured HVCG_* name only. Never a nextLink, token, GUID, or item title. */
 export function safeListWalkKey(raw: string): string {
@@ -63,6 +63,39 @@ export class ListWalkTruncatedError extends PmHttpError {
     this.reason = opts.reason;
     this.listKey = listKey;
     this.pagesFetched = pagesFetched;
+  }
+}
+
+/**
+ * Client-scoped walk hit the page cap. Same fail-closed truncation as
+ * ListWalkTruncatedError, plus a count of items observed (no titles).
+ */
+export class ScopedListWalkTruncatedError extends ListWalkTruncatedError {
+  readonly itemsFetched: number;
+
+  constructor(opts: {
+    reason: ListWalkTruncationReason;
+    listKey: string;
+    pagesFetched: number;
+    itemsFetched: number;
+  }) {
+    super({ reason: opts.reason, listKey: opts.listKey, pagesFetched: opts.pagesFetched });
+    this.name = 'ScopedListWalkTruncatedError';
+    const n = opts.itemsFetched;
+    this.itemsFetched = Number.isInteger(n) && n >= 0 && n <= 1_000_000 ? n : 0;
+  }
+}
+
+/**
+ * Indexed ClientCode equality was not applied.
+ * Not a workspace token failure and not a finished list.
+ */
+export class IndexedClientCodeScopeRejectedError extends Error {
+  readonly code = 'INDEXED_CLIENT_CODE_SCOPE_REJECTED';
+
+  constructor() {
+    super('Indexed ClientCode list scope was rejected.');
+    this.name = 'IndexedClientCodeScopeRejectedError';
   }
 }
 

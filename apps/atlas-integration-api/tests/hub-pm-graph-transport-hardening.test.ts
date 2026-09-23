@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { PmHttpError } from '../src/pm/sharepoint/errors.ts';
+import { IndexedClientCodeScopeRejectedError, PmHttpError } from '../src/pm/sharepoint/errors.ts';
 import {
   capabilityForPmList,
   createGraphTransport,
@@ -426,6 +426,61 @@ describe('PM Graph Selected-permission collection reads', () => {
     assert.equal(url.searchParams.get('$expand'), 'fields');
     assert.equal(urls[0].includes('$filter'), false);
     assert.equal(urls[0].includes(ACCESS_TOKEN), false);
+  });
+
+  it('sends one indexed ClientCode equality and rejects a non-canonical scope before fetch', async () => {
+    const urls: string[] = [];
+    const transport = createGraphTransport(
+      ALLOWLIST,
+      { getToken: async () => ACCESS_TOKEN },
+      {
+        fetch: async (input) => {
+          urls.push(String(input));
+          return jsonResponse(200, { value: [] });
+        },
+      },
+    );
+    await transport.listItems(PROJECTS, {
+      indexedClientCode: 'ACCG01',
+      filter: "fields/Title eq 'secret'",
+    });
+    assert.equal(urls.length, 1);
+    const url = new URL(urls[0]);
+    assert.equal(url.searchParams.get('$filter'), "fields/ClientCode eq 'ACCG01'");
+    assert.equal(url.searchParams.get('$expand'), 'fields');
+    assert.equal(url.searchParams.get('$top'), '100');
+    assert.equal(urls[0].includes('secret'), false);
+    assert.equal(urls[0].includes(ACCESS_TOKEN), false);
+
+    urls.length = 0;
+    await assert.rejects(
+      () => transport.listItems(PROJECTS, { indexedClientCode: "ACCG01' or true" }),
+      (err: unknown) => {
+        assert.ok(err instanceof IndexedClientCodeScopeRejectedError);
+        assert.equal(urls.length, 0);
+        assert.equal(String(err).includes(ACCESS_TOKEN), false);
+        return true;
+      },
+    );
+  });
+
+  it('maps a scoped ClientCode 403 to scope rejection without the Graph body', async () => {
+    const transport = createGraphTransport(
+      ALLOWLIST,
+      { getToken: async () => ACCESS_TOKEN },
+      {
+        fetch: async () => jsonResponse(403, { error: { code: 'accessDenied', message: ACCESS_TOKEN } }),
+      },
+    );
+    await assert.rejects(
+      () => transport.listItems(PROJECTS, { indexedClientCode: 'ACCG01' }),
+      (err: unknown) => {
+        assert.ok(err instanceof IndexedClientCodeScopeRejectedError);
+        assert.equal(err.message.includes(ACCESS_TOKEN), false);
+        assert.equal(/token was rejected/i.test(err.message), false);
+        return true;
+      },
+    );
   });
 
   it('maps Graph 401 and 403 to a permission/token rejection without leaking the body', async () => {
