@@ -7,6 +7,7 @@ import { buildOperatorCommercialContext } from '../src/pm/commercialContext/buil
 import { emptyOverlay } from '../src/pm/commercialContext/store.ts';
 import {
   answerClientOperatingBrief,
+  collectPendingDecisionLines,
   currentWorkspaceUnavailableAnswer,
   mapsToClientOperatingBriefIntent,
   WORKSPACE_TRUTH_SOURCE_UNAVAILABLE,
@@ -193,6 +194,43 @@ describe('W2C ACCG01 honest real-client operator proof', () => {
     }
   });
 
+  it('drops blank or foreign ClientCode lines from a client-scoped approvals answer', () => {
+    const lines = collectPendingDecisionLines({
+      clientCode: 'ACCG01',
+      approvalItems: [
+        { title: 'ACCG capital credit path', clientCode: 'accg01', status: 'PENDING' },
+        { title: 'Uncoded lender decision packet', clientCode: '', status: 'PENDING' },
+        { title: 'Missing code packet', status: 'PENDING' },
+        { title: 'PDG coded packet', clientCode: 'PDG01', status: 'PENDING' },
+      ],
+      workspace: {
+        clientCode: 'ACCG01',
+        decisionsRisks: {
+          queried: true,
+          items: [
+            { title: 'ACCG decision on file', clientCode: 'ACCG01', status: 'Open' },
+            { title: 'Blank decision row', status: 'Open' },
+          ],
+        },
+        tasks: [
+          { id: 't-blank', title: 'Task without a client code', status: 'needs_review', requiresApproval: true },
+          {
+            id: 't-accg',
+            title: 'ACCG coded owner task',
+            status: 'needs_review',
+            requiresApproval: true,
+            clientCode: 'ACCG01',
+          },
+        ],
+      },
+    });
+    assert.deepEqual(lines, [
+      'ACCG capital credit path',
+      'ACCG decision on file',
+      'ACCG coded owner task',
+    ]);
+  });
+
   it('fail-closes unscoped operating-brief questions instead of portfolio fallback', () => {
     const answer = answerClientOperatingBrief('Give me the current operating brief.', {
       entitledCodes: STAFF.allowedClientIds,
@@ -278,8 +316,14 @@ describe('W2C ACCG01 honest real-client operator proof', () => {
     assert.equal(mapsToGetAttentionItems('Summarize Capital'), true);
     assert.equal(mapsToGetClientContext('Summarize Capital'), false);
     assert.equal(mapsToClientOperatingBriefIntent('Summarize Capital'), false);
-    assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), true);
     assert.equal(mapsToSearchAuthorizedKnowledge('What documents do we have for ACCG?'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('Documents'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('Approvals'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('Projects'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('Documents', 'ACCG01'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('Approvals', 'ACCG01'), true);
+    assert.equal(mapsToClientOperatingBriefIntent('Projects', 'ACCG01'), true);
   });
 
   const CONCIERGE_QUESTIONS = [
@@ -389,7 +433,7 @@ describe('W2C ACCG01 honest real-client operator proof', () => {
     assert.equal(mapsToCapitalSubmissionHonestyIntent('Prepare capital submission for ACCG'), true);
     assert.equal(mapsToClientOperatingBriefIntent('What needs my approval for ACCG?'), false);
     assert.equal(mapsToApprovalCenterHonestyIntent('What needs my approval for ACCG?'), true);
-    assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('What documents do we have for ACCG?'), true);
     assert.equal(mapsToSearchAuthorizedKnowledge('What documents do we have for ACCG?'), true);
   });
 

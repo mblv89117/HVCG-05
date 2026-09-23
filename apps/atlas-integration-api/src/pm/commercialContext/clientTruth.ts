@@ -129,6 +129,8 @@ export type WorkspaceTruthSnapshot = {
     requiresApproval?: boolean;
     nextAction?: string;
     projectId?: string;
+    /** Present only when the source row carried an exact ClientCode. */
+    clientCode?: string;
   }>;
   documents?: { queried: boolean; items: Array<{ id: string; title: string; source?: string }>; reason?: string };
   communications?: { queried: boolean; items: Array<Record<string, unknown>>; reason?: string };

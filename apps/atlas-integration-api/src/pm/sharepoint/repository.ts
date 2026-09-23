@@ -17,7 +17,7 @@ import {
   isInternalStaff,
   type ProjectClassification,
 } from './authz.ts';
-import { PmHttpError, pmInfrastructureError, pmNotImplemented } from './errors.ts';
+import { ListWalkTruncatedError, PmHttpError, pmInfrastructureError, pmNotImplemented } from './errors.ts';
 import type { GraphListItem, PmGraphTransport } from './graph.ts';
 import { isSharePointItemId, normalizeEmail } from './ids.ts';
 import {
@@ -392,12 +392,22 @@ export class SharePointPmService {
     const items = (await this.listCache.getOrLoad(listId, async () => {
       const pages: GraphListItem[] = [];
       let nextLink: string | undefined;
-      do {
+      const seenLinks = new Set<string>();
+      // File-index lists can be thousands of rows. A repeated nextLink or the
+      // page cap is an incomplete walk: throw so the cache does not store a
+      // partial page set as a TTL success and callers cannot mark COMPLETE.
+      const maxPages = 80;
+      for (let pageNo = 0; pageNo < maxPages; pageNo += 1) {
+        if (nextLink) {
+          if (seenLinks.has(nextLink)) throw new ListWalkTruncatedError('repeated_next_link');
+          seenLinks.add(nextLink);
+        }
         const page = await this.graph.listItems(listId, { nextLink, top: 100 });
         pages.push(...page.items);
+        if (!page.nextLink) return pages;
         nextLink = page.nextLink;
-      } while (nextLink);
-      return pages;
+      }
+      throw new ListWalkTruncatedError('page_cap');
     })) as GraphListItem[];
     return filter ? items.filter((item) => itemMatchesFieldsFilter(item, filter)) : items;
   }

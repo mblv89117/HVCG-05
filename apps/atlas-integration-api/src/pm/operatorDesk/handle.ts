@@ -179,9 +179,13 @@ import {
 } from './historicalReconstructionHonesty.ts';
 import {
   answerClientOperatingBrief,
+  approvalsFinishedWithoutWorkspace,
   CLIENT_OPERATING_BRIEF_MISSION_KEY,
   clientOperatingBriefClientCode,
+  clientOperatingBriefTopic,
+  collectPendingDecisionLines,
   currentWorkspaceUnavailableAnswer,
+  documentIndexUnavailableAnswer,
   mapsToClientOperatingBriefIntent,
   WORKSPACE_TRUTH_SOURCE_UNAVAILABLE,
 } from './askAtlasClientOperatingBrief.ts';
@@ -307,6 +311,33 @@ function sendHtml(res: ServerResponse, status: number, body: string, origin?: st
   }
   res.writeHead(status, headers);
   res.end(body);
+}
+
+const DEFAULT_BRIEF_DEADLINE_MS = 20_000;
+
+function briefDeadlineMs(): number {
+  const raw = (process.env.ATLAS_OPERATOR_BRIEF_DEADLINE_MS || '').trim();
+  if (raw && /^\d+$/.test(raw)) {
+    const n = Number(raw);
+    if (n >= 200 && n <= 60_000) return n;
+  }
+  return DEFAULT_BRIEF_DEADLINE_MS;
+}
+
+function withDeadline<T>(work: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('operator_brief_deadline')), ms);
+    work.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown, origin?: string | null) {
@@ -443,6 +474,157 @@ async function readEventJson(req: IncomingMessage): Promise<Record<string, unkno
     bad.code = 'malformed_json';
     throw bad;
   }
+}
+
+/**
+ * Client-scoped Documents / Approvals / Projects (and the rest of the concierge
+ * brief) finish before the operator desk walks HVCG_Communications/file-index.
+ * A Graph 403 or a stalled nextLink must still return a finished answer.
+ * Approval lines come from Approval Center and workspace decisions. This path
+ * never calls applyApprovalAction.
+ */
+async function finishClientOperatingBriefBeforeDesk(opts: {
+  cfg: AppConfig;
+  repo: IntegrationRepository;
+  pm: PmRepository | null;
+  sharepoint?: SharePointPmService | null;
+  res: ServerResponse;
+  origin?: string | null;
+  principal: Awaited<ReturnType<typeof requirePrincipal>>;
+  question: string;
+  explicitClientCode: string;
+}): Promise<boolean> {
+  if (!mapsToClientOperatingBriefIntent(opts.question, opts.explicitClientCode)) return false;
+  const topic = clientOperatingBriefTopic(opts.question);
+  const entitled = entitledClientCodes(opts.principal);
+  const scoped = clientOperatingBriefClientCode(opts.question, {
+    entitledCodes: entitled,
+    explicitClientCode: opts.explicitClientCode,
+  });
+  const deadline = briefDeadlineMs();
+  const wantsApprovals = topic === 'approvals' || topic === 'owner_decisions';
+  const pendingPromise =
+    scoped && wantsApprovals
+      ? withDeadline(
+          loadOwnerApprovalTasks({
+            cfg: opts.cfg,
+            repo: opts.repo,
+            pm: opts.pm,
+            sharepoint: opts.sharepoint,
+            principal: opts.principal,
+          }),
+          deadline,
+        ).catch(() => [] as TaskRecord[])
+      : Promise.resolve([] as TaskRecord[]);
+
+  let commercial: Awaited<ReturnType<typeof readCommercialContextAsync>> | undefined;
+  let workspace: WorkspaceTruthSnapshot | undefined;
+  let workspaceFailed = false;
+  if (scoped && opts.cfg.pmBackend.mode === 'sharepoint') {
+    if (!opts.sharepoint) {
+      workspaceFailed = true;
+    } else {
+      try {
+        const loaded = await withDeadline(
+          loadEntitledClientWorkspaceTruth({
+            service: opts.sharepoint,
+            principal: opts.principal,
+            clientCode: scoped,
+            dataDir: opts.cfg.dataDir,
+          }),
+          deadline,
+        );
+        if (!loaded?.snapshot || loaded.snapshot.clientCode !== scoped) {
+          workspaceFailed = true;
+        } else {
+          commercial = loaded.commercial;
+          workspace = loaded.snapshot;
+        }
+      } catch {
+        workspaceFailed = true;
+      }
+    }
+  } else if (scoped) {
+    commercial = await readCommercialContextAsync({
+      dataDir: opts.cfg.dataDir,
+      principal: opts.principal,
+      clientCode: scoped,
+    });
+  }
+
+  const ownerTasks = await pendingPromise;
+  let approvalItems: Array<{
+    title?: string;
+    clientCode?: string;
+    status?: string;
+    requestedAction?: string;
+  }> = [];
+  if (scoped && wantsApprovals) {
+    try {
+      const approvalModel = buildApprovalCenter({
+        cfg: opts.cfg,
+        principal: opts.principal,
+        dataDir: opts.cfg.dataDir,
+        ownerApprovalTasks: ownerTasks,
+      });
+      approvalItems = approvalModel.items.map((item) => ({
+        title: item.title,
+        clientCode: item.clientCode,
+        status: item.status,
+        requestedAction: item.requestedAction,
+      }));
+    } catch {
+      approvalItems = [];
+    }
+  }
+  const pendingDecisions = scoped
+    ? collectPendingDecisionLines({ clientCode: scoped, approvalItems, workspace })
+    : [];
+
+  let briefAnswer: string;
+  let workspaceTruth: typeof WORKSPACE_TRUTH_SOURCE_UNAVAILABLE | undefined;
+  if (workspaceFailed && scoped) {
+    workspaceTruth = WORKSPACE_TRUTH_SOURCE_UNAVAILABLE;
+    if (topic === 'documents') briefAnswer = documentIndexUnavailableAnswer(scoped);
+    else if (topic === 'approvals') briefAnswer = approvalsFinishedWithoutWorkspace(scoped, pendingDecisions);
+    else briefAnswer = currentWorkspaceUnavailableAnswer(scoped);
+  } else {
+    briefAnswer = answerClientOperatingBrief(opts.question, {
+      entitledCodes: entitled,
+      explicitClientCode: opts.explicitClientCode,
+      commercial,
+      workspace,
+      pendingDecisions,
+    });
+  }
+
+  const askAtlas = buildConversationalAskAtlasAnswer({
+    question: opts.question,
+    previewText: briefAnswer,
+    workflowId: 'client-operating-brief-honesty',
+    workflowName: scoped ? `Operating brief — ${scoped}` : 'Operating brief',
+    clientCode: scoped,
+  });
+  sendJson(
+    opts.res,
+    200,
+    {
+      operatorDesk: { askAtlas },
+      workflowAnswer: briefAnswer,
+      runtime: {
+        agent: ASK_ATLAS_RUNTIME_AGENT,
+        toolsInvoked: ['client_operating_brief_honesty'],
+        policyClass: 'READ_AUTO',
+        missionKey: CLIENT_OPERATING_BRIEF_MISSION_KEY,
+        autoSend: false,
+        pending: false,
+        portfolioFallback: false,
+        ...(workspaceTruth ? { workspaceTruth } : {}),
+      },
+    },
+    opts.origin,
+  );
+  return true;
 }
 
 export async function handleOperatorDesk(opts: {
@@ -1069,6 +1251,27 @@ export async function handleOperatorDesk(opts: {
     return true;
   }
 
+  if (runtimeOnly) {
+    const earlyQuestion = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
+    const earlyClient =
+      (url.searchParams.get('client') || url.searchParams.get('clientCode') || '').trim();
+    if (
+      await finishClientOperatingBriefBeforeDesk({
+        cfg: opts.cfg,
+        repo: opts.repo,
+        pm: opts.pm,
+        sharepoint: opts.sharepoint,
+        res: opts.res,
+        origin: opts.origin,
+        principal,
+        question: earlyQuestion,
+        explicitClientCode: earlyClient,
+      })
+    ) {
+      return true;
+    }
+  }
+
   const model =
     opts.cfg.pmBackend.mode === 'sharepoint' && opts.sharepoint
       ? await loadSharePointDesk({
@@ -1153,101 +1356,6 @@ export async function handleOperatorDesk(opts: {
             toolsInvoked: ['historical_reconstruction_honesty'],
             policyClass: 'READ_AUTO',
             missionKey: HISTORICAL_RECONSTRUCTION_MISSION_KEY,
-            autoSend: false,
-          },
-        },
-        opts.origin,
-      );
-      return true;
-    }
-
-    if (mapsToClientOperatingBriefIntent(question, explicitClientCode)) {
-      const entitled = entitledClientCodes(principal);
-      const scoped = clientOperatingBriefClientCode(question, {
-        entitledCodes: entitled,
-        explicitClientCode,
-      });
-      let commercial: Awaited<ReturnType<typeof readCommercialContextAsync>> | undefined;
-      let workspace: WorkspaceTruthSnapshot | undefined;
-      if (scoped && opts.cfg.pmBackend.mode === 'sharepoint') {
-        let loaded:
-          | Awaited<ReturnType<typeof loadEntitledClientWorkspaceTruth>>
-          | undefined;
-        if (opts.sharepoint) {
-          try {
-            loaded = await loadEntitledClientWorkspaceTruth({
-              service: opts.sharepoint,
-              principal,
-              clientCode: scoped,
-              dataDir: opts.cfg.dataDir,
-            });
-          } catch {
-            loaded = undefined;
-          }
-        }
-        if (!loaded?.snapshot || loaded.snapshot.clientCode !== scoped) {
-          const briefAnswer = currentWorkspaceUnavailableAnswer(scoped);
-          const askAtlas = buildConversationalAskAtlasAnswer({
-            question,
-            previewText: briefAnswer,
-            workflowId: 'client-operating-brief-honesty',
-            workflowName: `Operating brief — ${scoped}`,
-            clientCode: scoped,
-          });
-          sendJson(
-            opts.res,
-            200,
-            {
-              operatorDesk: { askAtlas },
-              workflowAnswer: briefAnswer,
-              runtime: {
-                agent: ASK_ATLAS_RUNTIME_AGENT,
-                toolsInvoked: ['client_operating_brief_honesty'],
-                policyClass: 'READ_AUTO',
-                missionKey: CLIENT_OPERATING_BRIEF_MISSION_KEY,
-                autoSend: false,
-                workspaceTruth: WORKSPACE_TRUTH_SOURCE_UNAVAILABLE,
-                portfolioFallback: false,
-              },
-            },
-            opts.origin,
-          );
-          return true;
-        }
-        commercial = loaded.commercial;
-        workspace = loaded.snapshot;
-      } else if (scoped) {
-        commercial = await readCommercialContextAsync({
-          dataDir: opts.cfg.dataDir,
-          principal,
-          clientCode: scoped,
-        });
-      }
-      const briefAnswer = answerClientOperatingBrief(question, {
-        entitledCodes: entitled,
-        explicitClientCode,
-        commercial,
-        workspace,
-        picture: model.operatingPicture,
-      });
-      const askAtlas = buildConversationalAskAtlasAnswer({
-        question,
-        previewText: briefAnswer,
-        workflowId: 'client-operating-brief-honesty',
-        workflowName: scoped ? `Operating brief — ${scoped}` : 'Operating brief',
-        clientCode: scoped,
-      });
-      sendJson(
-        opts.res,
-        200,
-        {
-          operatorDesk: { askAtlas },
-          workflowAnswer: briefAnswer,
-          runtime: {
-            agent: ASK_ATLAS_RUNTIME_AGENT,
-            toolsInvoked: ['client_operating_brief_honesty'],
-            policyClass: 'READ_AUTO',
-            missionKey: CLIENT_OPERATING_BRIEF_MISSION_KEY,
             autoSend: false,
           },
         },
