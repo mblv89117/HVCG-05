@@ -355,6 +355,35 @@ describe('PM Graph pagination nextLink confinement', () => {
     await assert.rejects(() => transport.listItems(PROJECTS), /pagination link was rejected/);
     assert.equal(fetchCalls, 1);
   });
+
+  it('follows an opaque nextLink without rewriting host case or the skiptoken', async () => {
+    const fetched: string[] = [];
+    const nextLink = `https://GRAPH.microsoft.com/v1.0/sites/${encodeURIComponent(SITE)}/lists/${PROJECTS}/items?$skiptoken=abc%2Bdef%3D%3D`;
+    const transport = createGraphTransport(
+      ALLOWLIST,
+      { getToken: async () => ACCESS_TOKEN },
+      {
+        fetch: async (input) => {
+          fetched.push(String(input));
+          if (fetched.length === 1) {
+            return jsonResponse(200, {
+              value: [{ id: '1', fields: { Title: 'page-one' } }],
+              '@odata.nextLink': nextLink,
+            });
+          }
+          return jsonResponse(200, { value: [{ id: '2', fields: { Title: 'page-two' } }] });
+        },
+      },
+    );
+    const first = await transport.listItems(PROJECTS);
+    assert.equal(first.nextLink, nextLink);
+    const second = await transport.listItems(PROJECTS, { nextLink: first.nextLink });
+    assert.equal(second.items[0]?.id, '2');
+    assert.equal(fetched[1], nextLink);
+    assert.equal(fetched[1]?.includes('GRAPH.microsoft.com'), true);
+    assert.equal(fetched[1]?.includes('abc%2Bdef%3D%3D'), true);
+    assert.equal(fetched.some((url) => url.includes(ACCESS_TOKEN)), false);
+  });
 });
 
 describe('PM Graph metadata surface absence', () => {

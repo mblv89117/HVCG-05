@@ -585,6 +585,9 @@ async function finishClientOperatingBriefBeforeDesk(opts: {
     ? collectPendingDecisionLines({ clientCode: scoped, approvalItems, workspace })
     : [];
 
+  const fileIndexUnavailable =
+    workspace?.documents?.availability === 'SOURCE_UNAVAILABLE' ||
+    workspace?.communications?.status === 'SOURCE_UNAVAILABLE';
   let briefAnswer: string;
   let workspaceTruth: typeof WORKSPACE_TRUTH_SOURCE_UNAVAILABLE | undefined;
   if (workspaceFailed && scoped) {
@@ -606,6 +609,9 @@ async function finishClientOperatingBriefBeforeDesk(opts: {
       }
       briefAnswer = financeAnswerWhenWorkspaceUnavailable(scoped, commercial);
     } else briefAnswer = currentWorkspaceUnavailableAnswer(scoped);
+  } else if (fileIndexUnavailable && scoped && (topic === 'documents' || topic === 'missing_documents')) {
+    workspaceTruth = WORKSPACE_TRUTH_SOURCE_UNAVAILABLE;
+    briefAnswer = documentIndexUnavailableAnswer(scoped);
   } else {
     briefAnswer = answerClientOperatingBrief(opts.question, {
       entitledCodes: entitled,

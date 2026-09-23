@@ -272,7 +272,11 @@ export function createGraphTransport(
       capabilityForPmList(allowlist, listId);
       let url: string;
       if (opts?.nextLink) {
-        url = assertSafeNextLink(opts.nextLink, siteId, listId).toString();
+        // @odata.nextLink is opaque. URL.toString() rewrites host case and an
+        // explicit :443, so the follow-up request is not the URL Graph issued
+        // and the walk can fetch the same page again.
+        assertSafeNextLink(opts.nextLink, siteId, listId);
+        url = opts.nextLink;
       } else {
         const params = new URLSearchParams();
         params.set('$expand', 'fields');

@@ -715,7 +715,8 @@ export interface LeadConversionResult {
 export type WorkspaceCompletenessStatus =
   | 'COMPLETE'
   | 'PARTIAL_SOURCE_DATA_NOT_FOUND'
-  | 'BLOCKED_AMBIGUOUS_IDENTITY';
+  | 'BLOCKED_AMBIGUOUS_IDENTITY'
+  | 'SOURCE_UNAVAILABLE';
 
 export interface WorkspaceCompletenessCell {
   status: WorkspaceCompletenessStatus;
