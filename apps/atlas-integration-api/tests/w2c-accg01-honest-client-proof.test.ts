@@ -288,10 +288,11 @@ describe('W2C ACCG01 honest real-client operator proof', () => {
       workspace: {
         clientCode: 'ACCG01',
         displayName: 'ACCG Inc.',
-        projects: [{ id: 'p-accg-op', name: 'ACCG weekly operating file' }],
+        projects: [{ id: 'p-accg-op', name: 'ACCG Inc. Operating Engagement' }],
       },
     });
-    assert.match(answer, /ACCG weekly operating file/);
+    assert.match(answer, /ACCG Inc\. Operating Engagement/);
+    assert.equal(/ACCG weekly operating file/.test(answer), false);
     assert.equal(/PDG01|HFD01|Prodigy|Hart Family/.test(answer), false);
   });
 

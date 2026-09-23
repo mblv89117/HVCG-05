@@ -578,29 +578,49 @@ export function composeClientTruth(opts: {
     ],
   );
 
-  const projectNames = (workspace?.projects || []).map((p) => p.name);
+  // W2G: current/active projects are hygiene-kept HVCG_Projects only.
+  // An empty post-hygiene set is MISSING. Recovered HVS filenames are never that list.
+  const workspaceLoaded = Boolean(workspace);
+  const projectNames = (workspace?.projects || []).map((p) => p.name).filter((name) => name.trim().length > 0);
+  const staleRecoveredTitles = recoveredProjects
+    .map((p) => p.title.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  const staleRecoveredClause =
+    workspaceLoaded && staleRecoveredTitles.length
+      ? ` Historical/STALE_OR_UNCERTAIN recovered HVS filenames are not current or active projects: ${staleRecoveredTitles.join('; ')}.`
+      : '';
+  const projectsSummary =
+    (projectCount > 0
+      ? `${projectCount} hygiene-kept HVCG_Projects row(s) (REAL_CURRENT_OPERATING)` +
+        (taskCount ? `; ${taskCount} open HVCG_Tasks.` : '.') +
+        ` Current/active: ${projectNames.slice(0, 6).join('; ')}.`
+      : workspaceLoaded
+        ? 'No hygiene-kept HVCG_Projects rows after operating hygiene. projects=MISSING. Atlas does not invent active project names.'
+        : 'No hygiene-kept HVCG_Projects rows. projects=MISSING. Atlas will not substitute recovered HVS filenames for the active project list.') +
+    staleRecoveredClause;
   const projectsDomain = domain(
     'projects',
-    projectCount > 0 ? 'PARTIAL' : recoveredProjects.length ? 'INDEXED' : 'MISSING',
-    projectCount > 0 ? 'CONFIRMED' : recoveredProjects.length ? 'LIKELY' : 'MISSING',
-    projectCount > 0
-      ? `${projectCount} entitled HVCG_Projects row(s)` +
-        (taskCount ? `; ${taskCount} open HVCG_Tasks.` : '.')
-      : recoveredProjects.length
-        ? `No entitled HVCG_Projects rows. Recovered HVS project filenames are indexed (${recoveredProjects
-            .map((p) => p.title)
-            .slice(0, 3)
-            .join('; ')}). Live vs stale is STALE_OR_UNCERTAIN until Hub-visible.`
-        : 'No entitled projects and no recovered project filenames.',
+    projectCount > 0 ? 'PARTIAL' : 'MISSING',
+    projectCount > 0 ? 'CONFIRMED' : 'MISSING',
+    projectsSummary,
     [
       ...(workspace?.projects || []).slice(0, 8).map((p) => ({
         source: 'HVCG_Projects',
         detail: `${p.id}:${p.name}`,
       })),
-      ...recoveredProjects.slice(0, 4).map((p) => ({
-        source: 'hvs-recovered-projects',
-        detail: p.title,
-      })),
+      {
+        source: 'HVCG_Projects',
+        detail: workspaceLoaded
+          ? `hygiene-kept REAL_CURRENT_OPERATING count=${projectCount}`
+          : 'no successful workspace load; projects=MISSING',
+      },
+      ...(workspaceLoaded
+        ? recoveredProjects.slice(0, 4).map((p) => ({
+            source: 'hvs-recovered-projects',
+            detail: `STALE_OR_UNCERTAIN:${p.title}`,
+          }))
+        : []),
     ],
   );
 
@@ -818,10 +838,11 @@ export function composeClientTruth(opts: {
     },
     workingOn: {
       question: 'What are we actively working on?',
-      text:
-        projectNames.length
-          ? `Entitled projects: ${projectNames.slice(0, 6).join('; ')}.`
-          : projectsDomain.summary,
+      text: projectNames.length
+        ? `Current/active projects (hygiene-kept HVCG_Projects only): ${projectNames.slice(0, 6).join('; ')}.`
+        : workspaceLoaded
+          ? 'No current/active projects after operating hygiene. projects=MISSING. Atlas does not invent project names.'
+          : 'No current/active HVCG_Projects rows are loaded. projects=MISSING. Atlas will not substitute recovered HVS filenames for the active project list.',
       classification: projectsDomain.classification,
       provenance: projectsDomain.provenance,
     },
