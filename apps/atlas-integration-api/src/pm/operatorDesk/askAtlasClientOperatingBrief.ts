@@ -360,9 +360,10 @@ function renderTopic(
       return truth.answers.workingOn.text;
     case 'projects':
       return [
-        truth.projects.summary,
         truth.answers.workingOn.text,
         `projects=${truth.projects.completeness}.`,
+        'Current/active projects are hygiene-kept HVCG_Projects (REAL_CURRENT_OPERATING) only.',
+        truth.projects.summary,
         'Atlas does not invent projects that are absent from the entitled workspace.',
         authorityFooter(truth),
       ].join(' ');
