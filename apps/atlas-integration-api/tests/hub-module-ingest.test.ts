@@ -251,7 +251,7 @@ describe('Wave 3 module ingest', () => {
     assert.equal(both.ok, true);
   });
 
-  it('accepts GCC observation for SYN01 with mapped org', () => {
+  it('rejects GCC fixture SYN01 even when the fixture org is mapped', () => {
     const r = handleModuleEnvelope({
       clientCode: 'SYN01',
       source: 'growth_command_center',
@@ -269,9 +269,19 @@ describe('Wave 3 module ingest', () => {
       idempotencyKey: 'gcc|sig-1',
       actor: 'gcc-worker',
       authorityClass: 'OBSERVE',
-      payload: { organizationId: 'org-syn01', autoProvision: false, financialImpact: 0 },
+      payload: {
+        organizationId: 'org-syn01',
+        autoProvision: false,
+        financialImpact: 0,
+        signalType: 'engagement_health',
+        summary: 'fixture observation',
+      },
     });
-    assert.equal(r.ok, true);
+    assert.equal(r.ok, false);
+    if (!r.ok) {
+      assert.equal(r.status, 403);
+      assert.equal(r.code, 'GCC_UNMAPPED');
+    }
   });
 
   it('idempotent store upsert', () => {
