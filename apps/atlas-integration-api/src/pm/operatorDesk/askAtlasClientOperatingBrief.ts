@@ -376,10 +376,9 @@ function renderTopic(
     case 'documents':
       return [
         truth.answers.documentsExist.text,
-        `Missing: ${truth.answers.documentsMissing.text}`,
         `documents=${truth.documents.completeness}/${truth.documents.classification}.`,
         'Current document index is entitled HVCG_Communications/file-index rows for this ClientCode only.',
-        'Recovered HVS filenames are not the current document index.',
+        'Recovered HVS filenames are not the current document index and are not a current missing inventory.',
         'A SharePoint library URL pointer is not a complete file inventory.',
         'Filenames are not invented beyond the entitled index.',
         authorityFooter(truth),

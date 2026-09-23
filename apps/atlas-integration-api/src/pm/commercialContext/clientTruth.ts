@@ -996,11 +996,19 @@ export function composeClientTruth(opts: {
     },
     documentsMissing: {
       question: 'What documents are missing?',
-      text: missingDocs.length
-        ? missingDocs.map((d) => `${d.title} (${d.classification})`).join('; ')
-        : 'No specific missing-document inventory beyond honest-empty folders. Atlas does not invent a closing checklist.',
-      classification: missingDocs.length ? 'LIKELY' : 'MISSING',
-      provenance: missingDocs.slice(0, 6).map((d) => ({ source: 'hvs-actionable-missing-docs', detail: d.evidence })),
+      // Recovered HVS folder gaps (hvsActionableClientKnowledge.missingDocuments)
+      // are not an entitled file-index inventory. Do not emit them as current LIKELY missing.
+      text: 'No entitled missing-document inventory is on this composition. Recovered HVS filenames are not a current missing list. Atlas does not invent a closing checklist.',
+      classification: 'MISSING',
+      provenance: [
+        {
+          source: 'HVCG_Communications/file-index',
+          detail:
+            missingDocs.length > 0
+              ? 'recovered HVS folder gaps are not a current missing inventory'
+              : 'no entitled missing-document inventory on this composition',
+        },
+      ],
     },
     commitments: {
       question: 'What commitments exist?',

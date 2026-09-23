@@ -26,10 +26,40 @@ const FOREIGN_FILE = 'Prodigy private index.pdf';
 const FOREIGN_RECOVERED = 'Prodigy_secret_recovered_index.pdf';
 const HISTORICAL_MARKER = 'Historical/STALE_OR_UNCERTAIN';
 const LIBRARY_TITLE = 'Client SharePoint library';
+const LIKELY_MISSING_INVENTORY = /No inventoried files under|\(LIKELY\)|\(PROPOSED\)/;
 
 function activePortion(text: string): string {
   const marker = text.indexOf(HISTORICAL_MARKER);
   return marker === -1 ? text : text.slice(0, marker);
+}
+
+/**
+ * Drop the single historical STALE sentence. Filenames may contain periods
+ * (`.xlsx`), so the sentence ends at `.` followed by whitespace or end of text.
+ */
+function withoutHistoricalSentence(text: string): string {
+  const start = text.indexOf(HISTORICAL_MARKER);
+  if (start === -1) return text;
+  let end = text.length;
+  for (let i = start; i < text.length; i++) {
+    if (text[i] !== '.') continue;
+    const next = text[i + 1];
+    if (next === undefined || /\s/.test(next)) {
+      end = i + 1;
+      break;
+    }
+  }
+  return `${text.slice(0, start)} ${text.slice(end)}`;
+}
+
+/** Full answer: recovered names only inside the historical STALE sentence, never as LIKELY missing inventory. */
+function assertNoCurrentRecoveredInventory(answer: string, names: readonly string[]) {
+  assert.equal(LIKELY_MISSING_INVENTORY.test(answer), false);
+  assert.equal(/Missing:\s/i.test(answer), false);
+  const outside = withoutHistoricalSentence(answer);
+  for (const name of names) {
+    assert.equal(outside.includes(name), false, `recovered name outside STALE clause: ${name}`);
+  }
 }
 
 function assertAuthority(truth: { capitalSubmit: boolean; canExecute: boolean; globalAutoRespond: boolean }) {
@@ -144,6 +174,11 @@ describe('W2I ACCG01 documents-index honesty', () => {
       truth.documents.provenance.some((row) => row.detail.startsWith('STALE_OR_UNCERTAIN:')),
       true,
     );
+    assert.equal(truth.answers.documentsMissing.classification, 'MISSING');
+    assert.equal(LIKELY_MISSING_INVENTORY.test(truth.answers.documentsMissing.text), false);
+    assert.equal(truth.answers.documentsMissing.text.includes(INTAKE), false);
+    assert.equal(truth.answers.documentsMissing.text.includes(ARCHIVE), false);
+    assert.equal(truth.answers.documentsMissing.text.includes(SCOPE), false);
     assert.equal(truth.invented, false);
     assertAuthority(truth);
 
@@ -153,8 +188,11 @@ describe('W2I ACCG01 documents-index honesty', () => {
     });
     assert.match(answer, /documents=MISSING\/MISSING/);
     assert.match(answer, /not the current document index/);
-    assert.equal(activePortion(answer).includes(INTAKE), false);
-    assert.equal(activePortion(answer).includes(SCOPE), false);
+    assertNoCurrentRecoveredInventory(answer, [INTAKE, ARCHIVE, SCOPE, '02_Financial Docs', '99_Internal']);
+    assert.match(answer, new RegExp(HISTORICAL_MARKER));
+    assert.match(answer, /01_Intake Docs/);
+    assert.equal(answer.includes(ARCHIVE), false);
+    assert.equal(answer.includes(SCOPE), false);
     assert.equal(/indexed from recovered HVS inventory/i.test(answer), false);
     assert.match(answer, /canExecute=false/);
     assert.match(answer, /capitalSubmit=false/);
@@ -251,17 +289,17 @@ describe('W2I ACCG01 documents-index honesty', () => {
     assert.equal(JSON.stringify(truth.documents).includes('Prodigy'), false);
     assertAuthority(truth);
 
+    assert.equal(truth.answers.documentsMissing.classification, 'MISSING');
+    assert.equal(truth.answers.documentsMissing.text.includes(INTAKE), false);
+    assert.equal(LIKELY_MISSING_INVENTORY.test(truth.answers.documentsMissing.text), false);
+
     const answer = answerClientOperatingBrief('What documents exist for ACCG?', {
       entitledCodes: ['ACCG01', 'PDG01'],
       workspace,
     });
-    const currentIndex = answer.split('Missing:')[0] || answer;
     assert.match(answer, /documents=INDEXED\/CONFIRMED/);
-    assert.match(currentIndex, /ACCG operating memo\.pdf/);
-    assert.equal(currentIndex.includes(FOREIGN_FILE), false);
-    assert.equal(currentIndex.includes(LIBRARY_TITLE), false);
-    assert.equal(currentIndex.includes(INTAKE), false);
-    assert.equal(currentIndex.includes(SCOPE), false);
+    assert.match(answer, /ACCG operating memo\.pdf/);
+    assertNoCurrentRecoveredInventory(answer, [INTAKE, ARCHIVE, SCOPE, FOREIGN_FILE, LIBRARY_TITLE]);
     assert.equal(answer.includes(FOREIGN_FILE), false);
     assert.equal(/PDG01|Prodigy/.test(answer), false);
     assert.match(answer, /canExecute=false/);
@@ -302,12 +340,19 @@ describe('W2I ACCG01 documents-index honesty', () => {
     assert.equal(blob.includes('Prodigy'), false);
     assertAuthority(truth);
 
+    assert.equal(truth.answers.documentsMissing.classification, 'MISSING');
+    assert.equal(truth.answers.documentsMissing.text.includes(SCOPE), false);
+    assert.equal(truth.answers.documentsMissing.text.includes(INTAKE), false);
+    assert.equal(LIKELY_MISSING_INVENTORY.test(truth.answers.documentsMissing.text), false);
+
     const answer = answerClientOperatingBrief('What documents exist for ACCG01?', {
       entitledCodes: ['ACCG01', 'PDG01'],
       workspace,
       picture,
     });
     assert.match(answer, /documents=MISSING\/MISSING/);
+    assertNoCurrentRecoveredInventory(answer, [SCOPE, INTAKE, FOREIGN_RECOVERED, ARCHIVE]);
+    assert.match(answer, /ACCG INC SCOPE OF WORK\.xlsx/);
     assert.equal(answer.includes(FOREIGN_RECOVERED), false);
     assert.equal(/PDG01|Prodigy/.test(answer), false);
     assert.match(answer, /capitalSubmit=false/);
