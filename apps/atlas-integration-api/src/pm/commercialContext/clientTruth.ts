@@ -134,7 +134,11 @@ export type WorkspaceTruthSnapshot = {
     /** Present only when the source row carried an exact ClientCode. */
     clientCode?: string;
   }>;
-  documents?: { queried: boolean; items: Array<{ id: string; title: string; source?: string }>; reason?: string };
+  documents?: {
+    queried: boolean;
+    items: Array<{ id: string; title: string; source?: string; kind?: string; clientCode?: string }>;
+    reason?: string;
+  };
   communications?: { queried: boolean; items: Array<Record<string, unknown>>; reason?: string };
   meetings?: { queried: boolean; items: Array<Record<string, unknown>>; reason?: string };
   engagements?: { queried: boolean; items: Array<Record<string, unknown>>; reason?: string };
@@ -341,6 +345,39 @@ function historicalCapitalLabel(raw: string): string {
   return redactFinancialDollars(raw.replace(/\s+/g, ' ').trim());
 }
 
+const FILE_INDEX_SOURCE = 'HVCG_Communications/file-index';
+const LIBRARY_POINTER_SOURCE = 'HVCG_Clients.SharePointLibraryUrl';
+
+function isSharePointLibraryPointer(item: { id: string; title: string; source?: string; kind?: string }): boolean {
+  if (item.source === LIBRARY_POINTER_SOURCE) return true;
+  return (item.kind || '').toLowerCase() === 'library';
+}
+
+/**
+ * Current document index = entitled HVCG_Communications/file-index rows for this
+ * ClientCode. A library URL pointer is not a file inventory. Rows stamped with
+ * another ClientCode are refused.
+ */
+function entitledFileIndexTitles(
+  documents: WorkspaceTruthSnapshot['documents'] | undefined,
+  clientCode: string,
+): { titles: string[]; libraryPointer: boolean } {
+  const items = documents?.items || [];
+  const libraryPointer = items.some(isSharePointLibraryPointer);
+  if (!documents?.queried) return { titles: [], libraryPointer };
+  const titles: string[] = [];
+  for (const item of items) {
+    if (isSharePointLibraryPointer(item)) continue;
+    if (item.source !== FILE_INDEX_SOURCE) continue;
+    const rowCode = (item.clientCode || '').trim().toUpperCase();
+    if (rowCode && rowCode !== clientCode) continue;
+    const title = item.title.replace(/\s+/g, ' ').trim();
+    if (!title) continue;
+    titles.push(title);
+  }
+  return { titles, libraryPointer };
+}
+
 function queueFromTasks(
   tasks: NonNullable<WorkspaceTruthSnapshot['tasks']>,
   now?: string,
@@ -526,7 +563,8 @@ export function composeClientTruth(opts: {
 
   const contactCount = sectionCount(workspace?.contacts);
   const engagementCount = sectionCount(workspace?.engagements);
-  const documentCount = sectionCount(workspace?.documents);
+  const fileIndex = entitledFileIndexTitles(workspace?.documents, clientCode);
+  const documentCount = fileIndex.titles.length;
   const commsCount = sectionCount(workspace?.communications);
   const projectCount = workspace?.projects?.length ?? 0;
   const taskCount = workspace?.tasks?.length ?? 0;
@@ -632,20 +670,64 @@ export function composeClientTruth(opts: {
     ],
   );
 
+  // W2I: current document index is entitled HVCG_Communications/file-index rows
+  // for this ClientCode only. An empty index is MISSING even when recovered HVS
+  // filenames exist. Those names, if shown, stay Historical/STALE_OR_UNCERTAIN.
+  // A SharePoint library URL pointer is not a complete file inventory.
+  const documentTitles = fileIndex.titles;
+  const staleRecoveredDocNames =
+    workspaceLoaded && documentCount === 0
+      ? [
+          ...new Set(
+            recoveredDocs
+              .map((row) => row.name.replace(/\s+/g, ' ').trim())
+              .filter(Boolean),
+          ),
+        ].slice(0, 4)
+      : [];
+  const staleDocsClause = staleRecoveredDocNames.length
+    ? ` Historical/STALE_OR_UNCERTAIN recovered HVS filenames are not the current document index: ${staleRecoveredDocNames.join('; ')}.`
+    : '';
+  const libraryClause =
+    fileIndex.libraryPointer && documentCount === 0
+      ? ' A SharePoint library URL pointer is not a complete file inventory.'
+      : '';
+  const documentsSummary =
+    (documentCount > 0
+      ? `${documentCount} entitled HVCG_Communications/file-index row(s). Current index: ${documentTitles.slice(0, 8).join('; ')}. Binaries remain in M365.`
+      : workspaceLoaded
+        ? 'No entitled HVCG_Communications/file-index rows. documents=MISSING. Atlas does not invent filenames.'
+        : 'No entitled HVCG_Communications/file-index rows. documents=MISSING. Atlas will not substitute recovered HVS filenames for the current document index.') +
+    libraryClause +
+    staleDocsClause;
   const documentsDomain = domain(
     'documents',
-    documentCount > 0 || recoveredDocs.length > 0 ? 'INDEXED' : workspace?.documents && !workspace.documents.queried ? 'MISSING' : 'MISSING',
-    documentCount > 0 ? 'CONFIRMED' : recoveredDocs.length ? 'CONFIRMED' : 'MISSING',
-    documentCount > 0
-      ? `${documentCount} entitled document index row(s). Binaries remain in M365.`
-      : recoveredDocs.length
-        ? `Document filenames are indexed from recovered HVS inventory (${recoveredDocs.length} recovered rows). Not a certified completeness scan.`
-        : 'No entitled document index rows on this composition.',
+    documentCount > 0 ? 'INDEXED' : 'MISSING',
+    documentCount > 0 ? 'CONFIRMED' : 'MISSING',
+    documentsSummary,
     [
+      ...documentTitles.slice(0, 8).map((title) => ({
+        source: FILE_INDEX_SOURCE,
+        detail: title,
+      })),
       {
-        source: documentCount > 0 ? 'HVCG_Communications/file-index' : 'hvs-recovered-documents',
-        detail: workspace?.documents?.reason || `recovered=${recoveredDocs.length}; hub=${documentCount}`,
+        source: FILE_INDEX_SOURCE,
+        detail: workspaceLoaded
+          ? `entitled file-index count=${documentCount}; documents=${documentCount > 0 ? 'INDEXED' : 'MISSING'}`
+          : 'no successful workspace load; documents=MISSING',
       },
+      ...(fileIndex.libraryPointer
+        ? [
+            {
+              source: LIBRARY_POINTER_SOURCE,
+              detail: 'library URL pointer is not a file inventory',
+            },
+          ]
+        : []),
+      ...staleRecoveredDocNames.map((name) => ({
+        source: 'hvs-recovered-documents',
+        detail: `STALE_OR_UNCERTAIN:${name}`,
+      })),
     ],
   );
 
@@ -914,11 +996,19 @@ export function composeClientTruth(opts: {
     },
     documentsMissing: {
       question: 'What documents are missing?',
-      text: missingDocs.length
-        ? missingDocs.map((d) => `${d.title} (${d.classification})`).join('; ')
-        : 'No specific missing-document inventory beyond honest-empty folders. Atlas does not invent a closing checklist.',
-      classification: missingDocs.length ? 'LIKELY' : 'MISSING',
-      provenance: missingDocs.slice(0, 6).map((d) => ({ source: 'hvs-actionable-missing-docs', detail: d.evidence })),
+      // Recovered HVS folder gaps (hvsActionableClientKnowledge.missingDocuments)
+      // are not an entitled file-index inventory. Do not emit them as current LIKELY missing.
+      text: 'No entitled missing-document inventory is on this composition. Recovered HVS filenames are not a current missing list. Atlas does not invent a closing checklist.',
+      classification: 'MISSING',
+      provenance: [
+        {
+          source: 'HVCG_Communications/file-index',
+          detail:
+            missingDocs.length > 0
+              ? 'recovered HVS folder gaps are not a current missing inventory'
+              : 'no entitled missing-document inventory on this composition',
+        },
+      ],
     },
     commitments: {
       question: 'What commitments exist?',
