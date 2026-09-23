@@ -172,6 +172,7 @@ export function buildLiveClientPilotBrief(
         !/NOT_CERTIFIED/i.test(line) &&
         !/no entitled projects and no recovered/i.test(line) &&
         !/projects=MISSING/i.test(line) &&
+        !/documents=MISSING/i.test(line) &&
         !/no entitled document index rows/i.test(line) &&
         !/no entitled engagement rows and no recovered/i.test(line),
     );
