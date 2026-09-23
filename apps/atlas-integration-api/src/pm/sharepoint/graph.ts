@@ -10,8 +10,10 @@
  * Does not follow nextLink off graph.microsoft.com or onto another list/site.
  */
 
-import { pmInfrastructureError, PmHttpError } from './errors.ts';
+import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
+import { IndexedClientCodeScopeRejectedError, pmInfrastructureError, PmHttpError } from './errors.ts';
 import { formatGraphWriteFailure } from './indexWrite.ts';
+import { fieldsEq } from './odata.ts';
 import type { SharePointPmSettings } from './settings.ts';
 import type { PmGraphTokenProvider } from './token.ts';
 
@@ -29,7 +31,7 @@ export interface GraphListPage {
 export interface PmGraphTransport {
   listItems(
     listId: string,
-    opts?: { filter?: string; top?: number; nextLink?: string },
+    opts?: { filter?: string; top?: number; nextLink?: string; indexedClientCode?: string },
   ): Promise<GraphListPage>;
   getItem(listId: string, itemId: string): Promise<GraphListItem | null>;
   createItem(listId: string, fields: Record<string, unknown>): Promise<GraphListItem>;
@@ -281,11 +283,24 @@ export function createGraphTransport(
         const params = new URLSearchParams();
         params.set('$expand', 'fields');
         params.set('$top', String(opts?.top && opts.top > 0 ? Math.min(opts.top, 100) : DEFAULT_TOP));
-        // Never send $filter to Graph. Lists.SelectedOperations.Selected treats
-        // fields/ filters as 403, which Elite surfaces as a token rejection.
+        // Caller-supplied opts.filter is never sent. Lists.SelectedOperations.Selected
+        // treats arbitrary fields/ filters as 403, which Elite surfaces as a token rejection.
+        // indexedClientCode is the one exception: a canonical ClientCode equality on the
+        // indexed HVCG_Meetings column. A 400/401/403 on that request is a scope rejection,
+        // not a workspace token failure.
+        if (opts?.indexedClientCode !== undefined) {
+          if (!isCanonicalClientCode(opts.indexedClientCode)) {
+            throw new IndexedClientCodeScopeRejectedError();
+          }
+          params.set('$filter', fieldsEq('ClientCode', opts.indexedClientCode));
+        }
         url = itemsCollectionUrl(listId, `?${params.toString()}`);
       }
+      const scopedRequest = !opts?.nextLink && opts?.indexedClientCode !== undefined;
       const { status, json } = await graphFetch(url, { method: 'GET' });
+      if (scopedRequest && (status === 400 || status === 401 || status === 403)) {
+        throw new IndexedClientCodeScopeRejectedError();
+      }
       if (status !== 200) mapStatus(status, json);
       const body = json as { value?: unknown[]; '@odata.nextLink'?: unknown };
       const values = Array.isArray(body.value) ? body.value : [];

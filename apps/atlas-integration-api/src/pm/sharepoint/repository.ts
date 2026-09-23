@@ -17,7 +17,14 @@ import {
   isInternalStaff,
   type ProjectClassification,
 } from './authz.ts';
-import { ListWalkTruncatedError, PmHttpError, pmInfrastructureError, pmNotImplemented } from './errors.ts';
+import {
+  IndexedClientCodeScopeRejectedError,
+  ListWalkTruncatedError,
+  PmHttpError,
+  ScopedListWalkTruncatedError,
+  pmInfrastructureError,
+  pmNotImplemented,
+} from './errors.ts';
 import type { GraphListItem, PmGraphTransport } from './graph.ts';
 import { isSharePointItemId, normalizeEmail } from './ids.ts';
 import {
@@ -323,6 +330,10 @@ export type WorkspaceCollectionResult = {
   reason?: string;
 };
 
+/** Full-list and client-scoped walks share this cap. Do not raise it here. */
+export const LIST_WALK_PAGE_CAP = 80;
+export const LIST_WALK_TOP = 100;
+
 /**
  * Comparison key for a Graph nextLink. Host case and default port only.
  * Query bytes stay intact so two skiptokens are not collapsed.
@@ -338,6 +349,13 @@ function canonicalNextLinkKey(raw: string): string {
   } catch {
     return raw;
   }
+}
+
+function clientCodeScopeHonored(items: GraphListItem[], clientCode: string): boolean {
+  for (const item of items) {
+    if (asString(item.fields.ClientCode) !== clientCode) return false;
+  }
+  return true;
 }
 
 function asString(v: unknown): string | undefined {
@@ -431,32 +449,50 @@ export class SharePointPmService {
   }
 
   /**
-   * Full list walk. A repeated nextLink, a page that does not advance, or the
-   * page cap throws. The cache stores only a finished walk.
-   * maxPages stays 80 and $top stays 100 — a huge list stays fail-closed.
+   * Full list walk, or one indexed ClientCode walk when clientCode is set.
+   * A repeated nextLink, a page that does not advance, or the page cap throws.
+   * The cache stores only a finished unscoped walk.
+   * Page cap stays 80 and $top stays 100 — a huge list stays fail-closed.
+   * A scoped page that contains another ClientCode was not filtered by Graph.
    */
-  private async walkAllPages(listId: string, listKey: string): Promise<GraphListItem[]> {
+  private async walkAllPages(listId: string, listKey: string, clientCode?: string): Promise<GraphListItem[]> {
+    const scoped = clientCode !== undefined;
+    if (scoped && !isCanonicalClientCode(clientCode)) {
+      throw new IndexedClientCodeScopeRejectedError();
+    }
     const pages: GraphListItem[] = [];
     let nextLink: string | undefined;
     const seenRequestKeys = new Set<string>();
-    const maxPages = 80;
     let pagesFetched = 0;
+    let itemsFetched = 0;
     let previousIds = '';
     const truncated = (reason: 'repeated_next_link' | 'page_cap'): never => {
+      if (scoped && reason === 'page_cap') {
+        throw new ScopedListWalkTruncatedError({ reason, listKey, pagesFetched, itemsFetched });
+      }
       throw new ListWalkTruncatedError({ reason, listKey, pagesFetched });
     };
-    for (let pageNo = 0; pageNo < maxPages; pageNo += 1) {
+    for (let pageNo = 0; pageNo < LIST_WALK_PAGE_CAP; pageNo += 1) {
       const requestKey = nextLink ? canonicalNextLinkKey(nextLink) : `first:${listId}`;
       if (seenRequestKeys.has(requestKey)) truncated('repeated_next_link');
       seenRequestKeys.add(requestKey);
-      const page = await this.graph.listItems(listId, { nextLink, top: 100 });
+      const page = await this.graph.listItems(listId, {
+        nextLink,
+        top: LIST_WALK_TOP,
+        ...(scoped && !nextLink ? { indexedClientCode: clientCode } : {}),
+      });
       pagesFetched += 1;
+      if (scoped && clientCode && !clientCodeScopeHonored(page.items, clientCode)) {
+        if (pagesFetched === 1) throw new IndexedClientCodeScopeRejectedError();
+        throw new ListWalkTruncatedError({ reason: 'scope_not_honored', listKey, pagesFetched });
+      }
       const ids = page.items
         .map((item) => item.id)
         .sort()
         .join('\n');
       if (ids.length > 0 && ids === previousIds) truncated('repeated_next_link');
       previousIds = ids;
+      itemsFetched += page.items.length;
       pages.push(...page.items);
       if (!page.nextLink) return pages;
       const returnedKey = canonicalNextLinkKey(page.nextLink);
@@ -470,6 +506,23 @@ export class SharePointPmService {
     const listKey = this.listKeyFor(listId);
     const items = (await this.listCache.getOrLoad(listId, () => this.walkAllPages(listId, listKey))) as GraphListItem[];
     return filter ? items.filter((item) => itemMatchesFieldsFilter(item, filter)) : items;
+  }
+
+  /**
+   * Entitled HVCG_Meetings read for one canonical ClientCode.
+   * The result is not written to the whole-list cache.
+   * If Graph rejects or ignores the indexed equality, fall back to the
+   * unscoped walk once. That fallback still fail-closes at the page cap.
+   */
+  private async readMeetingsForClient(listId: string, clientCode: string): Promise<GraphListItem[]> {
+    try {
+      return await this.walkAllPages(listId, 'HVCG_Meetings', clientCode);
+    } catch (err) {
+      if (err instanceof IndexedClientCodeScopeRejectedError) {
+        return await this.listAll(listId);
+      }
+      throw err;
+    }
   }
 
   private classifyItem(fields: Record<string, unknown>): ProjectClassification {
@@ -621,11 +674,15 @@ export class SharePointPmService {
   private unavailableCollection(listName: string, err: unknown): WorkspaceCollectionResult {
     const safeName = /^HVCG_[A-Za-z0-9_]{1,40}$/.test(listName) ? listName : 'configured_list';
     if (err instanceof ListWalkTruncatedError) {
+      const measured =
+        err instanceof ScopedListWalkTruncatedError && err.reason === 'page_cap'
+          ? ` OWNER_DECISION_REQUIRED pageCap=${LIST_WALK_PAGE_CAP} top=${LIST_WALK_TOP} itemsFetched=${err.itemsFetched}.`
+          : '';
       return {
         status: 'SOURCE_UNAVAILABLE',
         queried: false,
         items: [],
-        reason: `${safeName} list walk did not complete. reason=${err.reason}; pagesFetched=${err.pagesFetched}. Section is SOURCE_UNAVAILABLE.`,
+        reason: `${safeName} list walk did not complete. reason=${err.reason}; pagesFetched=${err.pagesFetched}. Section is SOURCE_UNAVAILABLE.${measured}`,
       };
     }
     return {
@@ -759,7 +816,11 @@ export class SharePointPmService {
     ): Promise<WorkspaceCollectionResult> => {
       if (!listId) return this.ungranted(listName);
       try {
-        const items = this.mapWorkspaceItems(await this.listAll(listId), clientCode, listName);
+        const raw =
+          listName === 'HVCG_Meetings'
+            ? await this.readMeetingsForClient(listId, clientCode)
+            : await this.listAll(listId);
+        const items = this.mapWorkspaceItems(raw, clientCode, listName);
         return { status: 'COMPLETE', queried: true, items };
       } catch (err) {
         return this.unavailableCollection(listName, err);
@@ -824,6 +885,9 @@ export class SharePointPmService {
         };
       }
     };
+    // Search shares one unscoped meetings walk across entitled codes.
+    // A per-code scope here would repeat the page cap once per client if Graph
+    // rejects the indexed equality. The single-client workspace path is scoped.
     const [communications, meetings, engagements, deliverables, decisions, risks, contacts] = await Promise.all([
       load(this.settings.communicationsListId, 'HVCG_Communications'),
       load(this.settings.meetingsListId, 'HVCG_Meetings'),
