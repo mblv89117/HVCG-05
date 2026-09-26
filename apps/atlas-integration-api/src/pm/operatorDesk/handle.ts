@@ -185,6 +185,7 @@ import {
   clientOperatingBriefTopic,
   collectPendingDecisionLines,
   currentWorkspaceUnavailableAnswer,
+  contactsIndexUnavailableAnswer,
   documentIndexUnavailableAnswer,
   meetingsIndexUnavailableAnswer,
   financeAnswerWhenWorkspaceUnavailable,
@@ -596,6 +597,7 @@ async function finishClientOperatingBriefBeforeDesk(opts: {
     workspaceTruth = WORKSPACE_TRUTH_SOURCE_UNAVAILABLE;
     if (topic === 'documents') briefAnswer = documentIndexUnavailableAnswer(scoped);
     else if (topic === 'meetings') briefAnswer = meetingsIndexUnavailableAnswer(scoped);
+    else if (topic === 'contacts') briefAnswer = contactsIndexUnavailableAnswer(scoped);
     else if (topic === 'approvals') briefAnswer = approvalsFinishedWithoutWorkspace(scoped, pendingDecisions);
     else if (isFinanceScopedOperatingTopic(topic)) {
       try {

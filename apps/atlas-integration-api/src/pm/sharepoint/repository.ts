@@ -755,7 +755,7 @@ export class SharePointPmService {
     for (const item of items) {
       const code = asString(item.fields.ClientCode);
       if (code !== clientCode) continue;
-      out.push({
+      const row: Record<string, unknown> = {
         id: item.id,
         title: asString(item.fields.Title) || item.id,
         clientCode: code,
@@ -783,7 +783,16 @@ export class SharePointPmService {
         sourceItemId: asString(item.fields.SourceMessageId) || asString(item.fields.SourceItemId),
         channel: asString(item.fields.Channel),
         direction: asString(item.fields.Direction),
-      });
+      };
+      // W2L: HVCG_Contacts already returns Email and JobTitle. Copy them when
+      // present. Blank stays blank. Phone and role flags stay off the payload.
+      if (listName === 'HVCG_Contacts') {
+        const email = asString(item.fields.Email);
+        const jobTitle = asString(item.fields.JobTitle);
+        if (email) row.email = email;
+        if (jobTitle) row.jobTitle = jobTitle;
+      }
+      out.push(row);
     }
     return out;
   }

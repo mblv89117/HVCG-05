@@ -34,6 +34,22 @@ export const WORKSPACE_TRUTH_SOURCE_UNAVAILABLE = 'SOURCE_UNAVAILABLE' as const;
  * Finished meetings answer when the entitled workspace cannot be loaded.
  * Does not invent a page_cap measurement or a meeting list.
  */
+/**
+ * Finished contacts answer when the entitled workspace cannot be loaded.
+ * Does not invent a page_cap measurement or a contact list.
+ */
+export function contactsIndexUnavailableAnswer(clientCode: string): string {
+  const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
+  return [
+    `Atlas cannot read the current ${code} contact list (HVCG_Contacts).`,
+    'contacts=SOURCE_UNAVAILABLE.',
+    'Atlas will not invent contacts, emails, phones, roles, or meeting attendees.',
+    'Partial rows are not the contact list.',
+    'Proposed contactCandidates are not the contact list.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
 export function meetingsIndexUnavailableAnswer(clientCode: string): string {
   const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
   return [
@@ -96,6 +112,7 @@ export type ClientOperatingBriefTopic =
   | 'missing_documents'
   | 'documents'
   | 'meetings'
+  | 'contacts'
   | 'capital'
   | 'owner_decisions'
   | 'approvals'
@@ -181,6 +198,13 @@ const CONCIERGE_PHRASE_MAP: Array<{ topic: ClientOperatingBriefTopic; pattern: R
     // "List ACCG01 meetings") so attention-items empty cannot win when a meetings domain exists.
     pattern:
       /\bwhat meetings exist\b|\bmeetings exist\b|\bmeeting inventory\b|\bmeetings on the operating brief\b|\bwhat meetings do we have\b|\bwhat meetings (?:does|do)\b|\bwhat meetings\b.+\bhave\b|\bmeetings domain\b|\bmeeting picture\b|\bmeetings list\b|\bmeeting list\b|\blist (?:the )?meetings\b|\blist\b.+\bmeetings\b|^meetings$/,
+  },
+  {
+    topic: 'contacts',
+    // Closed list — include live phrasings ("What contacts exist for ACCG01?",
+    // "What contacts exist for client ACCG01?") so attention-items empty cannot win.
+    pattern:
+      /\bwhat contacts exist\b|\bcontacts exist\b|\bcontact inventory\b|\bcontacts on the operating brief\b|\bwhat contacts do we have\b|\bwhat contacts (?:does|do)\b|\bwhat contacts\b.+\bhave\b|\bcontacts domain\b|\bcontact picture\b|\bcontacts list\b|\bcontact list\b|\blist (?:the )?contacts\b|\blist\b.+\bcontacts\b|^contacts$/,
   },
   {
     topic: 'approvals',
@@ -299,13 +323,24 @@ function foreignCodesIn(blob: string, scoped: string): string[] {
 }
 
 function renderBrief(truth: ClientTruthModel): string {
+  const knowsBase = `WHAT ATLAS KNOWS: identity=${truth.identity.completeness}; documents=${truth.documents.completeness}; communications=${truth.communications.completeness}; projects=${truth.projects.completeness}; capital=${truth.capitalContext.completeness}`;
+  const knows =
+    truth.contacts.completeness === 'INDEXED' ? `${knowsBase}; ${truth.contacts.summary}` : `${knowsBase}.`;
+  const unknownBase = `WHAT ATLAS DOES NOT KNOW: financialContext=${truth.financialContext.completeness}; growthContext=${truth.growthContext.completeness}`;
+  const unknownContacts =
+    truth.contacts.completeness === 'INDEXED'
+      ? ''
+      : /contacts=|was not queried/i.test(truth.contacts.summary)
+        ? `; ${truth.contacts.summary}`
+        : `; contacts=${truth.contacts.completeness}. ${truth.contacts.summary}`;
+  const unknown = unknownContacts ? `${unknownBase}${unknownContacts}` : `${unknownBase}.`;
   return [
     `Client ${truth.displayName} (${truth.clientCode}) · posture ${truth.operatingPosture} · writePolicy ${truth.writePolicy}.`,
     `WHAT IS HAPPENING: ${truth.answers.workingOn.text}`,
     `WHY IT MATTERS: ${truth.identity.summary}`,
     `WHAT CHANGED: ${truth.answers.changed.text}`,
-    `WHAT ATLAS KNOWS: identity=${truth.identity.completeness}; documents=${truth.documents.completeness}; communications=${truth.communications.completeness}; projects=${truth.projects.completeness}; capital=${truth.capitalContext.completeness}.`,
-    `WHAT ATLAS DOES NOT KNOW: financialContext=${truth.financialContext.completeness}; growthContext=${truth.growthContext.completeness}; contacts=${truth.contacts.completeness}.`,
+    knows,
+    unknown,
     `WHAT SHOULD HAPPEN NEXT: ${truth.answers.hvcgNext.text}`,
     `PROVENANCE: ${truth.answers.provenance.text}`,
     `APPROVAL REQUIRED: ${truth.answers.ownerApproval.text}`,
@@ -414,6 +449,15 @@ function renderTopic(
         'Current meeting list is the entitled HVCG_Meetings slice for this ClientCode only.',
         'The workspace timeline is not the meeting inventory.',
         'Atlas does not invent meetings, attendees, notes, decisions, or next actions.',
+        authorityFooter(truth),
+      ].join(' ');
+    case 'contacts':
+      return [
+        truth.answers.contactsExist.text,
+        `contacts=${truth.contacts.completeness}/${truth.contacts.classification}.`,
+        'Current contact list is the entitled HVCG_Contacts slice for this ClientCode only.',
+        'Proposed contactCandidates are not the contact list.',
+        'Atlas does not invent contacts, emails, phones, roles, or meeting attendees.',
         authorityFooter(truth),
       ].join(' ');
     case 'capital':

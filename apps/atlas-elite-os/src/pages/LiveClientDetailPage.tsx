@@ -25,6 +25,7 @@ import {
   Text,
 } from '@fluentui/react-components';
 import { ArrowSyncRegular, OpenRegular } from '@fluentui/react-icons';
+import { contactsListHonesty } from './contactsListHonesty';
 import { meetingsListHonesty } from './meetingsListHonesty';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
@@ -342,6 +343,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
     () => meetingsListHonesty(workspace?.meetings, clientId),
     [workspace, clientId],
   );
+  const contactsHonesty = useMemo(
+    () => contactsListHonesty(workspace?.contacts, clientId),
+    [workspace, clientId],
+  );
   const projects = workspace?.projects || [];
   const tasks = workspace?.tasks || [];
   const nextActions = workspace?.nextActions || [];
@@ -592,9 +597,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
           ) : (
             <Caption1 style={{ display: 'block' }}>Last contact not recorded on HVCG_Clients.</Caption1>
           )}
-          <Caption1 style={{ display: 'block', marginTop: 4 }}>
-            Contacts: {sectionHonesty(workspace.contacts)}
-          </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>{contactsHonesty.sentence}</Caption1>
         </RecordRow>
       </AtlasCard>
 
@@ -722,6 +725,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
             {sectionHonesty(workspace.deliverables)} · Communications:{' '}
             {sectionHonesty(workspace.communications)}
           </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>{contactsHonesty.sentence}</Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{meetingsHonesty.sentence}</Caption1>
           {capitalLinked ? (
             <Caption1 style={{ display: 'block' }}>
@@ -933,6 +937,65 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         section={workspace.decisionsRisks}
         emptyTitle="No entitled decisions or risks"
       />
+
+      <AtlasCard
+        title="Contacts"
+        subtitle="HVCG_Contacts on this ClientCode — the Hub payload. Read-only. Not proposed contact candidates."
+        density="compact"
+        headerAction={
+          <StatusChip
+            label={
+              contactsHonesty.kind === 'indexed'
+                ? `${contactsHonesty.count} entitled`
+                : contactsHonesty.kind === 'missing'
+                  ? 'contacts=MISSING'
+                  : contactsHonesty.kind === 'source_unavailable'
+                    ? 'contacts=SOURCE_UNAVAILABLE'
+                    : 'Not queried'
+            }
+            tone={contactsHonesty.kind === 'indexed' ? 'info' : 'neutral'}
+            size="sm"
+          />
+        }
+      >
+        {contactsHonesty.kind === 'indexed' ? (
+          <>
+            {contactsHonesty.slice.map((row) => (
+              <div
+                key={row.id}
+                style={{
+                  display: 'grid',
+                  gap: 2,
+                  padding: '8px 0',
+                  borderBottom: '1px solid color-mix(in srgb, currentColor 10%, transparent)',
+                }}
+              >
+                <Text weight="semibold">{row.title}</Text>
+                <Caption1>{row.email ? `<${row.email}>` : 'email not recorded'}</Caption1>
+                {row.jobTitle ? <Caption1>{row.jobTitle}</Caption1> : null}
+              </div>
+            ))}
+            {contactsHonesty.count > contactsHonesty.slice.length ? (
+              <Caption1 style={{ display: 'block', marginTop: 8 }}>
+                +{contactsHonesty.count - contactsHonesty.slice.length} more
+              </Caption1>
+            ) : null}
+          </>
+        ) : (
+          <EmptyState
+            title={
+              contactsHonesty.kind === 'missing'
+                ? 'No entitled contacts'
+                : contactsHonesty.kind === 'source_unavailable'
+                  ? 'Contacts source unavailable'
+                  : 'Contacts not queried'
+            }
+            description={contactsHonesty.sentence}
+            density="compact"
+            align="start"
+          />
+        )}
+      </AtlasCard>
 
       <AtlasCard
         title="Meetings"
