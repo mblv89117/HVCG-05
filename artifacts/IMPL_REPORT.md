@@ -6,7 +6,8 @@ DRAFT only. No merge, no deploy, no client contact, no money movement, no author
 
 - Base tip: `production/atlas-core` at `8cef27463f84cab3ecca13a01ac41903fdfdb3e4` (W2Q communications list honesty, #248)
 - Caption implementation commit: `50d9432a3ab6a6f6ab3d23ca65779155152a7b9e`
-- This report commit sits on that SHA. The draft pull request description states the full branch head SHA after this file lands.
+- Report commit: `6a290160c78e0a148a417674f1201c4542427b65`
+- The commit that records the report SHA above is the draft pull request head. The pull request description states that full SHA.
 
 ## Files touched
 
