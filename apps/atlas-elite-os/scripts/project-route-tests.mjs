@@ -53,7 +53,9 @@ assert.match(portfolio, /Sync from Microsoft \+ Client 360/);
 
 const live = readFileSync(join(root, 'src/pages/LiveClientDetailPage.tsx'), 'utf8');
 assert.match(live, /Create project/);
-assert.match(live, /No entitled projects or open tasks on this ClientCode/);
+assert.match(live, /No entitled projects on this ClientCode/);
+assert.match(live, /tasksListHonesty/);
+assert.match(live, /\{tasksHonesty\.sentence\}/);
 assert.match(live, /projectDetailPath/);
 assert.match(live, /workspace\.timeline/);
 assert.match(live, /workspace\.engagements\.items/);
