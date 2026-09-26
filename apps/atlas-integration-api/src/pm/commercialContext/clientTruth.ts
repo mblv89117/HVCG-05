@@ -134,6 +134,16 @@ export type WorkspaceTruthSnapshot = {
     /** Present only when the source row carried an exact ClientCode. */
     clientCode?: string;
   }>;
+  /**
+   * Set when the HVCG_Tasks walk did not finish or was not queried.
+   * Absent on a loaded workspace: `tasks` is the finished open slice.
+   * SOURCE_UNAVAILABLE contributes no titles.
+   */
+  tasksIndex?: {
+    queried?: boolean;
+    reason?: string;
+    status?: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND' | 'BLOCKED_AMBIGUOUS_IDENTITY' | 'SOURCE_UNAVAILABLE';
+  };
   documents?: {
     queried: boolean;
     items: Array<{ id: string; title: string; source?: string; kind?: string; clientCode?: string }>;
@@ -194,6 +204,8 @@ export type ClientTruthModel = {
   communications: DomainTruth;
   /** Entitled HVCG_Meetings slice. Not the workspace timeline. */
   meetings: DomainTruth;
+  /** Entitled open HVCG_Tasks slice. Not the blocked queue and not the projects suffix. */
+  tasks: DomainTruth;
   financialContext: DomainTruth;
   growthContext: DomainTruth;
   capitalContext: DomainTruth;
@@ -262,6 +274,7 @@ export function workspaceSnapshotFromPayload(payload: {
   client?: { clientCode: string; displayName?: string; clientStage?: string; engagementType?: string };
   projects?: WorkspaceTruthSnapshot['projects'];
   tasks?: WorkspaceTruthSnapshot['tasks'];
+  tasksIndex?: WorkspaceTruthSnapshot['tasksIndex'];
   documents?: WorkspaceTruthSnapshot['documents'] & { status?: string };
   communications?: WorkspaceTruthSnapshot['communications'];
   meetings?: WorkspaceTruthSnapshot['meetings'];
@@ -281,6 +294,7 @@ export function workspaceSnapshotFromPayload(payload: {
     engagementType: payload.overview?.engagementType || payload.client?.engagementType,
     projects: payload.projects,
     tasks: payload.tasks,
+    tasksIndex: payload.tasksIndex,
     documents: payload.documents
       ? {
           queried: payload.documents.queried,
@@ -577,6 +591,105 @@ function entitledContacts(
     });
   }
   return { supplied: true, unavailable: false, queried: true, rows, reason: contacts.reason };
+}
+
+/** Short entitled open-task slice shown with the full count. Not a second inventory. */
+export const TASKS_LIST_SLICE = 6;
+
+export const TASKS_MISSING_SENTENCE =
+  'No entitled open HVCG_Tasks rows. tasks=MISSING. Atlas does not invent tasks, assignees, due dates, notes, or next actions.';
+
+export function tasksNotQueriedSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  const base = 'HVCG_Tasks was not queried. Atlas does not treat that as an empty task list.';
+  return detail ? `${base} ${detail}` : base;
+}
+
+export function tasksSourceUnavailableSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  return [
+    'Atlas cannot read the entitled HVCG_Tasks slice.',
+    'tasks=SOURCE_UNAVAILABLE.',
+    detail || 'HVCG_Tasks list walk did not complete.',
+    'Partial rows are not the task list.',
+    'Atlas does not invent tasks, assignees, due dates, notes, or next actions.',
+  ].join(' ');
+}
+
+function taskDueLabel(value?: string): string | undefined {
+  const raw = (value || '').trim();
+  if (!raw) return undefined;
+  const match = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match?.[1] || raw.replace(/\s+/g, ' ');
+}
+
+export function taskListLabel(row: { title: string; status?: string; dueDate?: string }): string {
+  const status = (row.status || '').trim();
+  const due = taskDueLabel(row.dueDate);
+  if (status && due) return `${row.title} (${status}, due ${due})`;
+  if (status) return `${row.title} (${status})`;
+  if (due) return `${row.title} (due ${due})`;
+  return row.title;
+}
+
+export function tasksIndexedSentence(
+  rows: Array<{ title: string; status?: string; dueDate?: string }>,
+): string {
+  const labels = rows.slice(0, TASKS_LIST_SLICE).map((row) => taskListLabel(row));
+  const extra = rows.length - labels.length;
+  const more = extra > 0 ? ` +${extra} more.` : '';
+  return `${rows.length} entitled open HVCG_Tasks row(s). tasks=INDEXED. ${labels.join('; ')}.${more}`;
+}
+
+type OpenTaskListRow = { title: string; status?: string; dueDate?: string };
+
+/**
+ * Open REAL_CURRENT_OPERATING HVCG_Tasks already on the snapshot.
+ * A loaded workspace with no tasksIndex is a finished slice.
+ * No workspace is not queried. A failed walk contributes no titles.
+ * Completed, cancelled, foreign-coded, and hygiene-quarantined rows are dropped.
+ * Status and due are copied only when already on the row.
+ */
+function entitledOpenTasks(
+  source: WorkspaceTruthSnapshot | undefined,
+  operating: WorkspaceTruthSnapshot | undefined,
+  clientCode: string,
+): {
+  supplied: boolean;
+  unavailable: boolean;
+  queried: boolean;
+  rows: OpenTaskListRow[];
+  reason?: string;
+} {
+  if (!source || !operating) {
+    return { supplied: false, unavailable: false, queried: false, rows: [] };
+  }
+  const index = source.tasksIndex;
+  if (index?.status === 'SOURCE_UNAVAILABLE') {
+    return { supplied: true, unavailable: true, queried: false, rows: [], reason: index.reason };
+  }
+  if (index && index.queried === false) {
+    return { supplied: true, unavailable: false, queried: false, rows: [], reason: index.reason };
+  }
+  const originalById = new Map((source.tasks || []).map((task) => [task.id, task]));
+  const rows: OpenTaskListRow[] = [];
+  for (const task of operating.tasks || []) {
+    const original = originalById.get(task.id) || task;
+    const code = (original.clientCode || '').trim().toUpperCase();
+    if (code && code !== clientCode) continue;
+    const statusRaw = (original.status || '').trim();
+    const statusKey = statusRaw.toLowerCase();
+    if (statusKey === 'completed' || statusKey === 'cancelled') continue;
+    const title = (original.title || task.title || '').replace(/\s+/g, ' ').trim();
+    if (!title) continue;
+    const due = taskDueLabel(original.dueDate);
+    rows.push({
+      title,
+      ...(statusRaw ? { status: statusRaw } : {}),
+      ...(due ? { dueDate: due } : {}),
+    });
+  }
+  return { supplied: true, unavailable: false, queried: true, rows, reason: index?.reason };
 }
 
 function queueFromTasks(
@@ -1061,6 +1174,64 @@ export function composeClientTruth(opts: {
     ],
   );
 
+  // W2M: current task list is the open hygiene-kept HVCG_Tasks slice only.
+  // A finished empty slice is MISSING. A workspace or task-walk failure is
+  // SOURCE_UNAVAILABLE and contributes no titles. No workspace snapshot is
+  // not an empty list.
+  const taskSlice = entitledOpenTasks(
+    opts.workspace?.clientCode === clientCode ? opts.workspace : undefined,
+    workspace,
+    clientCode,
+  );
+  const openTaskCount = taskSlice.rows.length;
+  const tasksSummary = !taskSlice.supplied
+    ? tasksNotQueriedSentence()
+    : taskSlice.unavailable
+      ? tasksSourceUnavailableSentence(taskSlice.reason)
+      : openTaskCount > 0
+        ? tasksIndexedSentence(taskSlice.rows)
+        : taskSlice.queried
+          ? TASKS_MISSING_SENTENCE
+          : tasksNotQueriedSentence(taskSlice.reason);
+  const tasksDomain = domain(
+    'tasks',
+    !taskSlice.supplied
+      ? 'NOT_CERTIFIED'
+      : taskSlice.unavailable
+        ? 'NOT_CERTIFIED'
+        : openTaskCount > 0
+          ? 'INDEXED'
+          : taskSlice.queried
+            ? 'MISSING'
+            : 'NOT_CERTIFIED',
+    !taskSlice.supplied
+      ? 'NOT_CERTIFIED'
+      : taskSlice.unavailable
+        ? 'NOT_CERTIFIED'
+        : openTaskCount > 0
+          ? 'CONFIRMED'
+          : taskSlice.queried
+            ? 'MISSING'
+            : 'NOT_CERTIFIED',
+    tasksSummary,
+    [
+      ...taskSlice.rows.slice(0, TASKS_LIST_SLICE).map((row) => ({
+        source: 'HVCG_Tasks',
+        detail: taskListLabel(row),
+      })),
+      {
+        source: 'HVCG_Tasks',
+        detail: !taskSlice.supplied
+          ? 'SharePoint workspace tasks were not supplied on this composition.'
+          : taskSlice.unavailable
+            ? `tasks=SOURCE_UNAVAILABLE; partial rows are not the list; ${taskSlice.reason || 'walk did not complete'}`
+            : taskSlice.queried
+              ? `entitled open count=${openTaskCount}; tasks=${openTaskCount > 0 ? 'INDEXED' : 'MISSING'}`
+              : taskSlice.reason || 'Tasks list not queried.',
+      },
+    ],
+  );
+
   const gccQuotes = gccSignals.slice(0, 4).map((s) => gccObservationHonestyLine(s));
   const financialContext = domain(
     'financialContext',
@@ -1321,6 +1492,12 @@ export function composeClientTruth(opts: {
       classification: contactsDomain.classification,
       provenance: contactsDomain.provenance,
     },
+    tasksExist: {
+      question: 'What tasks exist?',
+      text: tasksDomain.summary,
+      classification: tasksDomain.classification,
+      provenance: tasksDomain.provenance,
+    },
     documentsMissing: {
       question: 'What documents are missing?',
       // Recovered HVS folder gaps (hvsActionableClientKnowledge.missingDocuments)
@@ -1456,6 +1633,7 @@ export function composeClientTruth(opts: {
     documents: documentsDomain,
     communications: communicationsDomain,
     meetings: meetingsDomain,
+    tasks: tasksDomain,
     financialContext,
     growthContext,
     capitalContext,

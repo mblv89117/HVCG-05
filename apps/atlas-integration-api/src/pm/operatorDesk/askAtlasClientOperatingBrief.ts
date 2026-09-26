@@ -38,6 +38,21 @@ export const WORKSPACE_TRUTH_SOURCE_UNAVAILABLE = 'SOURCE_UNAVAILABLE' as const;
  * Finished contacts answer when the entitled workspace cannot be loaded.
  * Does not invent a page_cap measurement or a contact list.
  */
+/**
+ * Finished tasks answer when the entitled workspace cannot be loaded.
+ * Does not invent a page_cap measurement or a task list.
+ */
+export function tasksIndexUnavailableAnswer(clientCode: string): string {
+  const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
+  return [
+    `Atlas cannot read the current ${code} task list (HVCG_Tasks).`,
+    'tasks=SOURCE_UNAVAILABLE.',
+    'Atlas will not invent tasks, assignees, due dates, notes, or next actions.',
+    'Partial rows are not the task list.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
 export function contactsIndexUnavailableAnswer(clientCode: string): string {
   const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
   return [
@@ -113,6 +128,7 @@ export type ClientOperatingBriefTopic =
   | 'documents'
   | 'meetings'
   | 'contacts'
+  | 'tasks'
   | 'capital'
   | 'owner_decisions'
   | 'approvals'
@@ -205,6 +221,13 @@ const CONCIERGE_PHRASE_MAP: Array<{ topic: ClientOperatingBriefTopic; pattern: R
     // "What contacts exist for client ACCG01?") so attention-items empty cannot win.
     pattern:
       /\bwhat contacts exist\b|\bcontacts exist\b|\bcontact inventory\b|\bcontacts on the operating brief\b|\bwhat contacts do we have\b|\bwhat contacts (?:does|do)\b|\bwhat contacts\b.+\bhave\b|\bcontacts domain\b|\bcontact picture\b|\bcontacts list\b|\bcontact list\b|\blist (?:the )?contacts\b|\blist\b.+\bcontacts\b|^contacts$/,
+  },
+  {
+    topic: 'tasks',
+    // Closed list — include live phrasings ("What tasks does ACCG01 have?",
+    // "List ACCG01 tasks") so attention-items empty cannot win.
+    pattern:
+      /\bwhat tasks exist\b|\btasks exist\b|\btask inventory\b|\btasks on the operating brief\b|\bwhat tasks do we have\b|\bwhat tasks (?:does|do)\b|\bwhat tasks\b.+\bhave\b|\btasks domain\b|\btask picture\b|\btasks list\b|\btask list\b|\blist (?:the )?tasks\b|\blist\b.+\btasks\b|^tasks$/,
   },
   {
     topic: 'approvals',
@@ -324,8 +347,11 @@ function foreignCodesIn(blob: string, scoped: string): string[] {
 
 function renderBrief(truth: ClientTruthModel): string {
   const knowsBase = `WHAT ATLAS KNOWS: identity=${truth.identity.completeness}; documents=${truth.documents.completeness}; communications=${truth.communications.completeness}; projects=${truth.projects.completeness}; capital=${truth.capitalContext.completeness}`;
-  const knows =
-    truth.contacts.completeness === 'INDEXED' ? `${knowsBase}; ${truth.contacts.summary}` : `${knowsBase}.`;
+  const knowsIndexed = [
+    ...(truth.contacts.completeness === 'INDEXED' ? [truth.contacts.summary] : []),
+    ...(truth.tasks.completeness === 'INDEXED' ? [truth.tasks.summary] : []),
+  ];
+  const knows = knowsIndexed.length ? `${knowsBase}; ${knowsIndexed.join('; ')}` : `${knowsBase}.`;
   const unknownBase = `WHAT ATLAS DOES NOT KNOW: financialContext=${truth.financialContext.completeness}; growthContext=${truth.growthContext.completeness}`;
   const unknownContacts =
     truth.contacts.completeness === 'INDEXED'
@@ -333,7 +359,14 @@ function renderBrief(truth: ClientTruthModel): string {
       : /contacts=|was not queried/i.test(truth.contacts.summary)
         ? `; ${truth.contacts.summary}`
         : `; contacts=${truth.contacts.completeness}. ${truth.contacts.summary}`;
-  const unknown = unknownContacts ? `${unknownBase}${unknownContacts}` : `${unknownBase}.`;
+  const unknownTasks =
+    truth.tasks.completeness === 'INDEXED'
+      ? ''
+      : /tasks=|was not queried/i.test(truth.tasks.summary)
+        ? `; ${truth.tasks.summary}`
+        : `; tasks=${truth.tasks.completeness}. ${truth.tasks.summary}`;
+  const unknownTail = `${unknownContacts}${unknownTasks}`;
+  const unknown = unknownTail ? `${unknownBase}${unknownTail}` : `${unknownBase}.`;
   return [
     `Client ${truth.displayName} (${truth.clientCode}) · posture ${truth.operatingPosture} · writePolicy ${truth.writePolicy}.`,
     `WHAT IS HAPPENING: ${truth.answers.workingOn.text}`,
@@ -458,6 +491,15 @@ function renderTopic(
         'Current contact list is the entitled HVCG_Contacts slice for this ClientCode only.',
         'Proposed contactCandidates are not the contact list.',
         'Atlas does not invent contacts, emails, phones, roles, or meeting attendees.',
+        authorityFooter(truth),
+      ].join(' ');
+    case 'tasks':
+      return [
+        truth.answers.tasksExist.text,
+        `tasks=${truth.tasks.completeness}/${truth.tasks.classification}.`,
+        'Current task list is the entitled open HVCG_Tasks slice for this ClientCode only.',
+        'Completed, cancelled, and hygiene-quarantined tasks are not this list.',
+        'Atlas does not invent tasks, assignees, due dates, notes, or next actions.',
         authorityFooter(truth),
       ].join(' ');
     case 'capital':
