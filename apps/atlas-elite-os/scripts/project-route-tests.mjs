@@ -53,7 +53,13 @@ assert.match(portfolio, /Sync from Microsoft \+ Client 360/);
 
 const live = readFileSync(join(root, 'src/pages/LiveClientDetailPage.tsx'), 'utf8');
 assert.match(live, /Create project/);
-assert.match(live, /No entitled projects on this ClientCode/);
+assert.match(live, /projectsChipLabel\(projects\.length\)/);
+assert.match(live, /PROJECTS_MISSING_RELATED_SENTENCE/);
+assert.match(live, /PROJECTS_PARTIAL_CAPTION/);
+assert.match(live, /PROJECTS_READ_ONLY_EMPTY_DESCRIPTION/);
+assert.match(live, /Create is hidden until an approved write window exists/);
+assert.doesNotMatch(live, /\$\{projects\.length\} projects/);
+assert.doesNotMatch(live, /No entitled projects on this ClientCode/);
 assert.match(live, /tasksListHonesty/);
 assert.match(live, /\{tasksHonesty\.sentence\}/);
 const tasksCard = live.slice(live.indexOf('title="Related tasks"'), live.indexOf('title="Engagements"'));
