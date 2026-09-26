@@ -30,6 +30,22 @@ export const WORKSPACE_TRUTH_SOURCE_UNAVAILABLE = 'SOURCE_UNAVAILABLE' as const;
  * Finished document answer when the file-index read 403s, times out, or never returns.
  * Does not invent filenames.
  */
+/**
+ * Finished meetings answer when the entitled workspace cannot be loaded.
+ * Does not invent a page_cap measurement or a meeting list.
+ */
+export function meetingsIndexUnavailableAnswer(clientCode: string): string {
+  const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
+  return [
+    `Atlas cannot read the current ${code} meeting list (HVCG_Meetings).`,
+    'meetings=SOURCE_UNAVAILABLE.',
+    'Atlas will not invent meetings, attendees, notes, decisions, or next actions.',
+    'Partial rows are not the meeting list.',
+    'The workspace timeline is not the meeting inventory.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
 export function documentIndexUnavailableAnswer(clientCode: string): string {
   const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
   return [
@@ -79,6 +95,7 @@ export type ClientOperatingBriefTopic =
   | 'waiting'
   | 'missing_documents'
   | 'documents'
+  | 'meetings'
   | 'capital'
   | 'owner_decisions'
   | 'approvals'
@@ -157,6 +174,11 @@ const CONCIERGE_PHRASE_MAP: Array<{ topic: ClientOperatingBriefTopic; pattern: R
     topic: 'documents',
     pattern:
       /\bwhat documents exist\b|\bdocuments exist\b|\bdocument inventory\b|\bdocuments on the operating brief\b|\bwhat documents do we have\b|\bdocuments domain\b|\bdocument picture\b|\bdocument index\b|^documents$/,
+  },
+  {
+    topic: 'meetings',
+    pattern:
+      /\bwhat meetings exist\b|\bmeetings exist\b|\bmeeting inventory\b|\bmeetings on the operating brief\b|\bwhat meetings do we have\b|\bmeetings domain\b|\bmeeting picture\b|\bmeetings list\b|\bmeeting list\b|\blist (?:the )?meetings\b|^meetings$/,
   },
   {
     topic: 'approvals',
@@ -381,6 +403,15 @@ function renderTopic(
         'Recovered HVS filenames are not the current document index and are not a current missing inventory.',
         'A SharePoint library URL pointer is not a complete file inventory.',
         'Filenames are not invented beyond the entitled index.',
+        authorityFooter(truth),
+      ].join(' ');
+    case 'meetings':
+      return [
+        truth.answers.meetingsExist.text,
+        `meetings=${truth.meetings.completeness}/${truth.meetings.classification}.`,
+        'Current meeting list is the entitled HVCG_Meetings slice for this ClientCode only.',
+        'The workspace timeline is not the meeting inventory.',
+        'Atlas does not invent meetings, attendees, notes, decisions, or next actions.',
         authorityFooter(truth),
       ].join(' ');
     case 'capital':

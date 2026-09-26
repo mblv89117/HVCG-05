@@ -8,11 +8,15 @@ import assert from 'node:assert/strict';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import type { UserBasicLookup } from '../src/entitlements/userLookup.ts';
 import { composeClientTruth, workspaceSnapshotFromPayload } from '../src/pm/commercialContext/clientTruth.ts';
+import {
+  answerClientOperatingBrief,
+  mapsToClientOperatingBriefIntent,
+} from '../src/pm/operatorDesk/askAtlasClientOperatingBrief.ts';
 import { IndexedClientCodeScopeRejectedError } from '../src/pm/sharepoint/errors.ts';
 import { FILE_INDEX_MARKER } from '../src/pm/sharepoint/fabric/fileIndex.ts';
 import type { GraphListItem, GraphListPage, PmGraphTransport } from '../src/pm/sharepoint/graph.ts';
 import { createListItemCache } from '../src/pm/sharepoint/listCache.ts';
-import { LIST_WALK_PAGE_CAP, SharePointPmService } from '../src/pm/sharepoint/repository.ts';
+import { LIST_WALK_PAGE_CAP, LIST_WALK_TOP, SharePointPmService } from '../src/pm/sharepoint/repository.ts';
 import type { SharePointPmSettings } from '../src/pm/sharepoint/settings.ts';
 import { buildSharePointClientWorkspace } from '../src/pm/sharepoint/workspace.ts';
 
@@ -69,6 +73,7 @@ type ScopeMode = 'honor' | 'reject' | 'reject-then-cap' | 'scoped-cap' | 'mixed-
 class ScopeGraph implements PmGraphTransport {
   mode: ScopeMode = 'honor';
   readonly calls: Array<{ listId: string; indexedClientCode?: string; nextLink: boolean }> = [];
+  readonly writes: string[] = [];
 
   async listItems(
     listId: string,
@@ -91,10 +96,12 @@ class ScopeGraph implements PmGraphTransport {
   }
 
   async createItem(): Promise<GraphListItem> {
+    this.writes.push('create');
     throw new Error('read-only');
   }
 
   async patchItemFields(): Promise<GraphListItem> {
+    this.writes.push('patch');
     throw new Error('read-only');
   }
 
@@ -226,6 +233,14 @@ function truthFor(workspace: Awaited<ReturnType<typeof buildSharePointClientWork
   return truth;
 }
 
+function meetingsAnswer(workspace: Awaited<ReturnType<typeof buildSharePointClientWorkspace>>, clientCode: string) {
+  assert.equal(mapsToClientOperatingBriefIntent(`What meetings exist for ${clientCode}?`), true);
+  return answerClientOperatingBrief(`What meetings exist for ${clientCode}?`, {
+    entitledCodes: principal.allowedClientIds,
+    workspace: workspaceSnapshotFromPayload(workspace),
+  });
+}
+
 describe('W2I-R2 HVCG_Meetings client scope', () => {
   it('finishes an entitled populated meetings walk inside the page cap and keeps documents INDEXED', async () => {
     const graph = new ScopeGraph();
@@ -250,6 +265,27 @@ describe('W2I-R2 HVCG_Meetings client scope', () => {
     assert.equal(truth.canExecute, false);
     assert.equal(truth.capitalSubmit, false);
     assert.equal(truth.globalAutoRespond, false);
+    assert.equal(truth.meetings.completeness, 'INDEXED');
+    assert.equal(truth.meetings.classification, 'CONFIRMED');
+    assert.match(truth.meetings.summary, /meetings=INDEXED/);
+    assert.match(truth.meetings.summary, /ACCG kickoff \(2026-09-01\)/);
+    assert.match(truth.meetings.summary, /1 entitled HVCG_Meetings row/);
+    assert.equal(truth.meetings.summary.includes(PDG_MEETING), false);
+    assert.equal(truth.meetings.summary.includes(HVS_RECOVERED), false);
+    assert.equal(/meetings=MISSING|meetings=SOURCE_UNAVAILABLE/.test(truth.meetings.summary), false);
+    const answer = meetingsAnswer(workspace, 'ACCG01');
+    assert.match(answer, /meetings=INDEXED/);
+    assert.match(answer, /CONFIRMED/);
+    assert.match(answer, /ACCG kickoff \(2026-09-01\)/);
+    assert.equal(answer.includes(PDG_MEETING), false);
+    assert.equal(/meetings=MISSING|meetings=SOURCE_UNAVAILABLE/.test(answer), false);
+    assert.equal(/documents=MISSING|documents=SOURCE_UNAVAILABLE/.test(answer), false);
+    assert.match(answer, /canExecute=false/);
+    assert.match(answer, /capitalSubmit=false/);
+    assert.match(answer, /GLOBAL_AUTO_RESPOND=false/);
+    assert.equal(graph.writes.length, 0);
+    assert.equal(LIST_WALK_PAGE_CAP, 80);
+    assert.equal(LIST_WALK_TOP, 100);
     const meetingCalls = graph.calls.filter((call) => call.listId === MEETINGS);
     assert.ok(meetingCalls.length > 0);
     assert.equal(meetingCalls.every((call) => call.indexedClientCode === 'ACCG01' || call.nextLink), true);
@@ -272,6 +308,16 @@ describe('W2I-R2 HVCG_Meetings client scope', () => {
     assert.equal(truth.documents.completeness, 'INDEXED');
     assert.match(truth.documents.summary, new RegExp(HFD_FILE));
     assert.equal(/documents=MISSING|documents=SOURCE_UNAVAILABLE/.test(truth.documents.summary), false);
+    assert.equal(truth.meetings.completeness, 'MISSING');
+    assert.equal(truth.meetings.classification, 'MISSING');
+    assert.match(truth.meetings.summary, /meetings=MISSING/);
+    assert.equal(/meetings=SOURCE_UNAVAILABLE|meetings=INDEXED/.test(truth.meetings.summary), false);
+    assert.equal(truth.meetings.summary.includes(ACCG_MEETING), false);
+    const answer = meetingsAnswer(workspace, 'HFD01');
+    assert.match(answer, /meetings=MISSING/);
+    assert.equal(/meetings=SOURCE_UNAVAILABLE|meetings=INDEXED/.test(answer), false);
+    assert.equal(/documents=MISSING|documents=SOURCE_UNAVAILABLE/.test(answer), false);
+    assert.equal(graph.writes.length, 0);
     assert.equal(
       graph.calls.filter((call) => call.listId === MEETINGS).every((call) => call.indexedClientCode === 'HFD01'),
       true,
@@ -319,9 +365,36 @@ describe('W2I-R2 HVCG_Meetings client scope', () => {
     const truth = truthFor(workspace, 'ACCG01');
     assert.equal(truth.documents.completeness, 'INDEXED');
     assert.equal(/documents=SOURCE_UNAVAILABLE|documents=MISSING/.test(truth.documents.summary), false);
+    assert.equal(truth.meetings.completeness, 'NOT_CERTIFIED');
+    assert.equal(truth.meetings.classification, 'NOT_CERTIFIED');
+    assert.match(truth.meetings.summary, /meetings=SOURCE_UNAVAILABLE/);
+    assert.match(truth.meetings.summary, /reason=page_cap/);
+    assert.match(truth.meetings.summary, /pagesFetched=80/);
+    assert.match(truth.meetings.summary, /OWNER_DECISION_REQUIRED/);
+    assert.match(truth.meetings.summary, /itemsFetched=80/);
+    assert.equal(truth.meetings.summary.includes(CAPPED_TITLE), false);
+    assert.equal(/meetings=MISSING|meetings=INDEXED/.test(truth.meetings.summary), false);
     assert.equal(truth.canExecute, false);
     assert.equal(truth.capitalSubmit, false);
     assert.equal(truth.globalAutoRespond, false);
+    const answer = meetingsAnswer(workspace, 'ACCG01');
+    assert.match(answer, /meetings=SOURCE_UNAVAILABLE/);
+    assert.match(answer, /reason=page_cap/);
+    assert.match(answer, /pagesFetched=80/);
+    assert.match(answer, /OWNER_DECISION_REQUIRED/);
+    assert.match(answer, /itemsFetched=80/);
+    assert.equal(answer.includes(CAPPED_TITLE), false);
+    assert.equal(/meetings=MISSING|meetings=INDEXED/.test(answer), false);
+    assert.equal(/documents=MISSING|documents=SOURCE_UNAVAILABLE/.test(answer), false);
+    const documents = answerClientOperatingBrief('What documents exist for ACCG01?', {
+      entitledCodes: principal.allowedClientIds,
+      workspace: workspaceSnapshotFromPayload(workspace),
+    });
+    assert.match(documents, new RegExp(ACCG_FILE));
+    assert.equal(/documents=SOURCE_UNAVAILABLE|documents=MISSING/.test(documents), false);
+    assert.equal(graph.writes.length, 0);
+    assert.equal(LIST_WALK_PAGE_CAP, 80);
+    assert.equal(LIST_WALK_TOP, 100);
     const meetingPages = graph.calls.filter((call) => call.listId === MEETINGS).length;
     assert.equal(meetingPages, LIST_WALK_PAGE_CAP);
     assert.equal(graph.calls.filter((call) => call.listId === COMMS).length, 1);

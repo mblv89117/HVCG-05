@@ -25,6 +25,7 @@ import {
   Text,
 } from '@fluentui/react-components';
 import { ArrowSyncRegular, OpenRegular } from '@fluentui/react-icons';
+import { meetingsListHonesty } from './meetingsListHonesty';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import {
@@ -337,6 +338,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   }, [refresh, ready, account, auth.tokenReady, auth.hasBearer]);
 
   const overview = workspace?.overview;
+  const meetingsHonesty = useMemo(
+    () => meetingsListHonesty(workspace?.meetings, clientId),
+    [workspace, clientId],
+  );
   const projects = workspace?.projects || [];
   const tasks = workspace?.tasks || [];
   const nextActions = workspace?.nextActions || [];
@@ -714,9 +719,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
           </div>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>
             Documents: {sectionHonesty(workspace.documents)} · Deliverables:{' '}
-            {sectionHonesty(workspace.deliverables)} · Meetings: {sectionHonesty(workspace.meetings)} ·
-            Communications: {sectionHonesty(workspace.communications)}
+            {sectionHonesty(workspace.deliverables)} · Communications:{' '}
+            {sectionHonesty(workspace.communications)}
           </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>{meetingsHonesty.sentence}</Caption1>
           {capitalLinked ? (
             <Caption1 style={{ display: 'block' }}>
               Capital engagement is already on this payload — open the Capital desk, not GCC.
@@ -927,6 +933,65 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         section={workspace.decisionsRisks}
         emptyTitle="No entitled decisions or risks"
       />
+
+      <AtlasCard
+        title="Meetings"
+        subtitle="HVCG_Meetings on this ClientCode — the Hub payload, not the timeline. Read-only."
+        density="compact"
+        headerAction={
+          <StatusChip
+            label={
+              meetingsHonesty.kind === 'indexed'
+                ? `${meetingsHonesty.count} entitled`
+                : meetingsHonesty.kind === 'missing'
+                  ? 'meetings=MISSING'
+                  : meetingsHonesty.kind === 'source_unavailable'
+                    ? 'meetings=SOURCE_UNAVAILABLE'
+                    : 'Not queried'
+            }
+            tone={meetingsHonesty.kind === 'indexed' ? 'info' : 'neutral'}
+            size="sm"
+          />
+        }
+      >
+        {meetingsHonesty.kind === 'indexed' ? (
+          <>
+            {meetingsHonesty.slice.map((row) => (
+              <div
+                key={row.id}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) auto',
+                  gap: 8,
+                  padding: '8px 0',
+                  borderBottom: '1px solid color-mix(in srgb, currentColor 10%, transparent)',
+                }}
+              >
+                <Text weight="semibold">{row.title}</Text>
+                <Caption1>{row.date || 'date not recorded'}</Caption1>
+              </div>
+            ))}
+            {meetingsHonesty.count > meetingsHonesty.slice.length ? (
+              <Caption1 style={{ display: 'block', marginTop: 8 }}>
+                +{meetingsHonesty.count - meetingsHonesty.slice.length} more entitled rows
+              </Caption1>
+            ) : null}
+          </>
+        ) : (
+          <EmptyState
+            title={
+              meetingsHonesty.kind === 'missing'
+                ? 'No entitled meetings'
+                : meetingsHonesty.kind === 'source_unavailable'
+                  ? 'Meetings source unavailable'
+                  : 'Meetings not queried'
+            }
+            description={meetingsHonesty.sentence}
+            density="compact"
+            align="start"
+          />
+        )}
+      </AtlasCard>
 
       <AtlasCard
         title="Timeline"

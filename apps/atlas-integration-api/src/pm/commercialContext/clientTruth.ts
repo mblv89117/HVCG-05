@@ -192,6 +192,8 @@ export type ClientTruthModel = {
   projects: DomainTruth;
   documents: DomainTruth;
   communications: DomainTruth;
+  /** Entitled HVCG_Meetings slice. Not the workspace timeline. */
+  meetings: DomainTruth;
   financialContext: DomainTruth;
   growthContext: DomainTruth;
   capitalContext: DomainTruth;
@@ -293,7 +295,16 @@ export function workspaceSnapshotFromPayload(payload: {
         }
       : undefined,
     communications: payload.communications,
-    meetings: payload.meetings,
+    meetings: payload.meetings
+      ? payload.meetings.status === 'SOURCE_UNAVAILABLE'
+        ? {
+            queried: false,
+            items: [],
+            reason: payload.meetings.reason,
+            status: 'SOURCE_UNAVAILABLE',
+          }
+        : payload.meetings
+      : undefined,
     engagements: payload.engagements,
     contacts: payload.contacts,
     decisionsRisks: payload.decisionsRisks,
@@ -417,6 +428,69 @@ function entitledFileIndexTitles(
   return { titles, libraryPointer };
 }
 
+/** Short entitled slice shown with the full count. Not a second inventory. */
+export const MEETINGS_LIST_SLICE = 6;
+
+export const MEETINGS_MISSING_SENTENCE =
+  'No entitled HVCG_Meetings rows. meetings=MISSING. Atlas does not invent meetings, attendees, notes, decisions, or next actions.';
+
+export function meetingsNotQueriedSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  const base = 'HVCG_Meetings was not queried. Atlas does not treat that as an empty meeting list.';
+  return detail ? `${base} ${detail}` : base;
+}
+
+export function meetingsSourceUnavailableSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  return [
+    'Atlas cannot read the entitled HVCG_Meetings slice.',
+    'meetings=SOURCE_UNAVAILABLE.',
+    detail || 'HVCG_Meetings list walk did not complete.',
+    'Partial rows are not the meeting list.',
+    'Atlas does not invent meetings, attendees, notes, decisions, or next actions.',
+  ].join(' ');
+}
+
+export function meetingsIndexedSentence(rows: Array<{ title: string; date?: string }>): string {
+  const labels = rows.slice(0, MEETINGS_LIST_SLICE).map((row) =>
+    row.date ? `${row.title} (${row.date})` : `${row.title} (date not recorded)`,
+  );
+  const shown = labels.length;
+  const more = rows.length > shown ? ` Showing ${shown} of ${rows.length}.` : '';
+  return `${rows.length} entitled HVCG_Meetings row(s). meetings=INDEXED. ${labels.join('; ')}.${more}`;
+}
+
+function meetingDay(value: unknown): string | undefined {
+  const raw = asText(value);
+  const match = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match?.[1];
+}
+
+/**
+ * Entitled HVCG_Meetings rows for this ClientCode. A truncated walk contributes
+ * no titles. Rows stamped with another code, or with no code, are refused.
+ */
+function entitledMeetings(
+  meetings: WorkspaceTruthSnapshot['meetings'] | undefined,
+  clientCode: string,
+): { unavailable: boolean; queried: boolean; rows: Array<{ title: string; date?: string }>; reason?: string } {
+  if (meetings?.status === 'SOURCE_UNAVAILABLE') {
+    return { unavailable: true, queried: false, rows: [], reason: meetings.reason };
+  }
+  if (!meetings?.queried) {
+    return { unavailable: false, queried: false, rows: [], reason: meetings?.reason };
+  }
+  const rows: Array<{ title: string; date?: string }> = [];
+  for (const item of meetings.items || []) {
+    if (asText(item.clientCode).toUpperCase() !== clientCode) continue;
+    const title = asText(item.title).replace(/\s+/g, ' ');
+    if (!title) continue;
+    const date = meetingDay(item.date);
+    rows.push(date ? { title, date } : { title });
+  }
+  return { unavailable: false, queried: true, rows, reason: meetings.reason };
+}
+
 function queueFromTasks(
   tasks: NonNullable<WorkspaceTruthSnapshot['tasks']>,
   now?: string,
@@ -513,10 +587,16 @@ function prepareContactCandidates(workspace?: WorkspaceTruthSnapshot): ContactCa
   }
   const candidates: ContactCandidate[] = [];
   const seen = new Set<string>();
+  const meetingItems =
+    workspace.meetings?.status === 'SOURCE_UNAVAILABLE' || !workspace.meetings?.queried
+      ? []
+      : (workspace.meetings?.items || []).filter(
+          (item) => asText(item.clientCode).toUpperCase() === workspace.clientCode,
+        );
   const sources: Array<{ items: Array<Record<string, unknown>>; source: string }> = [
     { items: workspace.communications?.items || [], source: 'HVCG_Communications' },
     { items: workspace.engagements?.items || [], source: 'HVCG_Engagements' },
-    { items: workspace.meetings?.items || [], source: 'HVCG_Meetings' },
+    { items: meetingItems, source: 'HVCG_Meetings' },
   ];
   for (const bucket of sources) {
     for (const item of bucket.items) {
@@ -835,6 +915,39 @@ export function composeClientTruth(opts: {
         ],
       );
 
+  // W2K: current meeting list is the entitled HVCG_Meetings slice only.
+  // The workspace timeline is not that inventory. A finished empty slice is
+  // MISSING. A truncated walk is SOURCE_UNAVAILABLE and contributes no titles.
+  const meetingSlice = entitledMeetings(workspace?.meetings, clientCode);
+  const meetingCount = meetingSlice.rows.length;
+  const meetingsSummary = meetingSlice.unavailable
+    ? meetingsSourceUnavailableSentence(meetingSlice.reason)
+    : meetingCount > 0
+      ? meetingsIndexedSentence(meetingSlice.rows)
+      : meetingSlice.queried
+        ? MEETINGS_MISSING_SENTENCE
+        : meetingsNotQueriedSentence(meetingSlice.reason);
+  const meetingsDomain = domain(
+    'meetings',
+    meetingSlice.unavailable ? 'NOT_CERTIFIED' : meetingCount > 0 ? 'INDEXED' : meetingSlice.queried ? 'MISSING' : 'NOT_CERTIFIED',
+    meetingSlice.unavailable ? 'NOT_CERTIFIED' : meetingCount > 0 ? 'CONFIRMED' : meetingSlice.queried ? 'MISSING' : 'NOT_CERTIFIED',
+    meetingsSummary,
+    [
+      ...meetingSlice.rows.slice(0, MEETINGS_LIST_SLICE).map((row) => ({
+        source: 'HVCG_Meetings',
+        detail: row.date ? `${row.title} (${row.date})` : `${row.title} (date not recorded)`,
+      })),
+      {
+        source: 'HVCG_Meetings',
+        detail: meetingSlice.unavailable
+          ? `meetings=SOURCE_UNAVAILABLE; partial rows are not the list; ${meetingSlice.reason || 'walk did not complete'}`
+          : meetingSlice.queried
+            ? `entitled count=${meetingCount}; meetings=${meetingCount > 0 ? 'INDEXED' : 'MISSING'}`
+            : 'HVCG_Meetings was not queried; not an empty meeting list',
+      },
+    ],
+  );
+
   const gccQuotes = gccSignals.slice(0, 4).map((s) => gccObservationHonestyLine(s));
   const financialContext = domain(
     'financialContext',
@@ -1083,6 +1196,12 @@ export function composeClientTruth(opts: {
       classification: documentsDomain.classification,
       provenance: documentsDomain.provenance,
     },
+    meetingsExist: {
+      question: 'What meetings exist?',
+      text: meetingsDomain.summary,
+      classification: meetingsDomain.classification,
+      provenance: meetingsDomain.provenance,
+    },
     documentsMissing: {
       question: 'What documents are missing?',
       // Recovered HVS folder gaps (hvsActionableClientKnowledge.missingDocuments)
@@ -1217,6 +1336,7 @@ export function composeClientTruth(opts: {
     projects: projectsDomain,
     documents: documentsDomain,
     communications: communicationsDomain,
+    meetings: meetingsDomain,
     financialContext,
     growthContext,
     capitalContext,
