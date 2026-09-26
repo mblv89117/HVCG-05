@@ -70,9 +70,24 @@ const relatedWork = live.slice(live.indexOf('label="Related work"'), live.indexO
 assert.match(relatedWork, /\{tasksHonesty\.sentence\}/);
 assert.match(relatedWork, /\{contactsHonesty\.sentence\}/);
 assert.match(relatedWork, /\{meetingsHonesty\.sentence\}/);
+assert.match(relatedWork, /\{engagementsHonesty\.sentence\}/);
 assert.match(live, /projectDetailPath/);
 assert.match(live, /workspace\.timeline/);
-assert.match(live, /workspace\.engagements\.items/);
+assert.match(live, /engagementsListHonesty/);
+assert.match(live, /engagementsChipLabel/);
+const engagementsCard = live.slice(live.indexOf('title="Engagements"'), live.indexOf('title="Decisions / risks"'));
+const engagementsIndexed = engagementsCard.slice(
+  engagementsCard.indexOf("engagementsHonesty.kind === 'indexed'"),
+  engagementsCard.indexOf('No entitled engagements'),
+);
+assert.match(engagementsIndexed, /\{engagementsHonesty\.sentence\}/);
+assert.match(engagementsIndexed, /row\.title/);
+assert.ok(
+  engagementsIndexed.indexOf('{engagementsHonesty.sentence}') <
+    engagementsIndexed.indexOf('engagementsHonesty.slice.map'),
+);
+assert.match(engagementsCard, /engagementsChipLabel\(engagementsHonesty\.kind\)/);
+assert.doesNotMatch(live, /workspace\.engagements\.items/);
 assert.match(live, /workspace\.decisionsRisks\.items/);
 assert.match(live, /title="Engagements"/);
 assert.match(live, /title="Decisions \/ risks"/);

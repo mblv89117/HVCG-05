@@ -206,6 +206,11 @@ export type ClientTruthModel = {
   meetings: DomainTruth;
   /** Entitled open HVCG_Tasks slice. Not the blocked queue and not the projects suffix. */
   tasks: DomainTruth;
+  /**
+   * Entitled HVCG_Engagements rows already on the workspace.
+   * Not EngagementTypePrimary and not answers.engagement (the my-business clause).
+   */
+  engagementsList: DomainTruth;
   financialContext: DomainTruth;
   growthContext: DomainTruth;
   capitalContext: DomainTruth;
@@ -641,6 +646,104 @@ export function tasksIndexedSentence(
   return `${rows.length} entitled open HVCG_Tasks row(s). tasks=INDEXED. ${labels.join('; ')}.${more}`;
 }
 
+/** Short entitled HVCG_Engagements slice. Not EngagementTypePrimary and not a second walk. */
+export const ENGAGEMENTS_LIST_SLICE = 6;
+
+export const ENGAGEMENTS_MISSING_SENTENCE =
+  'No entitled HVCG_Engagements rows. engagements=MISSING. EngagementTypePrimary is not this list. Atlas does not invent engagements, scopes, fees, dates, or obligations.';
+
+export function engagementsNotQueriedSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  const base =
+    'HVCG_Engagements was not queried. Atlas does not treat that as an empty engagement list. EngagementTypePrimary is not this list.';
+  return detail ? `${base} ${detail}` : base;
+}
+
+export function engagementsSourceUnavailableSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  return [
+    'Atlas cannot read the entitled HVCG_Engagements slice.',
+    'engagements=SOURCE_UNAVAILABLE.',
+    detail || 'HVCG_Engagements list walk did not complete.',
+    'Partial rows are not the engagement list.',
+    'EngagementTypePrimary is not this list.',
+    'Atlas does not invent engagements, scopes, fees, dates, or obligations.',
+  ].join(' ');
+}
+
+export function engagementListLabel(row: { title: string; status?: string }): string {
+  const status = (row.status || '').trim();
+  return status ? `${row.title} (${status})` : row.title;
+}
+
+export function engagementsIndexedSentence(rows: Array<{ title: string; status?: string }>): string {
+  const labels = rows.slice(0, ENGAGEMENTS_LIST_SLICE).map((row) => engagementListLabel(row));
+  const extra = rows.length - labels.length;
+  const more = extra > 0 ? ` +${extra} more.` : '';
+  return `${rows.length} entitled HVCG_Engagements row(s). engagements=INDEXED. ${labels.join('; ')}.${more}`;
+}
+
+/**
+ * Ask Atlas answer for the engagements list topic. The lead summary is the
+ * workspace sentence; this wrapper is the same text Elite shows on the card.
+ * Does not rewrite answers.engagement.
+ */
+export function engagementsListAskAtlasSentence(
+  summary: string,
+  completeness: string,
+  classification: string,
+): string {
+  return [
+    summary,
+    `engagements=${completeness}/${classification}.`,
+    'Current engagement list is the entitled HVCG_Engagements slice for this ClientCode only.',
+    'EngagementTypePrimary on HVCG_Clients is not this list.',
+    'Recovered engagement/agreement filenames are not this list.',
+    'Atlas does not invent engagements, scopes, fees, dates, or obligations.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
+type EngagementListRow = { title: string; status?: string };
+
+/**
+ * ClientCode-matched HVCG_Engagements rows already on the snapshot.
+ * No section is not queried. A failed walk contributes no titles.
+ * Status is copied only when already on the row. Summary, Scope, and Background are not this list.
+ */
+function entitledEngagements(
+  engagements: WorkspaceTruthSnapshot['engagements'] | undefined,
+  clientCode: string,
+): {
+  supplied: boolean;
+  unavailable: boolean;
+  queried: boolean;
+  rows: EngagementListRow[];
+  reason?: string;
+} {
+  if (!engagements) {
+    return { supplied: false, unavailable: false, queried: false, rows: [] };
+  }
+  if (engagements.status === 'SOURCE_UNAVAILABLE') {
+    return { supplied: true, unavailable: true, queried: false, rows: [], reason: engagements.reason };
+  }
+  if (!engagements.queried) {
+    return { supplied: true, unavailable: false, queried: false, rows: [], reason: engagements.reason };
+  }
+  const rows: EngagementListRow[] = [];
+  for (const item of engagements.items || []) {
+    if (asText(item.clientCode).toUpperCase() !== clientCode) continue;
+    const title = asText(item.title).replace(/\s+/g, ' ');
+    if (!title) continue;
+    const status = asText(item.status);
+    rows.push({
+      title,
+      ...(status ? { status } : {}),
+    });
+  }
+  return { supplied: true, unavailable: false, queried: true, rows, reason: engagements.reason };
+}
+
 type OpenTaskListRow = { title: string; status?: string; dueDate?: string };
 
 /**
@@ -996,6 +1099,61 @@ export function composeClientTruth(opts: {
           },
         ],
       );
+
+  // W2N: list sentence is separate from answers.engagement / EngagementTypePrimary.
+  // A finished empty slice is MISSING. A truncated unscoped walk is
+  // SOURCE_UNAVAILABLE and contributes no titles. queried:false is not an empty list.
+  const engagementListSlice = entitledEngagements(workspace?.engagements, clientCode);
+  const engagementListCount = engagementListSlice.rows.length;
+  const engagementsListSummary = !engagementListSlice.supplied
+    ? engagementsNotQueriedSentence()
+    : engagementListSlice.unavailable
+      ? engagementsSourceUnavailableSentence(engagementListSlice.reason)
+      : engagementListCount > 0
+        ? engagementsIndexedSentence(engagementListSlice.rows)
+        : engagementListSlice.queried
+          ? ENGAGEMENTS_MISSING_SENTENCE
+          : engagementsNotQueriedSentence(engagementListSlice.reason);
+  const engagementsListCompleteness: DomainCompleteness = !engagementListSlice.supplied
+    ? 'NOT_CERTIFIED'
+    : engagementListSlice.unavailable
+      ? 'NOT_CERTIFIED'
+      : engagementListCount > 0
+        ? 'INDEXED'
+        : engagementListSlice.queried
+          ? 'MISSING'
+          : 'NOT_CERTIFIED';
+  const engagementsListClassification: TruthClassification = !engagementListSlice.supplied
+    ? 'NOT_CERTIFIED'
+    : engagementListSlice.unavailable
+      ? 'NOT_CERTIFIED'
+      : engagementListCount > 0
+        ? 'CONFIRMED'
+        : engagementListSlice.queried
+          ? 'MISSING'
+          : 'NOT_CERTIFIED';
+  const engagementsListDomain = domain(
+    'engagementsList',
+    engagementsListCompleteness,
+    engagementsListClassification,
+    engagementsListSummary,
+    [
+      ...engagementListSlice.rows.slice(0, ENGAGEMENTS_LIST_SLICE).map((row) => ({
+        source: 'HVCG_Engagements',
+        detail: engagementListLabel(row),
+      })),
+      {
+        source: 'HVCG_Engagements',
+        detail: !engagementListSlice.supplied
+          ? 'SharePoint workspace engagements were not supplied on this composition.'
+          : engagementListSlice.unavailable
+            ? `engagements=SOURCE_UNAVAILABLE; partial rows are not the list; ${engagementListSlice.reason || 'walk did not complete'}`
+            : engagementListSlice.queried
+              ? `entitled count=${engagementListCount}; engagements=${engagementListCount > 0 ? 'INDEXED' : 'MISSING'}`
+              : engagementListSlice.reason || 'Engagements list not queried.',
+      },
+    ],
+  );
 
   // W2G: current/active projects are hygiene-kept HVCG_Projects only.
   // An empty post-hygiene set is MISSING. Recovered HVS filenames are never that list.
@@ -1498,6 +1656,12 @@ export function composeClientTruth(opts: {
       classification: tasksDomain.classification,
       provenance: tasksDomain.provenance,
     },
+    engagementsExist: {
+      question: 'What engagements exist?',
+      text: engagementsListDomain.summary,
+      classification: engagementsListDomain.classification,
+      provenance: engagementsListDomain.provenance,
+    },
     documentsMissing: {
       question: 'What documents are missing?',
       // Recovered HVS folder gaps (hvsActionableClientKnowledge.missingDocuments)
@@ -1629,6 +1793,7 @@ export function composeClientTruth(opts: {
     identity: identityDomain,
     contacts: contactsDomain,
     engagements: engagementsDomain,
+    engagementsList: engagementsListDomain,
     projects: projectsDomain,
     documents: documentsDomain,
     communications: communicationsDomain,

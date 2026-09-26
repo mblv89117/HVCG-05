@@ -26,6 +26,7 @@ import {
 } from '@fluentui/react-components';
 import { ArrowSyncRegular, OpenRegular } from '@fluentui/react-icons';
 import { contactsListHonesty } from './contactsListHonesty';
+import { engagementsChipLabel, engagementsListHonesty } from './engagementsListHonesty';
 import { meetingsListHonesty } from './meetingsListHonesty';
 import { tasksListHonesty } from './tasksListHonesty';
 import { ModuleScaffold } from './shared/ModuleScaffold';
@@ -358,6 +359,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
       ),
     [workspace, clientId],
   );
+  const engagementsHonesty = useMemo(
+    () => engagementsListHonesty(workspace?.engagements, clientId),
+    [workspace, clientId],
+  );
   const projects = workspace?.projects || [];
   const tasks = workspace?.tasks || [];
   const nextActions = workspace?.nextActions || [];
@@ -642,8 +647,8 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
             <StatusChip label={`${projects.length} projects`} tone="gold" />
             <StatusChip label={`${tasks.length} open tasks`} tone="info" />
             <StatusChip
-              label={`${workspace.engagements.items.length} engagements`}
-              tone={workspace.engagements.queried ? 'info' : 'neutral'}
+              label={engagementsChipLabel(engagementsHonesty.kind)}
+              tone={engagementsHonesty.kind === 'indexed' ? 'info' : 'neutral'}
             />
             <StatusChip
               label={`${workspace.decisionsRisks.items.length} decisions / risks`}
@@ -739,6 +744,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{tasksHonesty.sentence}</Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{contactsHonesty.sentence}</Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{meetingsHonesty.sentence}</Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>{engagementsHonesty.sentence}</Caption1>
           {capitalLinked ? (
             <Caption1 style={{ display: 'block' }}>
               Capital engagement is already on this payload — open the Capital desk, not GCC.
@@ -944,12 +950,48 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         )}
       </AtlasCard>
 
-      <WorkspaceSectionCard
+      <AtlasCard
         title="Engagements"
-        subtitle="HVCG_Engagements on this ClientCode — read-only Hub payload. Not GCC."
-        section={workspace.engagements}
-        emptyTitle="No entitled engagements"
-      />
+        subtitle="HVCG_Engagements on this ClientCode — the Hub payload. Read-only titles, plus status when the row already has it. EngagementTypePrimary is not this list."
+        density="compact"
+        headerAction={
+          <StatusChip
+            label={engagementsChipLabel(engagementsHonesty.kind)}
+            tone={engagementsHonesty.kind === 'indexed' ? 'info' : 'neutral'}
+            size="sm"
+          />
+        }
+      >
+        {engagementsHonesty.kind === 'indexed' ? (
+          <>
+            <Caption1 style={{ display: 'block', marginBottom: 8 }}>{engagementsHonesty.sentence}</Caption1>
+            {engagementsHonesty.slice.map((row) => (
+              <div key={row.id} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '4px 0' }}>
+                <Text weight="semibold">{row.title}</Text>
+                {row.status ? <Caption1>{row.status}</Caption1> : null}
+              </div>
+            ))}
+            {engagementsHonesty.count > engagementsHonesty.slice.length ? (
+              <Caption1 style={{ display: 'block', marginTop: 8 }}>
+                +{engagementsHonesty.count - engagementsHonesty.slice.length} more
+              </Caption1>
+            ) : null}
+          </>
+        ) : (
+          <EmptyState
+            title={
+              engagementsHonesty.kind === 'missing'
+                ? 'No entitled engagements'
+                : engagementsHonesty.kind === 'source_unavailable'
+                  ? 'Engagements source unavailable'
+                  : 'Engagements not queried'
+            }
+            description={engagementsHonesty.sentence}
+            density="compact"
+            align="start"
+          />
+        )}
+      </AtlasCard>
 
       <WorkspaceSectionCard
         title="Decisions / risks"

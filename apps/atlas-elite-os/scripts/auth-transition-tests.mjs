@@ -125,7 +125,10 @@ assertHooksBeforeAuthEarlyReturns('LiveClientDetailPage.tsx', liveClient, 'LiveC
 assert.match(liveClient, /status === 401/);
 assert.match(liveClient, /status === 403/);
 assert.match(liveClient, /workspace\.timeline/);
-assert.match(liveClient, /workspace\.engagements\.items/);
+assert.match(liveClient, /engagementsListHonesty/);
+assert.match(liveClient, /engagementsChipLabel/);
+assert.match(liveClient, /\{engagementsHonesty\.sentence\}/);
+assert.doesNotMatch(liveClient, /workspace\.engagements\.items/);
 assert.match(liveClient, /workspace\.decisionsRisks\.items/);
 
 const useHubAuth = src('integrations/hub/useHubAuth.ts');
