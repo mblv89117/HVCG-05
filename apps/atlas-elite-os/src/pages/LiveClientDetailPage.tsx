@@ -31,6 +31,12 @@ import { decisionsRisksChipLabel, decisionsRisksListHonesty } from './decisionsR
 import { deliverablesChipLabel, deliverablesListHonesty } from './deliverablesListHonesty';
 import { engagementsChipLabel, engagementsListHonesty } from './engagementsListHonesty';
 import { meetingsListHonesty } from './meetingsListHonesty';
+import {
+  PROJECTS_MISSING_RELATED_SENTENCE,
+  PROJECTS_PARTIAL_CAPTION,
+  PROJECTS_READ_ONLY_EMPTY_DESCRIPTION,
+  projectsChipLabel,
+} from './projectsCaption';
 import { tasksListHonesty } from './tasksListHonesty';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
@@ -569,7 +575,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
             ) : (
               <Caption1>Health not assessed</Caption1>
             )}
-            <StatusChip label={`${projects.length} projects`} tone="gold" />
+            <StatusChip label={projectsChipLabel(projects.length)} tone="gold" />
             <StatusChip label={`${tasks.length} open tasks`} tone="info" />
             <StatusChip
               label={engagementsChipLabel(engagementsHonesty.kind)}
@@ -652,7 +658,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         <RecordRow label="Related work">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {projects.length === 0 ? (
-              <Caption1>No entitled projects on this ClientCode.</Caption1>
+              <Caption1>{PROJECTS_MISSING_RELATED_SENTENCE}</Caption1>
             ) : (
               <>
                 {projects.slice(0, 6).map((p) => {
@@ -669,6 +675,9 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
               </>
             )}
           </div>
+          {projects.length > 0 ? (
+            <Caption1 style={{ display: 'block', marginTop: 4 }}>{PROJECTS_PARTIAL_CAPTION}</Caption1>
+          ) : null}
           <Caption1 style={{ display: 'block', marginTop: 4 }}>
             Documents: {sectionHonesty(workspace.documents)} · Communications:{' '}
             {communicationsListView.sentence}
@@ -760,7 +769,11 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         {projects.length === 0 ? (
           <EmptyState
             title="No projects for this client"
-            description="Queried HVCG_Projects returned no entitled rows. Create a project to track next actions."
+            description={
+              workspace.writePolicy === 'read_only'
+                ? PROJECTS_READ_ONLY_EMPTY_DESCRIPTION
+                : 'Queried HVCG_Projects returned no entitled rows. Create a project to track next actions.'
+            }
           />
         ) : (
           <DataTable

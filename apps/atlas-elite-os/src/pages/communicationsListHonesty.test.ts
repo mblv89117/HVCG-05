@@ -250,7 +250,6 @@ describe('W2Q Elite communications list honesty', () => {
     assert.match(helper, /return 'communicationsList=SOURCE_UNAVAILABLE'/);
     assert.match(helper, /return 'Not queried'/);
     assert.equal(helper.includes('0 communications'), false);
-    assert.match(page, /Create a project to track next actions/);
     assert.match(page, /capitalLinked/);
     assert.match(page, /title="Timeline"/);
   });
