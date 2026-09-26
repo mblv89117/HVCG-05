@@ -134,7 +134,11 @@ assert.match(liveClient, /deliverablesChipLabel/);
 assert.match(liveClient, /\{deliverablesHonesty\.sentence\}/);
 assert.doesNotMatch(liveClient, /workspace\.deliverables\.items/);
 assert.doesNotMatch(liveClient, /sectionHonesty\(workspace\.deliverables\)/);
-assert.match(liveClient, /workspace\.decisionsRisks\.items/);
+assert.match(liveClient, /decisionsRisksListHonesty/);
+assert.match(liveClient, /decisionsRisksChipLabel/);
+assert.match(liveClient, /\{decisionsRisksHonesty\.sentence\}/);
+assert.doesNotMatch(liveClient, /workspace\.decisionsRisks\.items/);
+assert.doesNotMatch(liveClient, /sectionHonesty\(workspace\.decisionsRisks\)/);
 
 const useHubAuth = src('integrations/hub/useHubAuth.ts');
 assert.match(useHubAuth, /tokenReady/);

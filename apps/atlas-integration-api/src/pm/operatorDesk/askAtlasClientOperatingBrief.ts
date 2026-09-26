@@ -14,6 +14,7 @@ import {
 import {
   CLIENT_TRUTH_MISSION_KEY,
   composeClientTruth,
+  decisionsRisksListAskAtlasSentence,
   deliverablesListAskAtlasSentence,
   engagementsListAskAtlasSentence,
   type ClientTruthModel,
@@ -82,6 +83,23 @@ export function deliverablesIndexUnavailableAnswer(clientCode: string): string {
     'deliverables=SOURCE_UNAVAILABLE.',
     'Atlas will not invent deliverables, due dates, statuses, or acceptance.',
     'Partial rows are not the deliverable list.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
+/**
+ * Finished decisions/risks answer when the entitled workspace cannot be loaded.
+ * Does not invent a page_cap measurement, an OWNER_DECISION_REQUIRED clause, or a list.
+ * Owner approvals stay on the approvals topic.
+ */
+export function decisionsRisksIndexUnavailableAnswer(clientCode: string): string {
+  const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
+  return [
+    `Atlas cannot read the current ${code} decisions and risks list (HVCG_Decisions / HVCG_Risks).`,
+    'decisionsRisks=SOURCE_UNAVAILABLE.',
+    'Atlas will not invent decisions, risks, owners, severity, or due dates.',
+    'Partial rows are not the decisions or risks list.',
+    'Owner approvals are not this list.',
     `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
   ].join(' ');
 }
@@ -164,6 +182,7 @@ export type ClientOperatingBriefTopic =
   | 'tasks'
   | 'engagements'
   | 'deliverables'
+  | 'decisions_risks'
   | 'capital'
   | 'owner_decisions'
   | 'approvals'
@@ -277,6 +296,14 @@ const CONCIERGE_PHRASE_MAP: Array<{ topic: ClientOperatingBriefTopic; pattern: R
     // stay off the topic (no ClientCode). Document questions stay on documents.
     pattern:
       /\bwhat deliverables exist\b|\bdeliverables exist\b|\bdeliverables inventory\b|\bdeliverables on the operating brief\b|\bwhat deliverables do we have\b|\bwhat deliverables (?:does|do)\b|\bwhat deliverables\b.+\bhave\b|\bdeliverables domain\b|\bdeliverables picture\b|\bdeliverables list\b|\blist (?:the )?deliverables\b|\blist\b.+\bdeliverables\b|^deliverables$/,
+  },
+  {
+    topic: 'decisions_risks',
+    // Closed list only. Must not match "what decisions" or "what decision":
+    // those stay on owner_decisions or attention Decision Required.
+    // "What decisions and risks exist" contains "what decisions" and stays there.
+    pattern:
+      /^(?!.*\bwhat decisions?\b)(?:\bwhat risks exist\b|\bwhat risks do we have\b|\bwhat risks (?:does|do)\b|\bwhat risks\b.+\bhave\b|\brisks list\b|\bdecisions and risks list\b|\blist (?:the )?(?:risks|decisions)\b|\blist\b.+\b(?:risks|decisions)\b)/,
   },
   {
     topic: 'approvals',
@@ -562,6 +589,12 @@ function renderTopic(
         truth.answers.deliverablesExist.text,
         truth.deliverablesList.completeness,
         truth.deliverablesList.classification,
+      );
+    case 'decisions_risks':
+      return decisionsRisksListAskAtlasSentence(
+        truth.answers.decisionsRisksExist.text,
+        truth.decisionsRisksList.completeness,
+        truth.decisionsRisksList.classification,
       );
     case 'capital':
       return [
