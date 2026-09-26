@@ -12,8 +12,10 @@ Thread rows already on `HVCG_Communications` are the list. File-index rows stay 
 
 - Branch: `cursor/w2q-communications-list-honesty-1c33`
 - Base: `production/atlas-core` at `22308beb496b98f2d422a7233c0e609cd133c374` (W2P closed)
+- Draft PR: https://github.com/mblv89117/HVCG-05/pull/248
 - Implementation commit: `7d629dd08bf9d9e4f3554d4b61bd7af3f7788acd`
-- PR head: the commit that records this SHA line (draft pull request; full `git rev-parse HEAD`)
+- Head SHA when the draft was opened: `e103ab4d1323814ff5e936b2d2ff64794ce7f8c7`
+- This commit adds the PR URL. The pull request description carries the full head SHA after it lands.
 
 ## What changed
 
