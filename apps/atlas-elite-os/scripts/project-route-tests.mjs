@@ -56,6 +56,20 @@ assert.match(live, /Create project/);
 assert.match(live, /No entitled projects on this ClientCode/);
 assert.match(live, /tasksListHonesty/);
 assert.match(live, /\{tasksHonesty\.sentence\}/);
+const tasksCard = live.slice(live.indexOf('title="Related tasks"'), live.indexOf('title="Engagements"'));
+const indexedBranch = tasksCard.slice(
+  tasksCard.indexOf("tasksHonesty.kind === 'indexed'"),
+  tasksCard.indexOf('No entitled open tasks'),
+);
+assert.match(indexedBranch, /\{tasksHonesty\.sentence\}/);
+assert.match(indexedBranch, /row\.title/);
+assert.ok(indexedBranch.indexOf('{tasksHonesty.sentence}') < indexedBranch.indexOf('tasksHonesty.slice.map'));
+assert.match(tasksCard, /tasks=INDEXED/);
+assert.match(tasksCard, /Task create is hidden for this read-only ClientCode/);
+const relatedWork = live.slice(live.indexOf('label="Related work"'), live.indexOf('label="What requires me"'));
+assert.match(relatedWork, /\{tasksHonesty\.sentence\}/);
+assert.match(relatedWork, /\{contactsHonesty\.sentence\}/);
+assert.match(relatedWork, /\{meetingsHonesty\.sentence\}/);
 assert.match(live, /projectDetailPath/);
 assert.match(live, /workspace\.timeline/);
 assert.match(live, /workspace\.engagements\.items/);

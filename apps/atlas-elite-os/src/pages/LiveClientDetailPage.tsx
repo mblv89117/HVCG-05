@@ -869,7 +869,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
           <StatusChip
             label={
               tasksHonesty.kind === 'indexed'
-                ? `${tasksHonesty.count} entitled`
+                ? 'tasks=INDEXED'
                 : tasksHonesty.kind === 'missing'
                   ? 'tasks=MISSING'
                   : tasksHonesty.kind === 'source_unavailable'
@@ -914,6 +914,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         )}
         {tasksHonesty.kind === 'indexed' ? (
           <>
+            <Caption1 style={{ display: 'block', marginBottom: 8 }}>{tasksHonesty.sentence}</Caption1>
             {tasksHonesty.slice.map((row) => (
               <div key={row.id} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '4px 0' }}>
                 <Link to={projectDetailPath(row.projectId) || '/tasks'}>{row.title}</Link>

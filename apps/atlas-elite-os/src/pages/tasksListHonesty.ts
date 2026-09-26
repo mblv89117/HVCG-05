@@ -1,6 +1,9 @@
+import { GLOBAL_AUTO_RESPOND } from '../policy/globalAutoRespond';
+
 /**
- * W2M tasks list honesty for State → Related Work.
- * Renders the Hub open HVCG_Tasks payload only. Sentences match Hub clientTruth.
+ * W2M tasks list honesty for State → Related Work and the Related tasks card.
+ * Renders the Hub open HVCG_Tasks payload only. Sentences match Hub clientTruth
+ * and the Ask Atlas tasks answer built from that payload.
  * Completed, cancelled, and foreign-coded rows are not this list.
  */
 
@@ -47,6 +50,23 @@ export function tasksIndexedSentence(rows: Array<{ title: string; status?: strin
   const extra = rows.length - labels.length;
   const more = extra > 0 ? ` +${extra} more.` : '';
   return `${rows.length} entitled open HVCG_Tasks row(s). tasks=INDEXED. ${labels.join('; ')}.${more}`;
+}
+
+/**
+ * Ask Atlas appends this after the indexed summary. Hub classifies a finished
+ * open slice as INDEXED/CONFIRMED. Flags stay false; this is display text.
+ */
+export function tasksIndexedAskAtlasSentence(
+  rows: Array<{ title: string; status?: string; dueDate?: string }>,
+): string {
+  return [
+    tasksIndexedSentence(rows),
+    'tasks=INDEXED/CONFIRMED.',
+    'Current task list is the entitled open HVCG_Tasks slice for this ClientCode only.',
+    'Completed, cancelled, and hygiene-quarantined tasks are not this list.',
+    'Atlas does not invent tasks, assignees, due dates, notes, or next actions.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
 }
 
 export type TasksListRow = {
@@ -129,6 +149,6 @@ export function tasksListHonesty(input: TasksInput | undefined, clientCode: stri
     kind: 'indexed',
     count: rows.length,
     slice: rows.slice(0, TASKS_LIST_SLICE),
-    sentence: tasksIndexedSentence(rows),
+    sentence: tasksIndexedAskAtlasSentence(rows),
   };
 }
