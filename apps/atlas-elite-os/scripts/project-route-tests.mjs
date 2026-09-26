@@ -123,6 +123,28 @@ assert.ok(
     decisionsIndexed.indexOf('decisionsRisksHonesty.slice.map'),
 );
 assert.match(decisionsCard, /decisionsRisksChipLabel\(decisionsRisksHonesty\.kind\)/);
+assert.match(live, /communicationsListHonesty/);
+assert.match(live, /communicationsListChipLabel/);
+assert.match(live, /\{communicationsListView\.sentence\}/);
+assert.doesNotMatch(live, /sectionHonesty\(workspace\.communications\)/);
+assert.doesNotMatch(live, /workspace\.communications\.items/);
+assert.doesNotMatch(live, /0 communications/);
+const communicationsCard = live.slice(live.indexOf('title="Communications"'), live.indexOf('title="Timeline"'));
+const communicationsIndexed = communicationsCard.slice(
+  communicationsCard.indexOf("communicationsListView.kind === 'indexed'"),
+  communicationsCard.indexOf('No entitled communication threads'),
+);
+assert.match(communicationsIndexed, /\{communicationsListView\.sentence\}/);
+assert.match(communicationsIndexed, /row\.title/);
+assert.ok(
+  communicationsIndexed.indexOf('{communicationsListView.sentence}') <
+    communicationsIndexed.indexOf('communicationsListView.slice.map'),
+);
+assert.match(communicationsCard, /communicationsListChipLabel\(communicationsListView\.kind\)/);
+assert.match(live, /sectionHonesty\(workspace\.documents\)/);
+assert.match(relatedWork, /sectionHonesty\(workspace\.documents\)/);
+assert.match(relatedWork, /\{communicationsListView\.sentence\}/);
+assert.doesNotMatch(relatedWork, /sectionHonesty\(workspace\.communications\)/);
 assert.match(live, /title="Engagements"/);
 assert.match(live, /title="Decisions \/ risks"/);
 assert.match(live, /title="Meetings"/);
