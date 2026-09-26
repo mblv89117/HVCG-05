@@ -14,6 +14,7 @@ import {
 import {
   CLIENT_TRUTH_MISSION_KEY,
   composeClientTruth,
+  engagementsListAskAtlasSentence,
   type ClientTruthModel,
   type WorkspaceTruthSnapshot,
 } from '../commercialContext/clientTruth.ts';
@@ -49,6 +50,22 @@ export function tasksIndexUnavailableAnswer(clientCode: string): string {
     'tasks=SOURCE_UNAVAILABLE.',
     'Atlas will not invent tasks, assignees, due dates, notes, or next actions.',
     'Partial rows are not the task list.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
+/**
+ * Finished engagements answer when the entitled workspace cannot be loaded.
+ * Does not invent a page_cap measurement, an OWNER_DECISION_REQUIRED clause, or an engagement list.
+ */
+export function engagementsIndexUnavailableAnswer(clientCode: string): string {
+  const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
+  return [
+    `Atlas cannot read the current ${code} engagement list (HVCG_Engagements).`,
+    'engagements=SOURCE_UNAVAILABLE.',
+    'Atlas will not invent engagements, scopes, fees, dates, or obligations.',
+    'Partial rows are not the engagement list.',
+    'EngagementTypePrimary is not this list.',
     `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
   ].join(' ');
 }
@@ -129,6 +146,7 @@ export type ClientOperatingBriefTopic =
   | 'meetings'
   | 'contacts'
   | 'tasks'
+  | 'engagements'
   | 'capital'
   | 'owner_decisions'
   | 'approvals'
@@ -228,6 +246,13 @@ const CONCIERGE_PHRASE_MAP: Array<{ topic: ClientOperatingBriefTopic; pattern: R
     // "List ACCG01 tasks") so attention-items empty cannot win.
     pattern:
       /\bwhat tasks exist\b|\btasks exist\b|\btask inventory\b|\btasks on the operating brief\b|\bwhat tasks do we have\b|\bwhat tasks (?:does|do)\b|\bwhat tasks\b.+\bhave\b|\btasks domain\b|\btask picture\b|\btasks list\b|\btask list\b|\blist (?:the )?tasks\b|\blist\b.+\btasks\b|^tasks$/,
+  },
+  {
+    topic: 'engagements',
+    // Closed plural list only. Singular "engagement" stays off this topic so
+    // answers.engagement and the my-business composite remain the prior clause.
+    pattern:
+      /\bwhat engagements exist\b|\bengagements exist\b|\bengagements inventory\b|\bengagements on the operating brief\b|\bwhat engagements do we have\b|\bwhat engagements (?:does|do)\b|\bwhat engagements\b.+\bhave\b|\bengagements domain\b|\bengagements picture\b|\bengagements list\b|\blist (?:the )?engagements\b|\blist\b.+\bengagements\b|^engagements$/,
   },
   {
     topic: 'approvals',
@@ -502,6 +527,12 @@ function renderTopic(
         'Atlas does not invent tasks, assignees, due dates, notes, or next actions.',
         authorityFooter(truth),
       ].join(' ');
+    case 'engagements':
+      return engagementsListAskAtlasSentence(
+        truth.answers.engagementsExist.text,
+        truth.engagementsList.completeness,
+        truth.engagementsList.classification,
+      );
     case 'capital':
       return [
         `${truth.clientCode} capitalContext=${truth.capitalContext.completeness}/${truth.capitalContext.classification}.`,
