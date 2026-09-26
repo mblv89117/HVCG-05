@@ -10,6 +10,7 @@ import { aiCommandNavigatePath } from '../../../../packages/atlas-design-system/
 import {
   TASKS_LIST_SLICE,
   TASKS_MISSING_SENTENCE,
+  tasksChipLabel,
   tasksIndexedAskAtlasSentence,
   tasksListHonesty,
 } from './tasksListHonesty.ts';
@@ -70,6 +71,9 @@ describe('W2M Elite tasks list honesty', () => {
     assert.equal(view.sentence.includes('Completed filing'), false);
     assert.equal(view.sentence.includes('PDG secret task'), false);
     assert.equal(/tasks=MISSING|tasks=SOURCE_UNAVAILABLE/.test(view.sentence), false);
+    assert.equal(tasksChipLabel(view.kind), 'tasks=INDEXED');
+    assert.equal(tasksChipLabel(view.kind).includes('/CONFIRMED'), false);
+    assert.equal(tasksChipLabel(view.kind).includes('PARTIAL'), false);
   });
 
   it('caps the short slice and still reports +N more', () => {
@@ -96,6 +100,17 @@ describe('W2M Elite tasks list honesty', () => {
     assert.equal(view.kind, 'missing');
     assert.equal(view.sentence, TASKS_MISSING_SENTENCE);
     assert.equal(/tasks=SOURCE_UNAVAILABLE|tasks=INDEXED/.test(view.sentence), false);
+    assert.equal(tasksChipLabel(view.kind), 'tasks=MISSING');
+
+    const untitled = tasksListHonesty(
+      {
+        availability: { status: 'COMPLETE', queried: true },
+        tasks: [{ id: 'blank', title: '   ', clientCode: 'ACCG01', status: 'ready' }],
+      },
+      'ACCG01',
+    );
+    assert.equal(untitled.kind, 'missing');
+    assert.equal(tasksChipLabel(untitled.kind), 'tasks=MISSING');
   });
 
   it('keeps an allowlist miss as not queried', () => {
@@ -114,6 +129,7 @@ describe('W2M Elite tasks list honesty', () => {
     assert.match(view.sentence, /was not queried/);
     assert.equal(view.sentence.includes('Should Not List'), false);
     assert.equal(/tasks=MISSING|tasks=INDEXED|tasks=SOURCE_UNAVAILABLE/.test(view.sentence), false);
+    assert.equal(tasksChipLabel(view.kind), 'Not queried');
   });
 
   it('says tasks=SOURCE_UNAVAILABLE and hides partial rows on page_cap', () => {
@@ -133,6 +149,7 @@ describe('W2M Elite tasks list honesty', () => {
     assert.match(view.sentence, /itemsFetched=80/);
     assert.equal(view.sentence.includes('Hidden Task'), false);
     assert.equal(/tasks=MISSING|tasks=INDEXED/.test(view.sentence), false);
+    assert.equal(tasksChipLabel(view.kind), 'tasks=SOURCE_UNAVAILABLE');
   });
 
   it('keeps the entitled row when the indexed sentence matches Ask Atlas', () => {
@@ -183,14 +200,30 @@ describe('W2M Elite tasks list honesty', () => {
     assert.match(indexedBranch, /row\.title/);
     assert.match(tasksCard, /row\.status/);
     assert.match(tasksCard, /row\.dueDate/);
-    assert.match(tasksCard, /tasks=INDEXED/);
-    assert.match(tasksCard, /tasks=MISSING/);
-    assert.match(tasksCard, /tasks=SOURCE_UNAVAILABLE/);
+    assert.match(tasksCard, /tasksChipLabel\(tasksHonesty\.kind\)/);
+    assert.equal(tasksCard.includes('tasks=INDEXED'), false);
+    assert.equal(tasksCard.includes('tasks=MISSING'), false);
+    assert.equal(tasksCard.includes('tasks=SOURCE_UNAVAILABLE'), false);
+    assert.equal(tasksCard.includes('tasks=PARTIAL'), false);
+    assert.equal(tasksCard.includes('tasks=INDEXED/CONFIRMED'), false);
     assert.equal(tasksCard.includes('assigneeName'), false);
     assert.equal(tasksCard.includes('nextAction'), false);
     assert.equal(tasksCard.includes('Queried HVCG_Tasks returned no entitled open rows'), false);
     const related = page.slice(page.indexOf('label="Related work"'), page.indexOf('label="What requires me"'));
     assert.match(related, /\{tasksHonesty\.sentence\}/);
+    const state = page.slice(page.indexOf('label="State"'), page.indexOf('label="Next"'));
+    assert.match(state, /tasksChipLabel\(tasksHonesty\.kind\)/);
+    assert.match(state, /tasksHonesty\.kind === 'indexed' \? 'info' : 'neutral'/);
+    assert.equal(state.includes('${tasks.length} open tasks'), false);
+    assert.equal(state.includes('tasks=PARTIAL'), false);
+    assert.equal(state.includes('tasks=INDEXED/CONFIRMED'), false);
+    const helper = readFileSync(join(root, 'tasksListHonesty.ts'), 'utf8');
+    assert.match(helper, /return 'tasks=INDEXED'/);
+    assert.match(helper, /return 'tasks=MISSING'/);
+    assert.match(helper, /return 'tasks=SOURCE_UNAVAILABLE'/);
+    assert.match(helper, /return 'Not queried'/);
+    assert.equal(helper.includes('tasks=PARTIAL'), false);
+    assert.equal(helper.includes("return 'tasks=INDEXED/CONFIRMED'"), false);
     assert.match(page, /contactsListHonesty\(workspace\?\.contacts, clientId\)/);
     assert.match(page, /meetingsListHonesty\(workspace\?\.meetings, clientId\)/);
   });

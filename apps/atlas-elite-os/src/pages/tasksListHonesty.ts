@@ -83,6 +83,14 @@ export type TasksListHonesty =
   | { kind: 'source_unavailable'; sentence: string }
   | { kind: 'not_queried'; sentence: string };
 
+/** State chip and Related tasks header. Label is the kind already returned. */
+export function tasksChipLabel(kind: TasksListHonesty['kind']): string {
+  if (kind === 'indexed') return 'tasks=INDEXED';
+  if (kind === 'missing') return 'tasks=MISSING';
+  if (kind === 'source_unavailable') return 'tasks=SOURCE_UNAVAILABLE';
+  return 'Not queried';
+}
+
 type TaskItem = {
   id?: string;
   title?: string;

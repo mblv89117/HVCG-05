@@ -70,7 +70,14 @@ const indexedBranch = tasksCard.slice(
 assert.match(indexedBranch, /\{tasksHonesty\.sentence\}/);
 assert.match(indexedBranch, /row\.title/);
 assert.ok(indexedBranch.indexOf('{tasksHonesty.sentence}') < indexedBranch.indexOf('tasksHonesty.slice.map'));
-assert.match(tasksCard, /tasks=INDEXED/);
+assert.match(tasksCard, /tasksChipLabel\(tasksHonesty\.kind\)/);
+assert.doesNotMatch(tasksCard, /tasks=INDEXED/);
+assert.doesNotMatch(live, /\$\{tasks\.length\} open tasks/);
+const tasksHelper = readFileSync(join(root, 'src/pages/tasksListHonesty.ts'), 'utf8');
+assert.match(tasksHelper, /return 'tasks=INDEXED'/);
+assert.match(tasksHelper, /return 'tasks=MISSING'/);
+assert.match(tasksHelper, /return 'tasks=SOURCE_UNAVAILABLE'/);
+assert.match(tasksHelper, /return 'Not queried'/);
 assert.match(tasksCard, /Task create is hidden for this read-only ClientCode/);
 const relatedWork = live.slice(live.indexOf('label="Related work"'), live.indexOf('label="What requires me"'));
 assert.match(relatedWork, /\{tasksHonesty\.sentence\}/);

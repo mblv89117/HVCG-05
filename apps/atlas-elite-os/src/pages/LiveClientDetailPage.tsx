@@ -37,7 +37,7 @@ import {
   PROJECTS_READ_ONLY_EMPTY_DESCRIPTION,
   projectsChipLabel,
 } from './projectsCaption';
-import { tasksListHonesty } from './tasksListHonesty';
+import { tasksChipLabel, tasksListHonesty } from './tasksListHonesty';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import {
@@ -576,7 +576,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
               <Caption1>Health not assessed</Caption1>
             )}
             <StatusChip label={projectsChipLabel(projects.length)} tone="gold" />
-            <StatusChip label={`${tasks.length} open tasks`} tone="info" />
+            <StatusChip
+              label={tasksChipLabel(tasksHonesty.kind)}
+              tone={tasksHonesty.kind === 'indexed' ? 'info' : 'neutral'}
+            />
             <StatusChip
               label={engagementsChipLabel(engagementsHonesty.kind)}
               tone={engagementsHonesty.kind === 'indexed' ? 'info' : 'neutral'}
@@ -820,15 +823,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         subtitle="Open HVCG_Tasks on this ClientCode — the Hub payload. Read-only titles, plus status or due when the row already has them."
         headerAction={
           <StatusChip
-            label={
-              tasksHonesty.kind === 'indexed'
-                ? 'tasks=INDEXED'
-                : tasksHonesty.kind === 'missing'
-                  ? 'tasks=MISSING'
-                  : tasksHonesty.kind === 'source_unavailable'
-                    ? 'tasks=SOURCE_UNAVAILABLE'
-                    : 'Not queried'
-            }
+            label={tasksChipLabel(tasksHonesty.kind)}
             tone={tasksHonesty.kind === 'indexed' ? 'info' : 'neutral'}
             size="sm"
           />

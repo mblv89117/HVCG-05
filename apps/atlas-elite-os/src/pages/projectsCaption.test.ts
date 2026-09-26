@@ -62,7 +62,8 @@ describe('W2R Elite projects caption', () => {
     const state = page.slice(page.indexOf('label="State"'), page.indexOf('label="Next"'));
     assert.match(state, /projectsChipLabel\(projects\.length\)/);
     assert.equal(state.includes('${projects.length} projects'), false);
-    assert.match(state, /\$\{tasks\.length\} open tasks/);
+    assert.match(state, /tasksChipLabel\(tasksHonesty\.kind\)/);
+    assert.equal(state.includes('${tasks.length} open tasks'), false);
     assert.match(state, /\$\{workspace\.timeline\.length\} timeline/);
 
     const related = page.slice(page.indexOf('label="Related work"'), page.indexOf('label="What requires me"'));
