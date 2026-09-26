@@ -6,8 +6,9 @@ DRAFT only. No merge, no deploy, no client contact, no money movement, no author
 
 - Base tip: `production/atlas-core` at `c62bf45d0ea5bc4af88e59b9e4edbe81e6b71662` (W2R Elite projects caption residual, #249)
 - Chip implementation commit: `d187811e6dae8d282d556d5a5688eca2d3f3e0fb`
+- Report commit: `433bd6ee1dbced13a04417afdba1718c2ca9c0e8`
 - Draft PR: https://github.com/mblv89117/HVCG-05/pull/250
-- Head SHA is the commit that adds this report. The pull request description lists `git rev-parse HEAD` after that commit lands.
+- This commit records the report SHA. The pull request description carries the branch head SHA after it lands.
 
 ## Files touched
 
