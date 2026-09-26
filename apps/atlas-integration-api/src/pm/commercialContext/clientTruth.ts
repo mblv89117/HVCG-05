@@ -12,6 +12,7 @@ import {
 } from '@hvcg/atlas-identity-map';
 import { GLOBAL_AUTO_RESPOND } from '@hvcg/atlas-integration-contracts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
+import { isFileIndexRow } from '../sharepoint/fabric/fileIndex.ts';
 import { entityBoundaryFor, isAccgReadOnly } from '../sharepoint/knowledgeClassification.ts';
 import { hvsActionableClientKnowledge } from '../sharepoint/hvsActionableClientKnowledge.ts';
 import { hvsRecoveredDocuments } from '../sharepoint/hvsRecoveredDocuments.ts';
@@ -212,6 +213,12 @@ export type ClientTruthModel = {
   projects: DomainTruth;
   documents: DomainTruth;
   communications: DomainTruth;
+  /**
+   * Thread rows already on HVCG_Communications. File-index rows stay the
+   * document index and the certified communications completeness.
+   * Token is communicationsList=, never a rewrite of communications=.
+   */
+  communicationsList: DomainTruth;
   /** Entitled HVCG_Meetings slice. Not the workspace timeline. */
   meetings: DomainTruth;
   /** Entitled open HVCG_Tasks slice. Not the blocked queue and not the projects suffix. */
@@ -919,6 +926,76 @@ export function decisionsRisksListAskAtlasSentence(
   ].join(' ');
 }
 
+/**
+ * Short HVCG_Communications thread slice. File-index rows stay on
+ * communications.items and on the document index. This is not a second walk
+ * and it does not rewrite communications=.
+ */
+export const COMMUNICATIONS_LIST_SLICE = 6;
+
+export const COMMUNICATIONS_LIST_MISSING_SENTENCE =
+  'No entitled HVCG_Communications thread rows. communicationsList=MISSING. File-index rows are the document index. They are not threads. Atlas does not invent threads, recipients, channels, direction, sent times, or message text.';
+
+export function communicationsListNotQueriedSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  const base =
+    'HVCG_Communications was not queried. Atlas does not treat that as an empty communications list.';
+  return detail ? `${base} ${detail}` : base;
+}
+
+export function communicationsListSourceUnavailableSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  return [
+    'Atlas cannot read the entitled HVCG_Communications slice.',
+    'communicationsList=SOURCE_UNAVAILABLE.',
+    detail || 'HVCG_Communications list walk did not complete.',
+    'Partial rows are not the communications list.',
+    'File-index rows are not shown as threads.',
+    'Atlas does not invent threads, recipients, channels, direction, sent times, or message text.',
+  ].join(' ');
+}
+
+export function communicationsListLabel(row: {
+  title: string;
+  channel?: string;
+  direction?: string;
+  date?: string;
+}): string {
+  const bits = [row.channel, row.direction, row.date].map((part) => (part || '').trim()).filter(Boolean);
+  return bits.length ? `${row.title} (${bits.join(', ')})` : row.title;
+}
+
+export function communicationsListIndexedSentence(
+  rows: Array<{ title: string; channel?: string; direction?: string; date?: string }>,
+): string {
+  const labels = rows.slice(0, COMMUNICATIONS_LIST_SLICE).map((row) => communicationsListLabel(row));
+  const extra = rows.length - labels.length;
+  const more = extra > 0 ? ` +${extra} more.` : '';
+  return `${rows.length} entitled HVCG_Communications thread row(s). communicationsList=INDEXED. ${labels.join('; ')}.${more}`;
+}
+
+/**
+ * Ask Atlas answer for the communications list topic. The lead summary is the
+ * workspace sentence; this wrapper is the same text Elite shows on the card.
+ * The certified communications= brief line stays on the operating brief.
+ */
+export function communicationsListAskAtlasSentence(
+  summary: string,
+  completeness: string,
+  classification: string,
+): string {
+  return [
+    summary,
+    `communicationsList=${completeness}/${classification}.`,
+    'Current communications list is the hygiene-unfiltered HVCG_Communications slice for this ClientCode, excluding file-index rows.',
+    'File-index rows are the document index.',
+    'They are not threads.',
+    'The workspace timeline is not this list.',
+    'Atlas does not invent threads, recipients, channels, direction, sent times, or message text.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
 type EngagementListRow = { title: string; status?: string };
 
 /**
@@ -1075,6 +1152,58 @@ function entitledDecisionsRisks(
     rows,
     reason: section.reason,
   };
+}
+
+type CommunicationsListRow = {
+  title: string;
+  channel?: string;
+  direction?: string;
+  date?: string;
+};
+
+/**
+ * ClientCode-matched HVCG_Communications thread rows already on the snapshot.
+ * File-index rows stay on communications.items for the certified count and the
+ * document index. They are not threads. No section is not queried. A failed
+ * walk contributes no titles. Channel, direction, and date are copied only
+ * when already on the row. Status is not a thread status.
+ */
+function entitledCommunicationsThreads(
+  section: WorkspaceTruthSnapshot['communications'] | undefined,
+  clientCode: string,
+): {
+  supplied: boolean;
+  unavailable: boolean;
+  queried: boolean;
+  rows: CommunicationsListRow[];
+  reason?: string;
+} {
+  if (!section) {
+    return { supplied: false, unavailable: false, queried: false, rows: [] };
+  }
+  if (section.status === 'SOURCE_UNAVAILABLE') {
+    return { supplied: true, unavailable: true, queried: false, rows: [], reason: section.reason };
+  }
+  if (!section.queried) {
+    return { supplied: true, unavailable: false, queried: false, rows: [], reason: section.reason };
+  }
+  const rows: CommunicationsListRow[] = [];
+  for (const item of section.items || []) {
+    if (isFileIndexRow(item)) continue;
+    if (asText(item.clientCode).toUpperCase() !== clientCode) continue;
+    const title = asText(item.title).replace(/\s+/g, ' ');
+    if (!title) continue;
+    const channel = asText(item.channel);
+    const direction = asText(item.direction);
+    const date = asText(item.date);
+    rows.push({
+      title,
+      ...(channel ? { channel } : {}),
+      ...(direction ? { direction } : {}),
+      ...(date ? { date } : {}),
+    });
+  }
+  return { supplied: true, unavailable: false, queried: true, rows, reason: section.reason };
 }
 
 type OpenTaskListRow = { title: string; status?: string; dueDate?: string };
@@ -1753,6 +1882,63 @@ export function composeClientTruth(opts: {
         ],
       );
 
+  // W2Q: list sentence is the non-file-index HVCG_Communications slice already
+  // on the workspace. File-index rows stay on communications.items, commsCount,
+  // and the document index. A finished walk with zero thread rows is MISSING.
+  // A truncated walk is SOURCE_UNAVAILABLE and contributes no titles.
+  // queried:false is not an empty thread list. communications= is not rewritten.
+  const communicationsListSlice = entitledCommunicationsThreads(workspace?.communications, clientCode);
+  const communicationsListCount = communicationsListSlice.rows.length;
+  const communicationsListSummary = !communicationsListSlice.supplied
+    ? communicationsListNotQueriedSentence()
+    : communicationsListSlice.unavailable
+      ? communicationsListSourceUnavailableSentence(communicationsListSlice.reason)
+      : communicationsListCount > 0
+        ? communicationsListIndexedSentence(communicationsListSlice.rows)
+        : communicationsListSlice.queried
+          ? COMMUNICATIONS_LIST_MISSING_SENTENCE
+          : communicationsListNotQueriedSentence(communicationsListSlice.reason);
+  const communicationsListCompleteness: DomainCompleteness = !communicationsListSlice.supplied
+    ? 'NOT_CERTIFIED'
+    : communicationsListSlice.unavailable
+      ? 'NOT_CERTIFIED'
+      : communicationsListCount > 0
+        ? 'INDEXED'
+        : communicationsListSlice.queried
+          ? 'MISSING'
+          : 'NOT_CERTIFIED';
+  const communicationsListClassification: TruthClassification = !communicationsListSlice.supplied
+    ? 'NOT_CERTIFIED'
+    : communicationsListSlice.unavailable
+      ? 'NOT_CERTIFIED'
+      : communicationsListCount > 0
+        ? 'CONFIRMED'
+        : communicationsListSlice.queried
+          ? 'MISSING'
+          : 'NOT_CERTIFIED';
+  const communicationsListDomain = domain(
+    'communicationsList',
+    communicationsListCompleteness,
+    communicationsListClassification,
+    communicationsListSummary,
+    [
+      ...communicationsListSlice.rows.slice(0, COMMUNICATIONS_LIST_SLICE).map((row) => ({
+        source: 'HVCG_Communications',
+        detail: communicationsListLabel(row),
+      })),
+      {
+        source: 'HVCG_Communications',
+        detail: !communicationsListSlice.supplied
+          ? 'SharePoint workspace communications were not supplied on this composition.'
+          : communicationsListSlice.unavailable
+            ? `communicationsList=SOURCE_UNAVAILABLE; partial rows are not the list; ${communicationsListSlice.reason || 'walk did not complete'}`
+            : communicationsListSlice.queried
+              ? `entitled thread count=${communicationsListCount}; communicationsList=${communicationsListCount > 0 ? 'INDEXED' : 'MISSING'}`
+              : communicationsListSlice.reason || 'Communications list not queried.',
+      },
+    ],
+  );
+
   // W2K: current meeting list is the entitled HVCG_Meetings slice only.
   // The workspace timeline is not that inventory. A finished empty slice is
   // MISSING. A truncated walk is SOURCE_UNAVAILABLE and contributes no titles.
@@ -2128,6 +2314,12 @@ export function composeClientTruth(opts: {
       classification: decisionsRisksListDomain.classification,
       provenance: decisionsRisksListDomain.provenance,
     },
+    communicationsListExist: {
+      question: 'What communications exist?',
+      text: communicationsListDomain.summary,
+      classification: communicationsListDomain.classification,
+      provenance: communicationsListDomain.provenance,
+    },
     documentsMissing: {
       question: 'What documents are missing?',
       // Recovered HVS folder gaps (hvsActionableClientKnowledge.missingDocuments)
@@ -2265,6 +2457,7 @@ export function composeClientTruth(opts: {
     projects: projectsDomain,
     documents: documentsDomain,
     communications: communicationsDomain,
+    communicationsList: communicationsListDomain,
     meetings: meetingsDomain,
     tasks: tasksDomain,
     financialContext,

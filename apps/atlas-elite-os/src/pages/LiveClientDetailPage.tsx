@@ -25,6 +25,7 @@ import {
   Text,
 } from '@fluentui/react-components';
 import { ArrowSyncRegular, OpenRegular } from '@fluentui/react-icons';
+import { communicationsListChipLabel, communicationsListHonesty } from './communicationsListHonesty';
 import { contactsListHonesty } from './contactsListHonesty';
 import { decisionsRisksChipLabel, decisionsRisksListHonesty } from './decisionsRisksListHonesty';
 import { deliverablesChipLabel, deliverablesListHonesty } from './deliverablesListHonesty';
@@ -281,6 +282,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   );
   const decisionsRisksHonesty = useMemo(
     () => decisionsRisksListHonesty(workspace?.decisionsRisks, clientId),
+    [workspace, clientId],
+  );
+  const communicationsListView = useMemo(
+    () => communicationsListHonesty(workspace?.communications, clientId),
     [workspace, clientId],
   );
   const projects = workspace?.projects || [];
@@ -578,6 +583,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
               label={decisionsRisksChipLabel(decisionsRisksHonesty.kind)}
               tone={decisionsRisksHonesty.kind === 'indexed' ? 'warning' : 'neutral'}
             />
+            <StatusChip
+              label={communicationsListChipLabel(communicationsListView.kind)}
+              tone={communicationsListView.kind === 'indexed' ? 'info' : 'neutral'}
+            />
             <StatusChip label={`${workspace.timeline.length} timeline`} tone="gold" />
           </div>
         </RecordRow>
@@ -662,7 +671,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
           </div>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>
             Documents: {sectionHonesty(workspace.documents)} · Communications:{' '}
-            {sectionHonesty(workspace.communications)}
+            {communicationsListView.sentence}
           </Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{tasksHonesty.sentence}</Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{contactsHonesty.sentence}</Caption1>
@@ -1130,6 +1139,51 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
                   : 'Meetings not queried'
             }
             description={meetingsHonesty.sentence}
+            density="compact"
+            align="start"
+          />
+        )}
+      </AtlasCard>
+
+      <AtlasCard
+        title="Communications"
+        subtitle="HVCG_Communications thread rows on this ClientCode — the Hub payload. Read-only titles. Channel, direction, and date only when the row already has them. File-index rows are the document index."
+        density="compact"
+        headerAction={
+          <StatusChip
+            label={communicationsListChipLabel(communicationsListView.kind)}
+            tone={communicationsListView.kind === 'indexed' ? 'info' : 'neutral'}
+            size="sm"
+          />
+        }
+      >
+        {communicationsListView.kind === 'indexed' ? (
+          <>
+            <Caption1 style={{ display: 'block', marginBottom: 8 }}>{communicationsListView.sentence}</Caption1>
+            {communicationsListView.slice.map((row) => (
+              <div key={row.id} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '4px 0' }}>
+                <Text weight="semibold">{row.title}</Text>
+                {row.channel || row.direction || row.date ? (
+                  <Caption1>{[row.channel, row.direction, row.date].filter(Boolean).join(', ')}</Caption1>
+                ) : null}
+              </div>
+            ))}
+            {communicationsListView.count > communicationsListView.slice.length ? (
+              <Caption1 style={{ display: 'block', marginTop: 8 }}>
+                +{communicationsListView.count - communicationsListView.slice.length} more
+              </Caption1>
+            ) : null}
+          </>
+        ) : (
+          <EmptyState
+            title={
+              communicationsListView.kind === 'missing'
+                ? 'No entitled communication threads'
+                : communicationsListView.kind === 'source_unavailable'
+                  ? 'Communications source unavailable'
+                  : 'Communications not queried'
+            }
+            description={communicationsListView.sentence}
             density="compact"
             align="start"
           />

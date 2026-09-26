@@ -127,6 +127,13 @@ assert.match(liveDetail, /decisionsRisksChipLabel/);
 assert.match(liveDetail, /\{decisionsRisksHonesty\.sentence\}/);
 assert.doesNotMatch(liveDetail, /workspace\.decisionsRisks\.items/);
 assert.doesNotMatch(liveDetail, /sectionHonesty\(workspace\.decisionsRisks\)/);
+assert.match(liveDetail, /communicationsListHonesty/);
+assert.match(liveDetail, /communicationsListChipLabel/);
+assert.match(liveDetail, /\{communicationsListView\.sentence\}/);
+assert.doesNotMatch(liveDetail, /workspace\.communications\.items/);
+assert.doesNotMatch(liveDetail, /sectionHonesty\(workspace\.communications\)/);
+assert.doesNotMatch(liveDetail, /0 communications/);
+assert.match(liveDetail, /sectionHonesty\(workspace\.documents\)/);
 assert.doesNotMatch(liveDetail, /fetchClient360/);
 assert.doesNotMatch(liveDetail, /ingestMicrosoftClient360/);
 

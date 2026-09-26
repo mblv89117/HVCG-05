@@ -13,6 +13,7 @@ import {
 } from './clientOnboardingAutomation.ts';
 import {
   CLIENT_TRUTH_MISSION_KEY,
+  communicationsListAskAtlasSentence,
   composeClientTruth,
   decisionsRisksListAskAtlasSentence,
   deliverablesListAskAtlasSentence,
@@ -92,6 +93,25 @@ export function deliverablesIndexUnavailableAnswer(clientCode: string): string {
  * Does not invent a page_cap measurement, an OWNER_DECISION_REQUIRED clause, or a list.
  * Owner approvals stay on the approvals topic.
  */
+/**
+ * Finished communications-list answer when the entitled workspace cannot be loaded.
+ * Does not invent a page_cap measurement, an OWNER_DECISION_REQUIRED clause, or threads.
+ * Does not rewrite the certified communications= operating-brief line.
+ * Does not go through the document-index unavailable answer.
+ */
+export function communicationsListIndexUnavailableAnswer(clientCode: string): string {
+  const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
+  return [
+    `Atlas cannot read the current ${code} communications list (HVCG_Communications thread rows).`,
+    'communicationsList=SOURCE_UNAVAILABLE.',
+    'Atlas will not invent threads, recipients, channels, direction, sent times, or message text.',
+    'Partial rows are not the communications list.',
+    'File-index rows are the document index.',
+    'They are not threads.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
 export function decisionsRisksIndexUnavailableAnswer(clientCode: string): string {
   const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
   return [
@@ -183,6 +203,7 @@ export type ClientOperatingBriefTopic =
   | 'engagements'
   | 'deliverables'
   | 'decisions_risks'
+  | 'communications_list'
   | 'capital'
   | 'owner_decisions'
   | 'approvals'
@@ -261,6 +282,16 @@ const CONCIERGE_PHRASE_MAP: Array<{ topic: ClientOperatingBriefTopic; pattern: R
     topic: 'documents',
     pattern:
       /\bwhat documents exist\b|\bdocuments exist\b|\bdocument inventory\b|\bdocuments on the operating brief\b|\bwhat documents do we have\b|\bwhat documents (?:does|do)\b|\bwhat documents\b.+\bhave\b|\bdocuments domain\b|\bdocument picture\b|\bdocument index\b|\blist (?:the )?documents\b|\blist\b.+\bdocuments\b|^documents$/,
+  },
+  {
+    topic: 'communications_list',
+    // Closed plural list only. Documents stays earlier so a documents-and-communications
+    // question stays on documents. Lookaheads keep onboarding, policy, and
+    // communication context off this topic. The group is unanchored after those
+    // lookaheads: a start-anchored group misses "what is the communications list".
+    // Singular "communication", search, and threads stay unmapped.
+    pattern:
+      /^(?!.*\b(?:onboarding|policy)\b)(?!.*\bcommunication context\b)[\s\S]*?(?:\bwhat communications exist\b|\bcommunications exist\b|\bcommunications inventory\b|\bcommunications on the operating brief\b|\bwhat communications do we have\b|\bwhat communications (?:does|do)\b|\bwhat communications\b.+\bhave\b|\bcommunications domain\b|\bcommunications picture\b|\bcommunications list\b|\blist (?:the )?communications\b|\blist\b.+\bcommunications\b|^communications$)/,
   },
   {
     topic: 'meetings',
@@ -595,6 +626,12 @@ function renderTopic(
         truth.answers.decisionsRisksExist.text,
         truth.decisionsRisksList.completeness,
         truth.decisionsRisksList.classification,
+      );
+    case 'communications_list':
+      return communicationsListAskAtlasSentence(
+        truth.answers.communicationsListExist.text,
+        truth.communicationsList.completeness,
+        truth.communicationsList.classification,
       );
     case 'capital':
       return [
