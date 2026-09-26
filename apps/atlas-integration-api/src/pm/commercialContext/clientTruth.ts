@@ -306,7 +306,16 @@ export function workspaceSnapshotFromPayload(payload: {
         : payload.meetings
       : undefined,
     engagements: payload.engagements,
-    contacts: payload.contacts,
+    contacts: payload.contacts
+      ? payload.contacts.status === 'SOURCE_UNAVAILABLE'
+        ? {
+            queried: false,
+            items: [],
+            reason: payload.contacts.reason,
+            status: 'SOURCE_UNAVAILABLE',
+          }
+        : payload.contacts
+      : undefined,
     decisionsRisks: payload.decisionsRisks,
     timeline: payload.timeline,
     nextActions: payload.nextActions,
@@ -491,6 +500,85 @@ function entitledMeetings(
   return { unavailable: false, queried: true, rows, reason: meetings.reason };
 }
 
+/** Short entitled contact slice shown with the full count. Not a second inventory. */
+export const CONTACTS_LIST_SLICE = 6;
+
+export const CONTACTS_MISSING_SENTENCE =
+  'No entitled HVCG_Contacts rows. contacts=MISSING. Atlas does not invent contacts, emails, phones, roles, or meeting attendees.';
+
+export function contactsNotQueriedSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  const base = 'HVCG_Contacts was not queried. Atlas does not treat that as an empty contact list.';
+  return detail ? `${base} ${detail}` : base;
+}
+
+export function contactsSourceUnavailableSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  return [
+    'Atlas cannot read the entitled HVCG_Contacts slice.',
+    'contacts=SOURCE_UNAVAILABLE.',
+    detail || 'HVCG_Contacts list walk did not complete.',
+    'Partial rows are not the contact list.',
+    'Atlas does not invent contacts, emails, phones, roles, or meeting attendees.',
+  ].join(' ');
+}
+
+export function contactListLabel(row: { title: string; email?: string; jobTitle?: string }): string {
+  const email = (row.email || '').trim();
+  const jobTitle = (row.jobTitle || '').trim();
+  const identity = email ? `${row.title} <${email}>` : `${row.title} (email not recorded)`;
+  return jobTitle ? `${identity}, ${jobTitle}` : identity;
+}
+
+export function contactsIndexedSentence(
+  rows: Array<{ title: string; email?: string; jobTitle?: string }>,
+): string {
+  const labels = rows.slice(0, CONTACTS_LIST_SLICE).map((row) => contactListLabel(row));
+  const extra = rows.length - labels.length;
+  const more = extra > 0 ? ` +${extra} more.` : '';
+  return `${rows.length} entitled HVCG_Contacts row(s). contacts=INDEXED. ${labels.join('; ')}.${more}`;
+}
+
+/**
+ * Entitled HVCG_Contacts rows for this ClientCode. A truncated walk contributes
+ * no names. Rows stamped with another code, or with no code, are refused.
+ * Phone, role flags, and Modified are not part of the label.
+ */
+function entitledContacts(
+  contacts: WorkspaceTruthSnapshot['contacts'] | undefined,
+  clientCode: string,
+): {
+  supplied: boolean;
+  unavailable: boolean;
+  queried: boolean;
+  rows: Array<{ title: string; email?: string; jobTitle?: string }>;
+  reason?: string;
+} {
+  if (!contacts) {
+    return { supplied: false, unavailable: false, queried: false, rows: [] };
+  }
+  if (contacts.status === 'SOURCE_UNAVAILABLE') {
+    return { supplied: true, unavailable: true, queried: false, rows: [], reason: contacts.reason };
+  }
+  if (!contacts.queried) {
+    return { supplied: true, unavailable: false, queried: false, rows: [], reason: contacts.reason };
+  }
+  const rows: Array<{ title: string; email?: string; jobTitle?: string }> = [];
+  for (const item of contacts.items || []) {
+    if (asText(item.clientCode).toUpperCase() !== clientCode) continue;
+    const title = asText(item.title).replace(/\s+/g, ' ');
+    if (!title) continue;
+    const email = asText(item.email);
+    const jobTitle = asText(item.jobTitle);
+    rows.push({
+      title,
+      ...(email ? { email } : {}),
+      ...(jobTitle ? { jobTitle } : {}),
+    });
+  }
+  return { supplied: true, unavailable: false, queried: true, rows, reason: contacts.reason };
+}
+
 function queueFromTasks(
   tasks: NonNullable<WorkspaceTruthSnapshot['tasks']>,
   now?: string,
@@ -581,7 +669,11 @@ function pictureQueuesForClient(picture: OperatorOperatingPicture | undefined, c
 function prepareContactCandidates(workspace?: WorkspaceTruthSnapshot): ContactCandidate[] {
   if (!workspace) return [];
   const canonical = new Set<string>();
-  for (const item of workspace.contacts?.items || []) {
+  const contactItems =
+    workspace.contacts?.status === 'SOURCE_UNAVAILABLE' || !workspace.contacts?.queried
+      ? []
+      : workspace.contacts?.items || [];
+  for (const item of contactItems) {
     const email = extractEmail(item);
     if (email) canonical.add(email);
   }
@@ -680,7 +772,6 @@ export function composeClientTruth(opts: {
   const hasGccOrg = Boolean(identity?.gccOrganizationId);
   const has360Org = Boolean(identity?.growth360OrganizationId || identity?.growth360Slug);
 
-  const contactCount = sectionCount(workspace?.contacts);
   const engagementCount = sectionCount(workspace?.engagements);
   const fileIndex = entitledFileIndexTitles(workspace?.documents, clientCode);
   const documentCount = fileIndex.titles.length;
@@ -705,38 +796,60 @@ export function composeClientTruth(opts: {
     ],
   );
 
-  const contactsUnavailable = workspace?.contacts?.status === 'SOURCE_UNAVAILABLE';
-  const contactsDomain = contactsUnavailable
-    ? domain(
-        'contacts',
-        'NOT_CERTIFIED',
-        'NOT_CERTIFIED',
-        'HVCG_Contacts walk did not complete. contacts=SOURCE_UNAVAILABLE. Atlas does not invent contacts.',
-        [
-          {
-            source: 'HVCG_Contacts',
-            detail: workspace?.contacts?.reason || 'contacts walk did not complete',
-          },
-        ],
-      )
-    : domain(
-        'contacts',
-        contactCount > 0 ? 'PARTIAL' : 'MISSING',
-        contactCount > 0 ? 'CONFIRMED' : 'MISSING',
-        contactCount > 0
-          ? `${contactCount} entitled HVCG_Contacts row(s) on this ClientCode.`
-          : 'No entitled HVCG_Contacts rows. Atlas does not invent contacts.',
-        [
-          {
-            source: 'HVCG_Contacts',
-            detail: workspace?.contacts
-              ? workspace.contacts.queried
-                ? `queried; count=${contactCount}`
-                : workspace.contacts.reason || 'Contacts list not queried.'
-              : 'SharePoint workspace contacts were not supplied on this composition.',
-          },
-        ],
-      );
+  // W2L: current contact list is the entitled HVCG_Contacts slice only.
+  // Proposed contactCandidates are not that list. A finished empty slice is
+  // MISSING. A truncated walk is SOURCE_UNAVAILABLE and contributes no names.
+  // An absent section stays MISSING so a composition with no workspace does
+  // not become an allowlist miss.
+  const contactSlice = entitledContacts(workspace?.contacts, clientCode);
+  const entitledContactCount = contactSlice.rows.length;
+  const contactsSummary = !contactSlice.supplied
+    ? 'No entitled HVCG_Contacts rows. Atlas does not invent contacts.'
+    : contactSlice.unavailable
+      ? contactsSourceUnavailableSentence(contactSlice.reason)
+      : entitledContactCount > 0
+        ? contactsIndexedSentence(contactSlice.rows)
+        : contactSlice.queried
+          ? CONTACTS_MISSING_SENTENCE
+          : contactsNotQueriedSentence(contactSlice.reason);
+  const contactsDomain = domain(
+    'contacts',
+    !contactSlice.supplied
+      ? 'MISSING'
+      : contactSlice.unavailable
+        ? 'NOT_CERTIFIED'
+        : entitledContactCount > 0
+          ? 'INDEXED'
+          : contactSlice.queried
+            ? 'MISSING'
+            : 'NOT_CERTIFIED',
+    !contactSlice.supplied
+      ? 'MISSING'
+      : contactSlice.unavailable
+        ? 'NOT_CERTIFIED'
+        : entitledContactCount > 0
+          ? 'CONFIRMED'
+          : contactSlice.queried
+            ? 'MISSING'
+            : 'NOT_CERTIFIED',
+    contactsSummary,
+    [
+      ...contactSlice.rows.slice(0, CONTACTS_LIST_SLICE).map((row) => ({
+        source: 'HVCG_Contacts',
+        detail: contactListLabel(row),
+      })),
+      {
+        source: 'HVCG_Contacts',
+        detail: !contactSlice.supplied
+          ? 'SharePoint workspace contacts were not supplied on this composition.'
+          : contactSlice.unavailable
+            ? `contacts=SOURCE_UNAVAILABLE; partial rows are not the list; ${contactSlice.reason || 'walk did not complete'}`
+            : contactSlice.queried
+              ? `entitled count=${entitledContactCount}; contacts=${entitledContactCount > 0 ? 'INDEXED' : 'MISSING'}`
+              : contactSlice.reason || 'Contacts list not queried.',
+      },
+    ],
+  );
 
   const engagementsUnavailable = workspace?.engagements?.status === 'SOURCE_UNAVAILABLE';
   const engagementsDomain = engagementsUnavailable
@@ -1201,6 +1314,12 @@ export function composeClientTruth(opts: {
       text: meetingsDomain.summary,
       classification: meetingsDomain.classification,
       provenance: meetingsDomain.provenance,
+    },
+    contactsExist: {
+      question: 'What contacts exist?',
+      text: contactsDomain.summary,
+      classification: contactsDomain.classification,
+      provenance: contactsDomain.provenance,
     },
     documentsMissing: {
       question: 'What documents are missing?',
