@@ -1,35 +1,36 @@
-# W2R implementation report — ACCG01 projects caption residual
+# W2S implementation report — ACCG01 tasks State chip
 
 DRAFT only. No merge, no deploy, no client contact, no money movement, no authority-flag change. No `LIVE_CERT_PASS` is claimed.
 
 ## Head
 
-- Base tip: `production/atlas-core` at `8cef27463f84cab3ecca13a01ac41903fdfdb3e4` (W2Q communications list honesty, #248)
-- Caption implementation commit: `50d9432a3ab6a6f6ab3d23ca65779155152a7b9e`
-- Report commit: `6a290160c78e0a148a417674f1201c4542427b65`
-- Head SHA when the draft was opened: `a9d6e33bc24db99a8c6c0f68b8c6030b613313f2`
-- Draft PR: https://github.com/mblv89117/HVCG-05/pull/249
-- This commit adds the PR URL. The pull request description carries the full head SHA after it lands.
+- Base tip: `production/atlas-core` at `c62bf45d0ea5bc4af88e59b9e4edbe81e6b71662` (W2R Elite projects caption residual, #249)
+- Chip implementation commit: `d187811e6dae8d282d556d5a5688eca2d3f3e0fb`
+- Report commit: `433bd6ee1dbced13a04417afdba1718c2ca9c0e8`
+- Draft PR: https://github.com/mblv89117/HVCG-05/pull/250
+- This commit records the report SHA. The pull request description carries the branch head SHA after it lands.
 
 ## Files touched
 
-- `apps/atlas-elite-os/src/pages/projectsCaption.ts` (new, display-only)
-- `apps/atlas-elite-os/src/pages/projectsCaption.test.ts` (new)
-- `apps/atlas-elite-os/src/pages/LiveClientDetailPage.tsx` (State chip, related-work caption, read-only empty description)
-- `apps/atlas-elite-os/src/pages/communicationsListHonesty.test.ts` (moved the create-sentence lock off the W2Q test)
-- `apps/atlas-elite-os/scripts/project-route-tests.mjs` (route lock now requires the caption wiring)
-- `apps/atlas-elite-os/package.json` (`test:security` includes `projectsCaption.test.ts`)
+- `apps/atlas-elite-os/src/pages/tasksListHonesty.ts` (`tasksChipLabel`)
+- `apps/atlas-elite-os/src/pages/LiveClientDetailPage.tsx` (State chip and Related tasks header)
+- `apps/atlas-elite-os/src/pages/tasksListHonesty.test.ts` (four labels and wiring)
+- `apps/atlas-elite-os/src/pages/projectsCaption.test.ts` (W2R count lock moved off the tasks chip)
+- `apps/atlas-elite-os/scripts/project-route-tests.mjs` (`tasks=INDEXED` literal moved to the helper)
 - `artifacts/IMPL_REPORT.md` (this file)
 
 ## What changed
 
-Elite display copy on a loaded workspace only.
+Elite display only. The State chip and the Related tasks header use `tasksChipLabel(tasksHonesty.kind)`.
 
-- State chip: `projects=PARTIAL` when `projects.length > 0`, `projects=MISSING` when the length is zero. The raw `` `${projects.length} projects` `` chip is gone.
-- Related work, count zero: a `projects=MISSING` sentence. It does not say to create.
-- Related work, count greater than zero: name links stay. A caption says those rows are the hygiene-kept HVCG_Projects set and `projects=PARTIAL`.
-- Read-only empty description (`writePolicy === 'read_only'`): no longer says `Create a project to track next actions.` The existing line that create is hidden stays.
-- Writable empty (`writePolicy` not `read_only`): create form and the existing create description stay.
+- `indexed` → `tasks=INDEXED`, tone `info`
+- `missing` → `tasks=MISSING`, tone `neutral`
+- `source_unavailable` → `tasks=SOURCE_UNAVAILABLE`, tone `neutral`
+- `not_queried` → `Not queried`, tone `neutral`
+
+The label is the kind `tasksListHonesty` already returned. `tasks.length > 0` is not mapped to `tasks=INDEXED`. A finished payload whose titles were dropped stays `tasks=MISSING`. The chip does not say `tasks=PARTIAL` or `tasks=INDEXED/CONFIRMED`.
+
+Related work still prints `{tasksHonesty.sentence}`. Card titles, the row list, the read-only line `Task create is hidden for this read-only ClientCode.`, and the writable Create task form are unchanged.
 
 ## Authority
 
@@ -39,21 +40,17 @@ Unchanged. `canExecute`, `capitalSubmit`, and `GLOBAL_AUTO_RESPOND` stay false. 
 
 Commands were run from `apps/atlas-elite-os` after `npm ci --ignore-scripts` at the repo root.
 
-- `npx tsx --test src/pages/projectsCaption.test.ts` — 4/4 pass.
+- `npx tsx --test src/pages/tasksListHonesty.test.ts` — 8/8 pass.
 - `node ./scripts/project-route-tests.mjs` — pass (`PASS project route + operating layer source tests`).
-- `npm run test:security` — 108/108 pass, 0 fail. Includes projects caption plus communications, tasks, engagements, deliverables, decisions/risks, meetings, and contacts honesty locks.
-- `npm run lint:hooks` — pass.
-- `node ./scripts/auth-transition-tests.mjs` — pass.
-- `node ./scripts/hub-access-token-tests.mjs` — pass.
-- `node ./scripts/hook-order-render-tests.mjs` — pass.
+- `npm run test:security` — 108/108 pass, 0 fail. Includes tasks chip locks plus projects caption, communications, engagements, deliverables, decisions/risks, meetings, and contacts honesty locks.
 
 ## MUST-NOT checklist
 
-- Did not edit Hub Ask Atlas W2G `renderTopic` case `projects`, `answers.workingOn`, or the `WHAT ATLAS KNOWS` `projects=` token.
-- Did not add an Ask Atlas phrase-map entry for list-projects. The projects pattern is unchanged. `List capital projects for ACCG01` stays on `detectTopic` `/capital/`.
-- Did not change Graph walks, `LIST_WALK_PAGE_CAP` (80), `LIST_WALK_TOP` (100), `filterOwnerFacingProjects`, `buildSharePointClientWorkspace`, or `composeClientTruth`.
-- Did not change the timeline card, `capitalLinked`, the tasks State chip, `sectionHonesty(workspace.documents)`, or communications list sentences.
+- Did not edit Hub Ask Atlas, `renderTopic` case `tasks`, or `answers.tasksExist`.
+- Did not add a tasks phrase-map entry. Existing W2M sentences stay, including `tasks=INDEXED/CONFIRMED` inside the indexed Ask Atlas sentence.
+- Did not change Graph walks, `LIST_WALK_PAGE_CAP` (80), `LIST_WALK_TOP` (100), `filterOwnerFacingTasks`, `buildSharePointClientWorkspace`, `entitledOpenTasks`, or `composeClientTruth`.
+- Did not add `tasksIndex` on the Elite payload.
+- Did not change `projectsChipLabel`, `capitalLinked`, the timeline chips, `sectionHonesty(workspace.documents)`, contacts, or meetings cards.
 - Did not flip `canExecute`, `capitalSubmit`, or `GLOBAL_AUTO_RESPOND`.
-- Did not invent `projects=INDEXED`, recovered HVS titles, or project names that are not on the payload.
-- Did not treat a failed workspace load as `projects=MISSING`. Sign-in, 401, 403, error, and empty-response states still return before the State card.
+- Did not invent `tasks=PARTIAL`, `projects=INDEXED`, `timeline=INDEXED`, or `documents=INDEXED`.
 - Did not merge, undraft, deploy, contact clients, or move money. No `LIVE_CERT_PASS`.
