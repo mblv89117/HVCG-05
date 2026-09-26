@@ -7,7 +7,9 @@ DRAFT only. No merge, no deploy, no client contact, no money movement, no author
 - Base tip: `production/atlas-core` at `8cef27463f84cab3ecca13a01ac41903fdfdb3e4` (W2Q communications list honesty, #248)
 - Caption implementation commit: `50d9432a3ab6a6f6ab3d23ca65779155152a7b9e`
 - Report commit: `6a290160c78e0a148a417674f1201c4542427b65`
-- The commit that records the report SHA above is the draft pull request head. The pull request description states that full SHA.
+- Head SHA when the draft was opened: `a9d6e33bc24db99a8c6c0f68b8c6030b613313f2`
+- Draft PR: https://github.com/mblv89117/HVCG-05/pull/249
+- This commit adds the PR URL. The pull request description carries the full head SHA after it lands.
 
 ## Files touched
 
