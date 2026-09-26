@@ -60,6 +60,8 @@ assert.match(live, /workspace\.engagements\.items/);
 assert.match(live, /workspace\.decisionsRisks\.items/);
 assert.match(live, /title="Engagements"/);
 assert.match(live, /title="Decisions \/ risks"/);
+assert.match(live, /title="Meetings"/);
+assert.match(live, /meetingsListHonesty/);
 assert.match(live, /title="Timeline"/);
 assert.match(live, /EmptyState/);
 assert.match(live, /StatusChip/);

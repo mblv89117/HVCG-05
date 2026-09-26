@@ -36,6 +36,12 @@ describe('Ask Atlas keyword navigation', () => {
     assert.equal(aiCommandNavigatePath(PROJECTS, { liveAskAtlas: false }), null);
   });
 
+  it('keeps a meetings-list question in the drawer', () => {
+    const meetings = 'What meetings exist for ACCG01?';
+    assert.equal(aiCommandNavigatePath(meetings, { liveAskAtlas: true }), null);
+    assert.equal(aiCommandNavigatePath(meetings, { liveAskAtlas: false }), null);
+  });
+
   it('does not treat a finance-picture question as the financials route', () => {
     assert.equal(aiCommandNavigatePath(PDG01_FINANCE_PICTURE, { liveAskAtlas: true }), null);
     assert.equal(aiCommandNavigatePath(PDG01_FINANCE_PICTURE, { liveAskAtlas: false }), null);

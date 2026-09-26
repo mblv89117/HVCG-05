@@ -378,7 +378,7 @@ export async function buildSharePointClientWorkspace(
           source: 'HVCG_Communications',
           id: String(i.id),
         })),
-      ...extras.meetings.items
+      ...(extras.meetings.status === 'SOURCE_UNAVAILABLE' ? [] : extras.meetings.items)
         .filter((i) => typeof i.date === 'string' && i.date)
         .map((i) => ({
           at: String(i.date),
