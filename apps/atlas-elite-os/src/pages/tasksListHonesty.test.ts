@@ -10,6 +10,7 @@ import { aiCommandNavigatePath } from '../../../../packages/atlas-design-system/
 import {
   TASKS_LIST_SLICE,
   TASKS_MISSING_SENTENCE,
+  tasksIndexedAskAtlasSentence,
   tasksListHonesty,
 } from './tasksListHonesty.ts';
 
@@ -55,7 +56,17 @@ describe('W2M Elite tasks list honesty', () => {
       { id: 't1', title: 'File the ACCG return', status: 'ready', dueDate: '2026-10-02', projectId: 'p1' },
       { id: 't2', title: 'Confirm bank access' },
     ]);
-    assert.equal(view.sentence, INDEXED_SENTENCE);
+    assert.equal(view.sentence, tasksIndexedAskAtlasSentence([
+      { title: 'File the ACCG return', status: 'ready', dueDate: '2026-10-02' },
+      { title: 'Confirm bank access' },
+    ]));
+    assert.equal(view.sentence.startsWith(INDEXED_SENTENCE), true);
+    assert.match(view.sentence, /tasks=INDEXED\/CONFIRMED/);
+    assert.match(view.sentence, /Current task list is the entitled open HVCG_Tasks slice for this ClientCode only/);
+    assert.match(view.sentence, /GLOBAL_AUTO_RESPOND=false/);
+    assert.match(view.sentence, /capitalSubmit=false/);
+    assert.match(view.sentence, /canExecute=false/);
+    assert.equal(/GLOBAL_AUTO_RESPOND=true|capitalSubmit=true|canExecute=true/.test(view.sentence), false);
     assert.equal(view.sentence.includes('Completed filing'), false);
     assert.equal(view.sentence.includes('PDG secret task'), false);
     assert.equal(/tasks=MISSING|tasks=SOURCE_UNAVAILABLE/.test(view.sentence), false);
@@ -124,6 +135,38 @@ describe('W2M Elite tasks list honesty', () => {
     assert.equal(/tasks=MISSING|tasks=INDEXED/.test(view.sentence), false);
   });
 
+  it('keeps the entitled row when the indexed sentence matches Ask Atlas', () => {
+    const view = tasksListHonesty(
+      {
+        availability: { status: 'COMPLETE', queried: true },
+        tasks: [
+          {
+            id: 't-accg',
+            title: 'Review ACCG historical reconstruction evidence',
+            status: 'waiting',
+            clientCode: 'ACCG01',
+            projectId: 'p-recon',
+          },
+        ],
+      },
+      'ACCG01',
+    );
+    assert.equal(view.kind, 'indexed');
+    if (view.kind !== 'indexed') return;
+    assert.deepEqual(view.slice, [
+      {
+        id: 't-accg',
+        title: 'Review ACCG historical reconstruction evidence',
+        status: 'waiting',
+        projectId: 'p-recon',
+      },
+    ]);
+    assert.equal(
+      view.sentence,
+      '1 entitled open HVCG_Tasks row(s). tasks=INDEXED. Review ACCG historical reconstruction evidence (waiting). tasks=INDEXED/CONFIRMED. Current task list is the entitled open HVCG_Tasks slice for this ClientCode only. Completed, cancelled, and hygiene-quarantined tasks are not this list. Atlas does not invent tasks, assignees, due dates, notes, or next actions. GLOBAL_AUTO_RESPOND=false; capitalSubmit=false; canExecute=false.',
+    );
+  });
+
   it('wires State → Related Work and the Related tasks card to the Hub payload helper', () => {
     const page = readFileSync(join(root, 'LiveClientDetailPage.tsx'), 'utf8');
     assert.match(page, /tasksListHonesty\(/);
@@ -132,9 +175,15 @@ describe('W2M Elite tasks list honesty', () => {
     assert.match(page, /\+\{tasksHonesty\.count - tasksHonesty\.slice\.length\} more/);
     assert.match(page, /Task create is hidden for this read-only ClientCode/);
     const tasksCard = page.slice(page.indexOf('title="Related tasks"'), page.indexOf('title="Engagements"'));
-    assert.match(tasksCard, /row\.title/);
+    const indexedAt = tasksCard.indexOf("tasksHonesty.kind === 'indexed'");
+    const indexedBranch = tasksCard.slice(indexedAt, tasksCard.indexOf('No entitled open tasks'));
+    assert.match(indexedBranch, /\{tasksHonesty\.sentence\}/);
+    assert.match(indexedBranch, /tasksHonesty\.slice\.map/);
+    assert.ok(indexedBranch.indexOf('{tasksHonesty.sentence}') < indexedBranch.indexOf('tasksHonesty.slice.map'));
+    assert.match(indexedBranch, /row\.title/);
     assert.match(tasksCard, /row\.status/);
     assert.match(tasksCard, /row\.dueDate/);
+    assert.match(tasksCard, /tasks=INDEXED/);
     assert.match(tasksCard, /tasks=MISSING/);
     assert.match(tasksCard, /tasks=SOURCE_UNAVAILABLE/);
     assert.equal(tasksCard.includes('assigneeName'), false);
