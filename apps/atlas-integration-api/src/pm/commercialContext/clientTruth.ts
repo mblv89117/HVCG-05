@@ -169,6 +169,16 @@ export type WorkspaceTruthSnapshot = {
     reason?: string;
     status?: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND' | 'BLOCKED_AMBIGUOUS_IDENTITY' | 'SOURCE_UNAVAILABLE';
   };
+  /**
+   * Entitled HVCG_Deliverables already walked onto the Hub workspace payload.
+   * SOURCE_UNAVAILABLE contributes no titles. Not the document index.
+   */
+  deliverables?: {
+    queried: boolean;
+    items: Array<Record<string, unknown>>;
+    reason?: string;
+    status?: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND' | 'BLOCKED_AMBIGUOUS_IDENTITY' | 'SOURCE_UNAVAILABLE';
+  };
   contacts?: {
     queried: boolean;
     items: Array<Record<string, unknown>>;
@@ -211,6 +221,11 @@ export type ClientTruthModel = {
    * Not EngagementTypePrimary and not answers.engagement (the my-business clause).
    */
   engagementsList: DomainTruth;
+  /**
+   * Entitled HVCG_Deliverables rows already on the workspace.
+   * Not the document index and not recovered filenames.
+   */
+  deliverablesList: DomainTruth;
   financialContext: DomainTruth;
   growthContext: DomainTruth;
   capitalContext: DomainTruth;
@@ -284,6 +299,7 @@ export function workspaceSnapshotFromPayload(payload: {
   communications?: WorkspaceTruthSnapshot['communications'];
   meetings?: WorkspaceTruthSnapshot['meetings'];
   engagements?: WorkspaceTruthSnapshot['engagements'];
+  deliverables?: WorkspaceTruthSnapshot['deliverables'];
   contacts?: WorkspaceTruthSnapshot['contacts'];
   decisionsRisks?: WorkspaceTruthSnapshot['decisionsRisks'];
   timeline?: WorkspaceTruthSnapshot['timeline'];
@@ -325,6 +341,16 @@ export function workspaceSnapshotFromPayload(payload: {
         : payload.meetings
       : undefined,
     engagements: payload.engagements,
+    deliverables: payload.deliverables
+      ? payload.deliverables.status === 'SOURCE_UNAVAILABLE'
+        ? {
+            queried: false,
+            items: [],
+            reason: payload.deliverables.reason,
+            status: 'SOURCE_UNAVAILABLE',
+          }
+        : payload.deliverables
+      : undefined,
     contacts: payload.contacts
       ? payload.contacts.status === 'SOURCE_UNAVAILABLE'
         ? {
@@ -704,6 +730,62 @@ export function engagementsListAskAtlasSentence(
   ].join(' ');
 }
 
+/** Short entitled HVCG_Deliverables slice. Not the document index and not a second walk. */
+export const DELIVERABLES_LIST_SLICE = 6;
+
+export const DELIVERABLES_MISSING_SENTENCE =
+  'No entitled HVCG_Deliverables rows. deliverables=MISSING. Atlas does not invent deliverables, due dates, statuses, or acceptance.';
+
+export function deliverablesNotQueriedSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  const base =
+    'HVCG_Deliverables was not queried. Atlas does not treat that as an empty deliverable list.';
+  return detail ? `${base} ${detail}` : base;
+}
+
+export function deliverablesSourceUnavailableSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  return [
+    'Atlas cannot read the entitled HVCG_Deliverables slice.',
+    'deliverables=SOURCE_UNAVAILABLE.',
+    detail || 'HVCG_Deliverables list walk did not complete.',
+    'Partial rows are not the deliverable list.',
+    'Atlas does not invent deliverables, due dates, statuses, or acceptance.',
+  ].join(' ');
+}
+
+export function deliverableListLabel(row: { title: string; status?: string }): string {
+  const status = (row.status || '').trim();
+  return status ? `${row.title} (${status})` : row.title;
+}
+
+export function deliverablesIndexedSentence(rows: Array<{ title: string; status?: string }>): string {
+  const labels = rows.slice(0, DELIVERABLES_LIST_SLICE).map((row) => deliverableListLabel(row));
+  const extra = rows.length - labels.length;
+  const more = extra > 0 ? ` +${extra} more.` : '';
+  return `${rows.length} entitled HVCG_Deliverables row(s). deliverables=INDEXED. ${labels.join('; ')}.${more}`;
+}
+
+/**
+ * Ask Atlas answer for the deliverables list topic. The lead summary is the
+ * workspace sentence; this wrapper is the same text Elite shows on the card.
+ */
+export function deliverablesListAskAtlasSentence(
+  summary: string,
+  completeness: string,
+  classification: string,
+): string {
+  return [
+    summary,
+    `deliverables=${completeness}/${classification}.`,
+    'Current deliverable list is the entitled HVCG_Deliverables slice for this ClientCode only.',
+    'The document index is not this list.',
+    'Recovered filenames are not this list.',
+    'Atlas does not invent deliverables, due dates, statuses, or acceptance.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
 type EngagementListRow = { title: string; status?: string };
 
 /**
@@ -742,6 +824,47 @@ function entitledEngagements(
     });
   }
   return { supplied: true, unavailable: false, queried: true, rows, reason: engagements.reason };
+}
+
+type DeliverableListRow = { title: string; status?: string };
+
+/**
+ * ClientCode-matched HVCG_Deliverables rows already on the snapshot.
+ * No section is not queried. A failed walk contributes no titles.
+ * Status is copied only when DeliverableStatus is already on the row.
+ * Due dates, fees, and acceptance are not invented. The document index is not this list.
+ */
+function entitledDeliverables(
+  deliverables: WorkspaceTruthSnapshot['deliverables'] | undefined,
+  clientCode: string,
+): {
+  supplied: boolean;
+  unavailable: boolean;
+  queried: boolean;
+  rows: DeliverableListRow[];
+  reason?: string;
+} {
+  if (!deliverables) {
+    return { supplied: false, unavailable: false, queried: false, rows: [] };
+  }
+  if (deliverables.status === 'SOURCE_UNAVAILABLE') {
+    return { supplied: true, unavailable: true, queried: false, rows: [], reason: deliverables.reason };
+  }
+  if (!deliverables.queried) {
+    return { supplied: true, unavailable: false, queried: false, rows: [], reason: deliverables.reason };
+  }
+  const rows: DeliverableListRow[] = [];
+  for (const item of deliverables.items || []) {
+    if (asText(item.clientCode).toUpperCase() !== clientCode) continue;
+    const title = asText(item.title).replace(/\s+/g, ' ');
+    if (!title) continue;
+    const status = asText(item.status);
+    rows.push({
+      title,
+      ...(status ? { status } : {}),
+    });
+  }
+  return { supplied: true, unavailable: false, queried: true, rows, reason: deliverables.reason };
 }
 
 type OpenTaskListRow = { title: string; status?: string; dueDate?: string };
@@ -1151,6 +1274,62 @@ export function composeClientTruth(opts: {
             : engagementListSlice.queried
               ? `entitled count=${engagementListCount}; engagements=${engagementListCount > 0 ? 'INDEXED' : 'MISSING'}`
               : engagementListSlice.reason || 'Engagements list not queried.',
+      },
+    ],
+  );
+
+  // W2O: list sentence is the entitled HVCG_Deliverables slice already on the
+  // workspace. A finished empty slice is MISSING. A truncated walk is
+  // SOURCE_UNAVAILABLE and contributes no titles. queried:false is not an empty list.
+  // The document index and recovered filenames are not this list.
+  const deliverableListSlice = entitledDeliverables(workspace?.deliverables, clientCode);
+  const deliverableListCount = deliverableListSlice.rows.length;
+  const deliverablesListSummary = !deliverableListSlice.supplied
+    ? deliverablesNotQueriedSentence()
+    : deliverableListSlice.unavailable
+      ? deliverablesSourceUnavailableSentence(deliverableListSlice.reason)
+      : deliverableListCount > 0
+        ? deliverablesIndexedSentence(deliverableListSlice.rows)
+        : deliverableListSlice.queried
+          ? DELIVERABLES_MISSING_SENTENCE
+          : deliverablesNotQueriedSentence(deliverableListSlice.reason);
+  const deliverablesListCompleteness: DomainCompleteness = !deliverableListSlice.supplied
+    ? 'NOT_CERTIFIED'
+    : deliverableListSlice.unavailable
+      ? 'NOT_CERTIFIED'
+      : deliverableListCount > 0
+        ? 'INDEXED'
+        : deliverableListSlice.queried
+          ? 'MISSING'
+          : 'NOT_CERTIFIED';
+  const deliverablesListClassification: TruthClassification = !deliverableListSlice.supplied
+    ? 'NOT_CERTIFIED'
+    : deliverableListSlice.unavailable
+      ? 'NOT_CERTIFIED'
+      : deliverableListCount > 0
+        ? 'CONFIRMED'
+        : deliverableListSlice.queried
+          ? 'MISSING'
+          : 'NOT_CERTIFIED';
+  const deliverablesListDomain = domain(
+    'deliverablesList',
+    deliverablesListCompleteness,
+    deliverablesListClassification,
+    deliverablesListSummary,
+    [
+      ...deliverableListSlice.rows.slice(0, DELIVERABLES_LIST_SLICE).map((row) => ({
+        source: 'HVCG_Deliverables',
+        detail: deliverableListLabel(row),
+      })),
+      {
+        source: 'HVCG_Deliverables',
+        detail: !deliverableListSlice.supplied
+          ? 'SharePoint workspace deliverables were not supplied on this composition.'
+          : deliverableListSlice.unavailable
+            ? `deliverables=SOURCE_UNAVAILABLE; partial rows are not the list; ${deliverableListSlice.reason || 'walk did not complete'}`
+            : deliverableListSlice.queried
+              ? `entitled count=${deliverableListCount}; deliverables=${deliverableListCount > 0 ? 'INDEXED' : 'MISSING'}`
+              : deliverableListSlice.reason || 'Deliverables list not queried.',
       },
     ],
   );
@@ -1662,6 +1841,12 @@ export function composeClientTruth(opts: {
       classification: engagementsListDomain.classification,
       provenance: engagementsListDomain.provenance,
     },
+    deliverablesExist: {
+      question: 'What deliverables exist?',
+      text: deliverablesListDomain.summary,
+      classification: deliverablesListDomain.classification,
+      provenance: deliverablesListDomain.provenance,
+    },
     documentsMissing: {
       question: 'What documents are missing?',
       // Recovered HVS folder gaps (hvsActionableClientKnowledge.missingDocuments)
@@ -1794,6 +1979,7 @@ export function composeClientTruth(opts: {
     contacts: contactsDomain,
     engagements: engagementsDomain,
     engagementsList: engagementsListDomain,
+    deliverablesList: deliverablesListDomain,
     projects: projectsDomain,
     documents: documentsDomain,
     communications: communicationsDomain,
