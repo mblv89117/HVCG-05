@@ -40,6 +40,9 @@ describe('Ask Atlas keyword navigation', () => {
     const meetings = 'What meetings exist for ACCG01?';
     assert.equal(aiCommandNavigatePath(meetings, { liveAskAtlas: true }), null);
     assert.equal(aiCommandNavigatePath(meetings, { liveAskAtlas: false }), null);
+    // W2K-R1 live Ask Atlas phrasings stay in the drawer (Hub workflowAnswer path).
+    assert.equal(aiCommandNavigatePath('What meetings does ACCG01 have?', { liveAskAtlas: true }), null);
+    assert.equal(aiCommandNavigatePath('List ACCG01 meetings', { liveAskAtlas: true }), null);
   });
 
   it('does not treat a finance-picture question as the financials route', () => {

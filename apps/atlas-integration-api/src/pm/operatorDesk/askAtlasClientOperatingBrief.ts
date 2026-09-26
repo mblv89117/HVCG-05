@@ -173,12 +173,14 @@ const CONCIERGE_PHRASE_MAP: Array<{ topic: ClientOperatingBriefTopic; pattern: R
   {
     topic: 'documents',
     pattern:
-      /\bwhat documents exist\b|\bdocuments exist\b|\bdocument inventory\b|\bdocuments on the operating brief\b|\bwhat documents do we have\b|\bdocuments domain\b|\bdocument picture\b|\bdocument index\b|^documents$/,
+      /\bwhat documents exist\b|\bdocuments exist\b|\bdocument inventory\b|\bdocuments on the operating brief\b|\bwhat documents do we have\b|\bwhat documents (?:does|do)\b|\bwhat documents\b.+\bhave\b|\bdocuments domain\b|\bdocument picture\b|\bdocument index\b|\blist (?:the )?documents\b|\blist\b.+\bdocuments\b|^documents$/,
   },
   {
     topic: 'meetings',
+    // Closed list — include live W2K-R1 phrasings ("What meetings does ACCG01 have?",
+    // "List ACCG01 meetings") so attention-items empty cannot win when a meetings domain exists.
     pattern:
-      /\bwhat meetings exist\b|\bmeetings exist\b|\bmeeting inventory\b|\bmeetings on the operating brief\b|\bwhat meetings do we have\b|\bmeetings domain\b|\bmeeting picture\b|\bmeetings list\b|\bmeeting list\b|\blist (?:the )?meetings\b|^meetings$/,
+      /\bwhat meetings exist\b|\bmeetings exist\b|\bmeeting inventory\b|\bmeetings on the operating brief\b|\bwhat meetings do we have\b|\bwhat meetings (?:does|do)\b|\bwhat meetings\b.+\bhave\b|\bmeetings domain\b|\bmeeting picture\b|\bmeetings list\b|\bmeeting list\b|\blist (?:the )?meetings\b|\blist\b.+\bmeetings\b|^meetings$/,
   },
   {
     topic: 'approvals',

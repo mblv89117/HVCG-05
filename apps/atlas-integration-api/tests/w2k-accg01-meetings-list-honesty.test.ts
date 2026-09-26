@@ -68,11 +68,71 @@ describe('W2K meetings list honesty', () => {
     assert.equal(mapsToClientOperatingBriefIntent('What meetings do we have for ACCG?'), true);
     assert.equal(mapsToClientOperatingBriefIntent('Meetings list for ACCG01'), true);
     assert.equal(clientOperatingBriefTopic('What meetings exist for ACCG01?'), 'meetings');
+    // W2K-R1 live Ask Atlas phrasings — must hit meetings, not attention-items empty.
+    assert.equal(mapsToClientOperatingBriefIntent('What meetings does ACCG01 have?'), true);
+    assert.equal(clientOperatingBriefTopic('What meetings does ACCG01 have?'), 'meetings');
+    assert.equal(mapsToClientOperatingBriefIntent('List ACCG01 meetings'), true);
+    assert.equal(clientOperatingBriefTopic('List ACCG01 meetings'), 'meetings');
+    assert.equal(mapsToClientOperatingBriefIntent('List the ACCG01 meetings'), true);
+    assert.equal(clientOperatingBriefTopic('List the ACCG01 meetings'), 'meetings');
     assert.equal(mapsToClientOperatingBriefIntent('What meetings exist?'), false);
+    assert.equal(mapsToClientOperatingBriefIntent('List meetings'), false);
     assert.equal(mapsToClientOperatingBriefIntent('What documents exist for ACCG01?'), true);
     assert.equal(clientOperatingBriefTopic('What documents exist for ACCG01?'), 'documents');
+    assert.equal(mapsToClientOperatingBriefIntent('What documents does ACCG01 have?'), true);
+    assert.equal(clientOperatingBriefTopic('What documents does ACCG01 have?'), 'documents');
     assert.equal(mapsToClientOperatingBriefIntent('What is blocked for ACCG01?'), true);
     assert.equal(clientOperatingBriefTopic('What is blocked for ACCG01?'), 'blocked');
+  });
+
+  it('answers live W2K-R1 meetings phrasings from the meetings domain, not attention-items empty', () => {
+    const snapshot = workspace({
+      meetings: {
+        queried: true,
+        status: 'COMPLETE',
+        items: [
+          {
+            id: 'm1',
+            title: 'ACCG kickoff',
+            clientCode: 'ACCG01',
+            date: '2026-09-01T00:00:00.000Z',
+            summary: 'Private notes about the decision and the next action',
+            attendees: 'Someone Else',
+          },
+        ],
+      },
+    });
+    const livePhrasings = [
+      'What meetings does ACCG01 have?',
+      'List ACCG01 meetings',
+      'List the ACCG01 meetings',
+    ];
+    for (const question of livePhrasings) {
+      const answer = answerClientOperatingBrief(question, {
+        entitledCodes: ['ACCG01', 'PDG01', 'HFD01'],
+        workspace: snapshot,
+      });
+      assert.match(answer, /meetings=INDEXED/);
+      assert.match(answer, /CONFIRMED/);
+      assert.match(answer, /ACCG kickoff \(2026-09-01\)/);
+      assert.equal(/No entitled attention items/.test(answer), false);
+      assert.equal(answer.includes('Private notes'), false);
+      assert.equal(answer.includes('Someone Else'), false);
+      assert.equal(answer.includes('Timeline only standup'), false);
+      assert.equal(/documents=MISSING|documents=SOURCE_UNAVAILABLE/.test(answer), false);
+      assert.match(answer, /canExecute=false/);
+      assert.match(answer, /capitalSubmit=false/);
+      assert.match(answer, /GLOBAL_AUTO_RESPOND=false/);
+    }
+
+    // Documents INDEXED path must still win for the parallel live phrasing.
+    const docs = answerClientOperatingBrief('What documents does ACCG01 have?', {
+      entitledCodes: ['ACCG01'],
+      workspace: snapshot,
+    });
+    assert.match(docs, /documents=INDEXED/);
+    assert.match(docs, /CONFIRMED/);
+    assert.equal(/meetings=MISSING|meetings=SOURCE_UNAVAILABLE|No entitled attention items/.test(docs), false);
   });
 
   it('does not treat the timeline as the meeting inventory and does not invent notes', () => {
