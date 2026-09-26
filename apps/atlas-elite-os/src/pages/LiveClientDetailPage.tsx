@@ -27,6 +27,7 @@ import {
 import { ArrowSyncRegular, OpenRegular } from '@fluentui/react-icons';
 import { contactsListHonesty } from './contactsListHonesty';
 import { meetingsListHonesty } from './meetingsListHonesty';
+import { tasksListHonesty } from './tasksListHonesty';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import {
@@ -345,6 +346,16 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   );
   const contactsHonesty = useMemo(
     () => contactsListHonesty(workspace?.contacts, clientId),
+    [workspace, clientId],
+  );
+  const tasksHonesty = useMemo(
+    () =>
+      tasksListHonesty(
+        workspace
+          ? { tasks: workspace.tasks, availability: workspace.completeness?.tasks }
+          : undefined,
+        clientId,
+      ),
     [workspace, clientId],
   );
   const projects = workspace?.projects || [];
@@ -702,8 +713,8 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
 
         <RecordRow label="Related work">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {projects.length === 0 && tasks.length === 0 ? (
-              <Caption1>No entitled projects or open tasks on this ClientCode.</Caption1>
+            {projects.length === 0 ? (
+              <Caption1>No entitled projects on this ClientCode.</Caption1>
             ) : (
               <>
                 {projects.slice(0, 6).map((p) => {
@@ -725,6 +736,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
             {sectionHonesty(workspace.deliverables)} · Communications:{' '}
             {sectionHonesty(workspace.communications)}
           </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>{tasksHonesty.sentence}</Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{contactsHonesty.sentence}</Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{meetingsHonesty.sentence}</Caption1>
           {capitalLinked ? (
@@ -850,7 +862,25 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         )}
       </AtlasCard>
 
-      <AtlasCard title="Related tasks" subtitle="Open tasks deep-link to the owning project">
+      <AtlasCard
+        title="Related tasks"
+        subtitle="Open HVCG_Tasks on this ClientCode — the Hub payload. Read-only titles, plus status or due when the row already has them."
+        headerAction={
+          <StatusChip
+            label={
+              tasksHonesty.kind === 'indexed'
+                ? `${tasksHonesty.count} entitled`
+                : tasksHonesty.kind === 'missing'
+                  ? 'tasks=MISSING'
+                  : tasksHonesty.kind === 'source_unavailable'
+                    ? 'tasks=SOURCE_UNAVAILABLE'
+                    : 'Not queried'
+            }
+            tone={tasksHonesty.kind === 'indexed' ? 'info' : 'neutral'}
+            size="sm"
+          />
+        }
+      >
         {workspace.writePolicy === 'read_only' ? (
           <Caption1 style={{ display: 'block', marginBottom: 12 }}>
             Task create is hidden for this read-only ClientCode.
@@ -882,44 +912,33 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
           </Button>
         </div>
         )}
-        {tasks.length === 0 ? (
-          <EmptyState
-            title="No open tasks for this client"
-            description="Queried HVCG_Tasks returned no entitled open rows."
-          />
+        {tasksHonesty.kind === 'indexed' ? (
+          <>
+            {tasksHonesty.slice.map((row) => (
+              <div key={row.id} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '4px 0' }}>
+                <Link to={projectDetailPath(row.projectId) || '/tasks'}>{row.title}</Link>
+                {row.status ? <Caption1>{row.status}</Caption1> : null}
+                {row.dueDate ? <Caption1>{row.dueDate}</Caption1> : null}
+              </div>
+            ))}
+            {tasksHonesty.count > tasksHonesty.slice.length ? (
+              <Caption1 style={{ display: 'block', marginTop: 8 }}>
+                +{tasksHonesty.count - tasksHonesty.slice.length} more
+              </Caption1>
+            ) : null}
+          </>
         ) : (
-          <DataTable
-            ariaLabel="Client tasks"
-            getRowKey={(r: PmTask) => r.id}
-            rows={tasks}
-            columns={[
-              {
-                key: 'title',
-                header: 'Task',
-                sticky: 'left',
-                render: (r) => <Link to={taskWorkPath(r)}>{r.title}</Link>,
-              },
-              {
-                key: 'status',
-                header: 'Status',
-                render: (r) => {
-                  const chip = taskStatusLabel(r);
-                  return <StatusChip label={chip.label} tone={chip.tone} />;
-                },
-              },
-              { key: 'owner', header: 'Owner', render: (r) => r.assigneeName || '—' },
-              { key: 'due', header: 'Due', render: (r) => dayStamp(r.dueDate) || '—' },
-              {
-                key: 'project',
-                header: 'Project',
-                render: (r) => {
-                  const path = projectDetailPath(r.projectId);
-                  const name = projects.find((p) => p.id === r.projectId)?.name;
-                  if (path) return <Link to={path}>{name || 'Project'}</Link>;
-                  return <Caption1>{name || '—'}</Caption1>;
-                },
-              },
-            ]}
+          <EmptyState
+            title={
+              tasksHonesty.kind === 'missing'
+                ? 'No entitled open tasks'
+                : tasksHonesty.kind === 'source_unavailable'
+                  ? 'Tasks source unavailable'
+                  : 'Tasks not queried'
+            }
+            description={tasksHonesty.sentence}
+            density="compact"
+            align="start"
           />
         )}
       </AtlasCard>

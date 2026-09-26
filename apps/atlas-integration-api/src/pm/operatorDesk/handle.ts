@@ -186,6 +186,7 @@ import {
   collectPendingDecisionLines,
   currentWorkspaceUnavailableAnswer,
   contactsIndexUnavailableAnswer,
+  tasksIndexUnavailableAnswer,
   documentIndexUnavailableAnswer,
   meetingsIndexUnavailableAnswer,
   financeAnswerWhenWorkspaceUnavailable,
@@ -598,6 +599,7 @@ async function finishClientOperatingBriefBeforeDesk(opts: {
     if (topic === 'documents') briefAnswer = documentIndexUnavailableAnswer(scoped);
     else if (topic === 'meetings') briefAnswer = meetingsIndexUnavailableAnswer(scoped);
     else if (topic === 'contacts') briefAnswer = contactsIndexUnavailableAnswer(scoped);
+    else if (topic === 'tasks') briefAnswer = tasksIndexUnavailableAnswer(scoped);
     else if (topic === 'approvals') briefAnswer = approvalsFinishedWithoutWorkspace(scoped, pendingDecisions);
     else if (isFinanceScopedOperatingTopic(topic)) {
       try {
