@@ -1,50 +1,56 @@
-# W2Q implementation report — ACCG01 communications list honesty
+# W2R implementation report — ACCG01 projects caption residual
 
-Draft only. No merge, no deploy, no client contact, no money movement, no authority-flag change.
-
-## Scope
-
-New Ask Atlas topic `communications_list` and domain `communicationsList` / token `communicationsList=`.
-
-Thread rows already on `HVCG_Communications` are the list. File-index rows stay the W2I document index (`isFileIndexRow` unchanged) and stay on `communications.items`. The certified operating-brief line `communications=`, `commsCount`, and `hasIndexedWork` are unchanged.
+DRAFT only. No merge, no deploy, no client contact, no money movement, no authority-flag change. No `LIVE_CERT_PASS` is claimed.
 
 ## Head
 
-- Branch: `cursor/w2q-communications-list-honesty-1c33`
-- Base: `production/atlas-core` at `22308beb496b98f2d422a7233c0e609cd133c374` (W2P closed)
-- Draft PR: https://github.com/mblv89117/HVCG-05/pull/248
-- Implementation commit: `7d629dd08bf9d9e4f3554d4b61bd7af3f7788acd`
-- Head SHA when the draft was opened: `e103ab4d1323814ff5e936b2d2ff64794ce7f8c7`
-- This commit adds the PR URL. The pull request description carries the full head SHA after it lands.
+- Base tip: `production/atlas-core` at `8cef27463f84cab3ecca13a01ac41903fdfdb3e4` (W2Q communications list honesty, #248)
+- Caption implementation commit: `50d9432a3ab6a6f6ab3d23ca65779155152a7b9e`
+- This report commit sits on that SHA. The draft pull request description states the full branch head SHA after this file lands.
+
+## Files touched
+
+- `apps/atlas-elite-os/src/pages/projectsCaption.ts` (new, display-only)
+- `apps/atlas-elite-os/src/pages/projectsCaption.test.ts` (new)
+- `apps/atlas-elite-os/src/pages/LiveClientDetailPage.tsx` (State chip, related-work caption, read-only empty description)
+- `apps/atlas-elite-os/src/pages/communicationsListHonesty.test.ts` (moved the create-sentence lock off the W2Q test)
+- `apps/atlas-elite-os/scripts/project-route-tests.mjs` (route lock now requires the caption wiring)
+- `apps/atlas-elite-os/package.json` (`test:security` includes `projectsCaption.test.ts`)
+- `artifacts/IMPL_REPORT.md` (this file)
 
 ## What changed
 
-- Hub `communicationsList` domain and `answers.communicationsListExist`, counting ClientCode-matched rows that fail `isFileIndexRow`.
-- Phrase map entry after documents. Negative lookaheads keep `onboarding`, `policy`, and `communication context` off the topic. The group is unanchored after those lookaheads so `What is the communications list for ACCG01?` hits. The discovery paste was start-positioned after the lookaheads and missed that phrase.
-- Workspace-failed branch calls `communicationsListIndexUnavailableAnswer`. It does not use `documentIndexUnavailableAnswer`.
-- Elite `communicationsListHonesty` (same contract shape as deliverables / decisions-risks). State chip is `communicationsList=INDEXED|MISSING|SOURCE_UNAVAILABLE|Not queried` and never `0 communications`. Related-work Communications half uses that sentence. Documents half stays `sectionHonesty(workspace.documents)`. Read-only thread card. No send or reply control.
-- Route locks in `project-route-tests.mjs`, `auth-transition-tests.mjs`, and `hub-access-token-tests.mjs`.
+Elite display copy on a loaded workspace only.
+
+- State chip: `projects=PARTIAL` when `projects.length > 0`, `projects=MISSING` when the length is zero. The raw `` `${projects.length} projects` `` chip is gone.
+- Related work, count zero: a `projects=MISSING` sentence. It does not say to create.
+- Related work, count greater than zero: name links stay. A caption says those rows are the hygiene-kept HVCG_Projects set and `projects=PARTIAL`.
+- Read-only empty description (`writePolicy === 'read_only'`): no longer says `Create a project to track next actions.` The existing line that create is hidden stays.
+- Writable empty (`writePolicy` not `read_only`): create form and the existing create description stay.
 
 ## Authority
 
-`canExecute`, `capitalSubmit`, and `GLOBAL_AUTO_RESPOND` stay false. Unknown ClientCode stays fail-closed.
+Unchanged. `canExecute`, `capitalSubmit`, and `GLOBAL_AUTO_RESPOND` stay false. Unknown ClientCode stays fail-closed.
 
 ## Tests
 
-- Hub `tests/w2q-accg01-communications-list-honesty.test.ts`: 9/9 pass.
-- Hub `tests/w2p-accg01-decisions-risks-list-honesty.test.ts`: 12/12 pass.
-- Hub `npm run test:integration-api`: 940/940 pass, 0 fail.
-- Elite `communicationsListHonesty.test.ts` plus decisions/risks and meetings honesty: pass.
-- Elite `test:security`: 104/104 pass (includes the new honesty test).
-- Elite route locks: project routes, hub access-token, auth transitions: pass.
-- Elite `lint:hooks` and `tsc -b`: pass.
-- Elite `test:hard-refresh` was not run against a production `dist/` (no dist in this workspace). CI builds Elite before that script.
+Commands were run from `apps/atlas-elite-os` after `npm ci --ignore-scripts` at the repo root.
 
-## Residual risk
+- `npx tsx --test src/pages/projectsCaption.test.ts` — 4/4 pass.
+- `node ./scripts/project-route-tests.mjs` — pass (`PASS project route + operating layer source tests`).
+- `npm run test:security` — 108/108 pass, 0 fail. Includes projects caption plus communications, tasks, engagements, deliverables, decisions/risks, meetings, and contacts honesty locks.
+- `npm run lint:hooks` — pass.
+- `node ./scripts/auth-transition-tests.mjs` — pass.
+- `node ./scripts/hub-access-token-tests.mjs` — pass.
+- `node ./scripts/hook-order-render-tests.mjs` — pass.
 
-- No live SharePoint cert and no `LIVE_CERT_PASS`. Phrase routing and sentences were checked locally.
-- A file-index-only section is still `communications=INDEXED` on the certified brief line, because that count includes every walked row. `communicationsList=MISSING` is the thread sentence. That split is intentional.
-- The workspace timeline still appends dated file-index rows as communication events. This package does not filter the timeline.
-- Projects empty create sentence and `capitalLinked` are unchanged (runner-up, not this wave).
-- `answers.changed` and the owner-approval draft clause are unchanged.
-- `LIST_WALK_PAGE_CAP` (80) and `LIST_WALK_TOP` (100) are unchanged.
+## MUST-NOT checklist
+
+- Did not edit Hub Ask Atlas W2G `renderTopic` case `projects`, `answers.workingOn`, or the `WHAT ATLAS KNOWS` `projects=` token.
+- Did not add an Ask Atlas phrase-map entry for list-projects. The projects pattern is unchanged. `List capital projects for ACCG01` stays on `detectTopic` `/capital/`.
+- Did not change Graph walks, `LIST_WALK_PAGE_CAP` (80), `LIST_WALK_TOP` (100), `filterOwnerFacingProjects`, `buildSharePointClientWorkspace`, or `composeClientTruth`.
+- Did not change the timeline card, `capitalLinked`, the tasks State chip, `sectionHonesty(workspace.documents)`, or communications list sentences.
+- Did not flip `canExecute`, `capitalSubmit`, or `GLOBAL_AUTO_RESPOND`.
+- Did not invent `projects=INDEXED`, recovered HVS titles, or project names that are not on the payload.
+- Did not treat a failed workspace load as `projects=MISSING`. Sign-in, 401, 403, error, and empty-response states still return before the State card.
+- Did not merge, undraft, deploy, contact clients, or move money. No `LIVE_CERT_PASS`.
