@@ -12,8 +12,8 @@ Thread rows already on `HVCG_Communications` are the list. File-index rows stay 
 
 - Branch: `cursor/w2q-communications-list-honesty-1c33`
 - Base: `production/atlas-core` at `22308beb496b98f2d422a7233c0e609cd133c374` (W2P closed)
-- Implementation commit: filled in the follow-up note on this file after the code commit
-- PR head SHA: the draft pull request description (full `git rev-parse HEAD` after the report commit)
+- Implementation commit: `7d629dd08bf9d9e4f3554d4b61bd7af3f7788acd`
+- PR head: the commit that records this SHA line (draft pull request; full `git rev-parse HEAD`)
 
 ## What changed
 
