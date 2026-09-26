@@ -129,6 +129,11 @@ assert.match(liveClient, /engagementsListHonesty/);
 assert.match(liveClient, /engagementsChipLabel/);
 assert.match(liveClient, /\{engagementsHonesty\.sentence\}/);
 assert.doesNotMatch(liveClient, /workspace\.engagements\.items/);
+assert.match(liveClient, /deliverablesListHonesty/);
+assert.match(liveClient, /deliverablesChipLabel/);
+assert.match(liveClient, /\{deliverablesHonesty\.sentence\}/);
+assert.doesNotMatch(liveClient, /workspace\.deliverables\.items/);
+assert.doesNotMatch(liveClient, /sectionHonesty\(workspace\.deliverables\)/);
 assert.match(liveClient, /workspace\.decisionsRisks\.items/);
 
 const useHubAuth = src('integrations/hub/useHubAuth.ts');

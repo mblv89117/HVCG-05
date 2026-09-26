@@ -14,6 +14,7 @@ import {
 import {
   CLIENT_TRUTH_MISSION_KEY,
   composeClientTruth,
+  deliverablesListAskAtlasSentence,
   engagementsListAskAtlasSentence,
   type ClientTruthModel,
   type WorkspaceTruthSnapshot,
@@ -66,6 +67,21 @@ export function engagementsIndexUnavailableAnswer(clientCode: string): string {
     'Atlas will not invent engagements, scopes, fees, dates, or obligations.',
     'Partial rows are not the engagement list.',
     'EngagementTypePrimary is not this list.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
+/**
+ * Finished deliverables answer when the entitled workspace cannot be loaded.
+ * Does not invent a page_cap measurement, an OWNER_DECISION_REQUIRED clause, or a deliverable list.
+ */
+export function deliverablesIndexUnavailableAnswer(clientCode: string): string {
+  const code = (clientCode || '').trim().toUpperCase() || 'UNKNOWN';
+  return [
+    `Atlas cannot read the current ${code} deliverable list (HVCG_Deliverables).`,
+    'deliverables=SOURCE_UNAVAILABLE.',
+    'Atlas will not invent deliverables, due dates, statuses, or acceptance.',
+    'Partial rows are not the deliverable list.',
     `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
   ].join(' ');
 }
@@ -147,6 +163,7 @@ export type ClientOperatingBriefTopic =
   | 'contacts'
   | 'tasks'
   | 'engagements'
+  | 'deliverables'
   | 'capital'
   | 'owner_decisions'
   | 'approvals'
@@ -253,6 +270,13 @@ const CONCIERGE_PHRASE_MAP: Array<{ topic: ClientOperatingBriefTopic; pattern: R
     // answers.engagement and the my-business composite remain the prior clause.
     pattern:
       /\bwhat engagements exist\b|\bengagements exist\b|\bengagements inventory\b|\bengagements on the operating brief\b|\bwhat engagements do we have\b|\bwhat engagements (?:does|do)\b|\bwhat engagements\b.+\bhave\b|\bengagements domain\b|\bengagements picture\b|\bengagements list\b|\blist (?:the )?engagements\b|\blist\b.+\bengagements\b|^engagements$/,
+  },
+  {
+    topic: 'deliverables',
+    // Closed plural list only. Unscoped "What deliverables exist?" / "List deliverables"
+    // stay off the topic (no ClientCode). Document questions stay on documents.
+    pattern:
+      /\bwhat deliverables exist\b|\bdeliverables exist\b|\bdeliverables inventory\b|\bdeliverables on the operating brief\b|\bwhat deliverables do we have\b|\bwhat deliverables (?:does|do)\b|\bwhat deliverables\b.+\bhave\b|\bdeliverables domain\b|\bdeliverables picture\b|\bdeliverables list\b|\blist (?:the )?deliverables\b|\blist\b.+\bdeliverables\b|^deliverables$/,
   },
   {
     topic: 'approvals',
@@ -532,6 +556,12 @@ function renderTopic(
         truth.answers.engagementsExist.text,
         truth.engagementsList.completeness,
         truth.engagementsList.classification,
+      );
+    case 'deliverables':
+      return deliverablesListAskAtlasSentence(
+        truth.answers.deliverablesExist.text,
+        truth.deliverablesList.completeness,
+        truth.deliverablesList.classification,
       );
     case 'capital':
       return [

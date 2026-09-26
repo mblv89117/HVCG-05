@@ -71,6 +71,7 @@ assert.match(relatedWork, /\{tasksHonesty\.sentence\}/);
 assert.match(relatedWork, /\{contactsHonesty\.sentence\}/);
 assert.match(relatedWork, /\{meetingsHonesty\.sentence\}/);
 assert.match(relatedWork, /\{engagementsHonesty\.sentence\}/);
+assert.match(relatedWork, /\{deliverablesHonesty\.sentence\}/);
 assert.match(live, /projectDetailPath/);
 assert.match(live, /workspace\.timeline/);
 assert.match(live, /engagementsListHonesty/);
@@ -88,6 +89,22 @@ assert.ok(
 );
 assert.match(engagementsCard, /engagementsChipLabel\(engagementsHonesty\.kind\)/);
 assert.doesNotMatch(live, /workspace\.engagements\.items/);
+assert.match(live, /deliverablesListHonesty/);
+assert.match(live, /deliverablesChipLabel/);
+assert.doesNotMatch(live, /workspace\.deliverables\.items/);
+assert.doesNotMatch(live, /sectionHonesty\(workspace\.deliverables\)/);
+const deliverablesCard = live.slice(live.indexOf('title="Deliverables"'), live.indexOf('title="Contacts"'));
+const deliverablesIndexed = deliverablesCard.slice(
+  deliverablesCard.indexOf("deliverablesHonesty.kind === 'indexed'"),
+  deliverablesCard.indexOf('No entitled deliverables'),
+);
+assert.match(deliverablesIndexed, /\{deliverablesHonesty\.sentence\}/);
+assert.match(deliverablesIndexed, /row\.title/);
+assert.ok(
+  deliverablesIndexed.indexOf('{deliverablesHonesty.sentence}') <
+    deliverablesIndexed.indexOf('deliverablesHonesty.slice.map'),
+);
+assert.match(deliverablesCard, /deliverablesChipLabel\(deliverablesHonesty\.kind\)/);
 assert.match(live, /workspace\.decisionsRisks\.items/);
 assert.match(live, /title="Engagements"/);
 assert.match(live, /title="Decisions \/ risks"/);

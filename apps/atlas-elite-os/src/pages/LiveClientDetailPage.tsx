@@ -26,6 +26,7 @@ import {
 } from '@fluentui/react-components';
 import { ArrowSyncRegular, OpenRegular } from '@fluentui/react-icons';
 import { contactsListHonesty } from './contactsListHonesty';
+import { deliverablesChipLabel, deliverablesListHonesty } from './deliverablesListHonesty';
 import { engagementsChipLabel, engagementsListHonesty } from './engagementsListHonesty';
 import { meetingsListHonesty } from './meetingsListHonesty';
 import { tasksListHonesty } from './tasksListHonesty';
@@ -363,6 +364,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
     () => engagementsListHonesty(workspace?.engagements, clientId),
     [workspace, clientId],
   );
+  const deliverablesHonesty = useMemo(
+    () => deliverablesListHonesty(workspace?.deliverables, clientId),
+    [workspace, clientId],
+  );
   const projects = workspace?.projects || [];
   const tasks = workspace?.tasks || [];
   const nextActions = workspace?.nextActions || [];
@@ -651,6 +656,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
               tone={engagementsHonesty.kind === 'indexed' ? 'info' : 'neutral'}
             />
             <StatusChip
+              label={deliverablesChipLabel(deliverablesHonesty.kind)}
+              tone={deliverablesHonesty.kind === 'indexed' ? 'info' : 'neutral'}
+            />
+            <StatusChip
               label={`${workspace.decisionsRisks.items.length} decisions / risks`}
               tone={workspace.decisionsRisks.queried ? 'warning' : 'neutral'}
             />
@@ -737,14 +746,14 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
             )}
           </div>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>
-            Documents: {sectionHonesty(workspace.documents)} · Deliverables:{' '}
-            {sectionHonesty(workspace.deliverables)} · Communications:{' '}
+            Documents: {sectionHonesty(workspace.documents)} · Communications:{' '}
             {sectionHonesty(workspace.communications)}
           </Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{tasksHonesty.sentence}</Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{contactsHonesty.sentence}</Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{meetingsHonesty.sentence}</Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{engagementsHonesty.sentence}</Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>{deliverablesHonesty.sentence}</Caption1>
           {capitalLinked ? (
             <Caption1 style={{ display: 'block' }}>
               Capital engagement is already on this payload — open the Capital desk, not GCC.
@@ -999,6 +1008,49 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         section={workspace.decisionsRisks}
         emptyTitle="No entitled decisions or risks"
       />
+
+      <AtlasCard
+        title="Deliverables"
+        subtitle="HVCG_Deliverables on this ClientCode — the Hub payload. Read-only titles, plus status when the row already has it. The document index is not this list."
+        density="compact"
+        headerAction={
+          <StatusChip
+            label={deliverablesChipLabel(deliverablesHonesty.kind)}
+            tone={deliverablesHonesty.kind === 'indexed' ? 'info' : 'neutral'}
+            size="sm"
+          />
+        }
+      >
+        {deliverablesHonesty.kind === 'indexed' ? (
+          <>
+            <Caption1 style={{ display: 'block', marginBottom: 8 }}>{deliverablesHonesty.sentence}</Caption1>
+            {deliverablesHonesty.slice.map((row) => (
+              <div key={row.id} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '4px 0' }}>
+                <Text weight="semibold">{row.title}</Text>
+                {row.status ? <Caption1>{row.status}</Caption1> : null}
+              </div>
+            ))}
+            {deliverablesHonesty.count > deliverablesHonesty.slice.length ? (
+              <Caption1 style={{ display: 'block', marginTop: 8 }}>
+                +{deliverablesHonesty.count - deliverablesHonesty.slice.length} more
+              </Caption1>
+            ) : null}
+          </>
+        ) : (
+          <EmptyState
+            title={
+              deliverablesHonesty.kind === 'missing'
+                ? 'No entitled deliverables'
+                : deliverablesHonesty.kind === 'source_unavailable'
+                  ? 'Deliverables source unavailable'
+                  : 'Deliverables not queried'
+            }
+            description={deliverablesHonesty.sentence}
+            density="compact"
+            align="start"
+          />
+        )}
+      </AtlasCard>
 
       <AtlasCard
         title="Contacts"
