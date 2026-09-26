@@ -226,6 +226,11 @@ export type ClientTruthModel = {
    * Not the document index and not recovered filenames.
    */
   deliverablesList: DomainTruth;
+  /**
+   * Hygiene-kept HVCG_Decisions + HVCG_Risks already combined as decisionsRisks.
+   * Not Approval Center and not answers.decisions / answers.ownerApproval.
+   */
+  decisionsRisksList: DomainTruth;
   financialContext: DomainTruth;
   growthContext: DomainTruth;
   capitalContext: DomainTruth;
@@ -361,7 +366,16 @@ export function workspaceSnapshotFromPayload(payload: {
           }
         : payload.contacts
       : undefined,
-    decisionsRisks: payload.decisionsRisks,
+    decisionsRisks: payload.decisionsRisks
+      ? payload.decisionsRisks.status === 'SOURCE_UNAVAILABLE'
+        ? {
+            queried: false,
+            items: [],
+            reason: payload.decisionsRisks.reason,
+            status: 'SOURCE_UNAVAILABLE',
+          }
+        : payload.decisionsRisks
+      : undefined,
     timeline: payload.timeline,
     nextActions: payload.nextActions,
     hygiene: payload.hygiene,
@@ -786,6 +800,125 @@ export function deliverablesListAskAtlasSentence(
   ].join(' ');
 }
 
+/**
+ * Short hygiene-kept HVCG_Decisions / HVCG_Risks slice.
+ * The section is already combined. This is not a second walk.
+ */
+export const DECISIONS_RISKS_LIST_SLICE = 6;
+
+export const DECISIONS_RISKS_MISSING_SENTENCE =
+  'No entitled HVCG_Decisions or HVCG_Risks rows. decisionsRisks=MISSING. Atlas does not invent decisions, risks, owners, severity, or due dates.';
+
+/** Prefix already written by ungranted(). Not a Graph error parse. */
+export const HVCG_DECISIONS_ALLOWLIST_MISS = 'HVCG_Decisions is not in the Hub Graph Selected allowlist';
+export const HVCG_RISKS_ALLOWLIST_MISS = 'HVCG_Risks is not in the Hub Graph Selected allowlist';
+
+export type DecisionsRisksSide = 'HVCG_Decisions' | 'HVCG_Risks';
+
+export type DecisionsRisksListKind = 'decision' | 'risk';
+
+/**
+ * One side queried and the other ungranted on the already-combined section.
+ * Both-ungranted stays queried:false, so the shared "HVCG_Risks is not…" substring
+ * in that reason is not a mixed grant.
+ */
+export function decisionsRisksMixedGrant(section: {
+  queried?: boolean;
+  status?: string;
+  reason?: string;
+} | undefined): { queriedList: DecisionsRisksSide; unqueriedList: DecisionsRisksSide } | null {
+  if (!section?.queried || section.status === 'SOURCE_UNAVAILABLE') return null;
+  const reason = section.reason || '';
+  const decisionsUngranted = reason.includes(HVCG_DECISIONS_ALLOWLIST_MISS);
+  const risksUngranted = reason.includes(HVCG_RISKS_ALLOWLIST_MISS);
+  if (decisionsUngranted && !risksUngranted) {
+    return { queriedList: 'HVCG_Risks', unqueriedList: 'HVCG_Decisions' };
+  }
+  if (risksUngranted && !decisionsUngranted) {
+    return { queriedList: 'HVCG_Decisions', unqueriedList: 'HVCG_Risks' };
+  }
+  return null;
+}
+
+export function decisionsRisksNotQueriedSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  const base =
+    'HVCG_Decisions and HVCG_Risks were not queried. Atlas does not treat that as an empty decisions or risks list.';
+  return detail ? `${base} ${detail}` : base;
+}
+
+export function decisionsRisksSourceUnavailableSentence(reason?: string): string {
+  const detail = (reason || '').replace(/\s+/g, ' ').trim();
+  return [
+    'Atlas cannot read the entitled HVCG_Decisions / HVCG_Risks slice.',
+    'decisionsRisks=SOURCE_UNAVAILABLE.',
+    detail || 'HVCG_Decisions / HVCG_Risks list walk did not complete.',
+    'Partial rows are not the decisions or risks list.',
+    'Atlas does not invent decisions, risks, owners, severity, or due dates.',
+  ].join(' ');
+}
+
+export function decisionsRisksListLabel(row: {
+  title: string;
+  status?: string;
+  kind: DecisionsRisksListKind;
+}): string {
+  const prefix = row.kind === 'risk' ? 'Risk' : 'Decision';
+  const status = (row.status || '').trim();
+  return status ? `${prefix}: ${row.title} (${status})` : `${prefix}: ${row.title}`;
+}
+
+export function decisionsRisksIndexedSentence(
+  rows: Array<{ title: string; status?: string; kind: DecisionsRisksListKind }>,
+): string {
+  const labels = rows.slice(0, DECISIONS_RISKS_LIST_SLICE).map((row) => decisionsRisksListLabel(row));
+  const extra = rows.length - labels.length;
+  const more = extra > 0 ? ` +${extra} more.` : '';
+  return `${rows.length} entitled HVCG_Decisions / HVCG_Risks row(s). decisionsRisks=INDEXED. ${labels.join('; ')}.${more}`;
+}
+
+export function decisionsRisksMixedSentence(
+  queriedList: DecisionsRisksSide,
+  unqueriedList: DecisionsRisksSide,
+  rows: Array<{ title: string; status?: string; kind: DecisionsRisksListKind }>,
+): string {
+  const labels = rows.slice(0, DECISIONS_RISKS_LIST_SLICE).map((row) => decisionsRisksListLabel(row));
+  const extra = rows.length - labels.length;
+  const more = extra > 0 ? ` +${extra} more.` : '';
+  const titles = labels.length
+    ? `${labels.join('; ')}.${more}`
+    : 'The queried list has no entitled rows.';
+  return [
+    `${queriedList} was queried.`,
+    `${unqueriedList} was not queried.`,
+    'Atlas does not treat the unqueried list as empty.',
+    titles,
+    'decisionsRisks combined section is not fully indexed.',
+  ].join(' ');
+}
+
+/**
+ * Ask Atlas answer for the decisions/risks list topic. The lead summary is the
+ * workspace sentence; this wrapper is the same text Elite shows on the card.
+ * Owner approvals and Approval Center stay on their own sentences.
+ */
+export function decisionsRisksListAskAtlasSentence(
+  summary: string,
+  completeness: string,
+  classification: string,
+): string {
+  return [
+    summary,
+    `decisionsRisks=${completeness}/${classification}.`,
+    'Current decisions and risks list is the hygiene-kept HVCG_Decisions and HVCG_Risks slice for this ClientCode only.',
+    'Owner approvals are not this list.',
+    'Approval Center items are not this list.',
+    'Hygiene-quarantined rows are not this list.',
+    'Atlas does not invent decisions, risks, owners, severity, or due dates.',
+    `GLOBAL_AUTO_RESPOND=${GLOBAL_AUTO_RESPOND}; capitalSubmit=false; canExecute=false.`,
+  ].join(' ');
+}
+
 type EngagementListRow = { title: string; status?: string };
 
 /**
@@ -865,6 +998,83 @@ function entitledDeliverables(
     });
   }
   return { supplied: true, unavailable: false, queried: true, rows, reason: deliverables.reason };
+}
+
+type DecisionsRisksListRow = { title: string; status?: string; kind: DecisionsRisksListKind };
+
+function decisionsRisksRowKind(item: Record<string, unknown>): DecisionsRisksListKind | null {
+  const entity = asText(item.entityType).toLowerCase();
+  const source = asText(item.sourceList);
+  if (entity === 'decision' || source === 'HVCG_Decisions') return 'decision';
+  if (entity === 'risk' || source === 'HVCG_Risks') return 'risk';
+  return null;
+}
+
+/**
+ * Hygiene-kept HVCG_Decisions / HVCG_Risks rows already on the combined section.
+ * No section is not queried. Either side SOURCE_UNAVAILABLE contributes no titles.
+ * Mixed grant (one allowlist miss, queried:true) is not INDEXED and not MISSING.
+ * Status is copied only when DecisionStatus or RiskStatus is already on the row.
+ */
+function entitledDecisionsRisks(
+  section: WorkspaceTruthSnapshot['decisionsRisks'] | undefined,
+  clientCode: string,
+): {
+  supplied: boolean;
+  unavailable: boolean;
+  queried: boolean;
+  mixed: { queriedList: DecisionsRisksSide; unqueriedList: DecisionsRisksSide } | null;
+  rows: DecisionsRisksListRow[];
+  reason?: string;
+} {
+  if (!section) {
+    return { supplied: false, unavailable: false, queried: false, mixed: null, rows: [] };
+  }
+  if (section.status === 'SOURCE_UNAVAILABLE') {
+    return {
+      supplied: true,
+      unavailable: true,
+      queried: false,
+      mixed: null,
+      rows: [],
+      reason: section.reason,
+    };
+  }
+  const mixed = decisionsRisksMixedGrant(section);
+  if (!section.queried && !mixed) {
+    return {
+      supplied: true,
+      unavailable: false,
+      queried: false,
+      mixed: null,
+      rows: [],
+      reason: section.reason,
+    };
+  }
+  const rows: DecisionsRisksListRow[] = [];
+  for (const item of section.items || []) {
+    if (asText(item.clientCode).toUpperCase() !== clientCode) continue;
+    const kind = decisionsRisksRowKind(item);
+    if (!kind) continue;
+    if (mixed?.queriedList === 'HVCG_Decisions' && kind !== 'decision') continue;
+    if (mixed?.queriedList === 'HVCG_Risks' && kind !== 'risk') continue;
+    const title = asText(item.title).replace(/\s+/g, ' ');
+    if (!title) continue;
+    const status = asText(item.status);
+    rows.push({
+      title,
+      kind,
+      ...(status ? { status } : {}),
+    });
+  }
+  return {
+    supplied: true,
+    unavailable: false,
+    queried: Boolean(section.queried),
+    mixed,
+    rows,
+    reason: section.reason,
+  };
 }
 
 type OpenTaskListRow = { title: string; status?: string; dueDate?: string };
@@ -1330,6 +1540,71 @@ export function composeClientTruth(opts: {
             : deliverableListSlice.queried
               ? `entitled count=${deliverableListCount}; deliverables=${deliverableListCount > 0 ? 'INDEXED' : 'MISSING'}`
               : deliverableListSlice.reason || 'Deliverables list not queried.',
+      },
+    ],
+  );
+
+  // W2P: list sentence is the hygiene-kept combined decisionsRisks section.
+  // Both sides queried and empty is MISSING. Either side SOURCE_UNAVAILABLE
+  // blanks the combined section and contributes no titles. queried:false is
+  // not an empty list. One ungranted side is mixed grant, not INDEXED.
+  // Approval Center and answers.decisions stay on their own sentences.
+  const decisionsRisksSlice = entitledDecisionsRisks(workspace?.decisionsRisks, clientCode);
+  const decisionsRisksCount = decisionsRisksSlice.rows.length;
+  const decisionsRisksListSummary = !decisionsRisksSlice.supplied
+    ? decisionsRisksNotQueriedSentence()
+    : decisionsRisksSlice.unavailable
+      ? decisionsRisksSourceUnavailableSentence(decisionsRisksSlice.reason)
+      : decisionsRisksSlice.mixed
+        ? decisionsRisksMixedSentence(
+            decisionsRisksSlice.mixed.queriedList,
+            decisionsRisksSlice.mixed.unqueriedList,
+            decisionsRisksSlice.rows,
+          )
+        : decisionsRisksCount > 0
+          ? decisionsRisksIndexedSentence(decisionsRisksSlice.rows)
+          : decisionsRisksSlice.queried
+            ? DECISIONS_RISKS_MISSING_SENTENCE
+            : decisionsRisksNotQueriedSentence(decisionsRisksSlice.reason);
+  const decisionsRisksListCompleteness: DomainCompleteness = !decisionsRisksSlice.supplied
+    ? 'NOT_CERTIFIED'
+    : decisionsRisksSlice.unavailable || decisionsRisksSlice.mixed
+      ? 'NOT_CERTIFIED'
+      : decisionsRisksCount > 0
+        ? 'INDEXED'
+        : decisionsRisksSlice.queried
+          ? 'MISSING'
+          : 'NOT_CERTIFIED';
+  const decisionsRisksListClassification: TruthClassification = !decisionsRisksSlice.supplied
+    ? 'NOT_CERTIFIED'
+    : decisionsRisksSlice.unavailable || decisionsRisksSlice.mixed
+      ? 'NOT_CERTIFIED'
+      : decisionsRisksCount > 0
+        ? 'CONFIRMED'
+        : decisionsRisksSlice.queried
+          ? 'MISSING'
+          : 'NOT_CERTIFIED';
+  const decisionsRisksListDomain = domain(
+    'decisionsRisksList',
+    decisionsRisksListCompleteness,
+    decisionsRisksListClassification,
+    decisionsRisksListSummary,
+    [
+      ...decisionsRisksSlice.rows.slice(0, DECISIONS_RISKS_LIST_SLICE).map((row) => ({
+        source: row.kind === 'risk' ? 'HVCG_Risks' : 'HVCG_Decisions',
+        detail: decisionsRisksListLabel(row),
+      })),
+      {
+        source: 'HVCG_Decisions / HVCG_Risks',
+        detail: !decisionsRisksSlice.supplied
+          ? 'SharePoint workspace decisions and risks were not supplied on this composition.'
+          : decisionsRisksSlice.unavailable
+            ? `decisionsRisks=SOURCE_UNAVAILABLE; partial rows are not the list; ${decisionsRisksSlice.reason || 'walk did not complete'}`
+            : decisionsRisksSlice.mixed
+              ? `${decisionsRisksSlice.mixed.unqueriedList} was not queried. Combined section is not fully indexed.`
+              : decisionsRisksSlice.queried
+                ? `entitled count=${decisionsRisksCount}; decisionsRisks=${decisionsRisksCount > 0 ? 'INDEXED' : 'MISSING'}`
+                : decisionsRisksSlice.reason || 'Decisions and risks lists not queried.',
       },
     ],
   );
@@ -1847,6 +2122,12 @@ export function composeClientTruth(opts: {
       classification: deliverablesListDomain.classification,
       provenance: deliverablesListDomain.provenance,
     },
+    decisionsRisksExist: {
+      question: 'What is the decisions and risks list?',
+      text: decisionsRisksListDomain.summary,
+      classification: decisionsRisksListDomain.classification,
+      provenance: decisionsRisksListDomain.provenance,
+    },
     documentsMissing: {
       question: 'What documents are missing?',
       // Recovered HVS folder gaps (hvsActionableClientKnowledge.missingDocuments)
@@ -1980,6 +2261,7 @@ export function composeClientTruth(opts: {
     engagements: engagementsDomain,
     engagementsList: engagementsListDomain,
     deliverablesList: deliverablesListDomain,
+    decisionsRisksList: decisionsRisksListDomain,
     projects: projectsDomain,
     documents: documentsDomain,
     communications: communicationsDomain,

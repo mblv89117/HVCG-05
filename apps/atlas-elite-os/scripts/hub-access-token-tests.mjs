@@ -122,7 +122,11 @@ assert.match(liveDetail, /deliverablesChipLabel/);
 assert.match(liveDetail, /\{deliverablesHonesty\.sentence\}/);
 assert.doesNotMatch(liveDetail, /workspace\.deliverables\.items/);
 assert.doesNotMatch(liveDetail, /sectionHonesty\(workspace\.deliverables\)/);
-assert.match(liveDetail, /workspace\.decisionsRisks\.items/);
+assert.match(liveDetail, /decisionsRisksListHonesty/);
+assert.match(liveDetail, /decisionsRisksChipLabel/);
+assert.match(liveDetail, /\{decisionsRisksHonesty\.sentence\}/);
+assert.doesNotMatch(liveDetail, /workspace\.decisionsRisks\.items/);
+assert.doesNotMatch(liveDetail, /sectionHonesty\(workspace\.decisionsRisks\)/);
 assert.doesNotMatch(liveDetail, /fetchClient360/);
 assert.doesNotMatch(liveDetail, /ingestMicrosoftClient360/);
 

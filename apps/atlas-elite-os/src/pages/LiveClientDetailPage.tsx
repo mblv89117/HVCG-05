@@ -26,6 +26,7 @@ import {
 } from '@fluentui/react-components';
 import { ArrowSyncRegular, OpenRegular } from '@fluentui/react-icons';
 import { contactsListHonesty } from './contactsListHonesty';
+import { decisionsRisksChipLabel, decisionsRisksListHonesty } from './decisionsRisksListHonesty';
 import { deliverablesChipLabel, deliverablesListHonesty } from './deliverablesListHonesty';
 import { engagementsChipLabel, engagementsListHonesty } from './engagementsListHonesty';
 import { meetingsListHonesty } from './meetingsListHonesty';
@@ -153,20 +154,6 @@ function sectionHonesty(section?: WorkspaceSection): string {
   return `${section.items.length} entitled row${section.items.length === 1 ? '' : 's'}.`;
 }
 
-function asItemText(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
-  const trimmed = value.trim();
-  return trimmed || undefined;
-}
-
-function workspaceItemId(item: Record<string, unknown>, index: number): string {
-  return asItemText(item.id) || `workspace-item-${index}`;
-}
-
-function workspaceItemTitle(item: Record<string, unknown>): string {
-  return asItemText(item.title) || asItemText(item.id) || 'Untitled item';
-}
-
 function timelineKindChip(kind: string) {
   const token = kind.trim() || 'event';
   const mapped = atlasStatusDisplay(token);
@@ -189,82 +176,6 @@ function timelineEventPath(
     return task ? taskWorkPath(task) : '/tasks';
   }
   return null;
-}
-
-function WorkspaceItemRow({ item, index }: { item: Record<string, unknown>; index: number }) {
-  const title = workspaceItemTitle(item);
-  const statusRaw = asItemText(item.status);
-  const chip = atlasStatusDisplay(statusRaw);
-  const date = dayStamp(asItemText(item.date));
-  const summary = asItemText(item.summary);
-  const webUrl = asItemText(item.webUrl);
-  const channel = asItemText(item.channel);
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr) auto',
-        gap: 8,
-        padding: '8px 0',
-        borderBottom: '1px solid color-mix(in srgb, currentColor 10%, transparent)',
-      }}
-    >
-      <div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          {chip ? (
-            <StatusChip label={chip.label} tone={chip.tone} size="sm" />
-          ) : statusRaw ? (
-            <StatusChip label={statusRaw} tone="neutral" size="sm" />
-          ) : null}
-          {webUrl ? (
-            <a href={webUrl} target="_blank" rel="noreferrer">
-              {title} <OpenRegular />
-            </a>
-          ) : (
-            <Text weight="semibold">{title}</Text>
-          )}
-        </div>
-        {summary ? <Caption1 style={{ display: 'block' }}>{summary}</Caption1> : null}
-        {channel ? <Caption1 style={{ display: 'block' }}>{channel}</Caption1> : null}
-      </div>
-      <Caption1>{date || '—'}</Caption1>
-    </div>
-  );
-}
-
-function WorkspaceSectionCard({
-  title,
-  subtitle,
-  section,
-  emptyTitle,
-}: {
-  title: string;
-  subtitle: string;
-  section?: WorkspaceSection;
-  emptyTitle: string;
-}) {
-  const items = section?.items || [];
-  const showItems = Boolean(section?.queried && items.length && section?.status !== 'SOURCE_UNAVAILABLE');
-  const sectionLabel =
-    section?.status === 'SOURCE_UNAVAILABLE'
-      ? 'Unavailable'
-      : section?.queried
-        ? `${items.length} entitled`
-        : 'Not queried';
-  return (
-    <AtlasCard
-      title={title}
-      subtitle={subtitle}
-      density="compact"
-      headerAction={<StatusChip label={sectionLabel} tone={showItems ? 'info' : 'neutral'} size="sm" />}
-    >
-      {showItems ? (
-        items.map((item, index) => <WorkspaceItemRow key={workspaceItemId(item, index)} item={item} index={index} />)
-      ) : (
-        <EmptyState title={emptyTitle} description={sectionHonesty(section)} density="compact" align="start" />
-      )}
-    </AtlasCard>
-  );
 }
 
 export function LiveClientDetailPage({ clientId }: { clientId: string }) {
@@ -366,6 +277,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   );
   const deliverablesHonesty = useMemo(
     () => deliverablesListHonesty(workspace?.deliverables, clientId),
+    [workspace, clientId],
+  );
+  const decisionsRisksHonesty = useMemo(
+    () => decisionsRisksListHonesty(workspace?.decisionsRisks, clientId),
     [workspace, clientId],
   );
   const projects = workspace?.projects || [];
@@ -660,8 +575,8 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
               tone={deliverablesHonesty.kind === 'indexed' ? 'info' : 'neutral'}
             />
             <StatusChip
-              label={`${workspace.decisionsRisks.items.length} decisions / risks`}
-              tone={workspace.decisionsRisks.queried ? 'warning' : 'neutral'}
+              label={decisionsRisksChipLabel(decisionsRisksHonesty.kind)}
+              tone={decisionsRisksHonesty.kind === 'indexed' ? 'warning' : 'neutral'}
             />
             <StatusChip label={`${workspace.timeline.length} timeline`} tone="gold" />
           </div>
@@ -754,6 +669,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{meetingsHonesty.sentence}</Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{engagementsHonesty.sentence}</Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{deliverablesHonesty.sentence}</Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>{decisionsRisksHonesty.sentence}</Caption1>
           {capitalLinked ? (
             <Caption1 style={{ display: 'block' }}>
               Capital engagement is already on this payload — open the Capital desk, not GCC.
@@ -1002,12 +918,62 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         )}
       </AtlasCard>
 
-      <WorkspaceSectionCard
+      <AtlasCard
         title="Decisions / risks"
-        subtitle="HVCG_Decisions and HVCG_Risks on this ClientCode — read-only Hub payload"
-        section={workspace.decisionsRisks}
-        emptyTitle="No entitled decisions or risks"
-      />
+        subtitle="HVCG_Decisions and HVCG_Risks on this ClientCode — the Hub payload. Read-only titles, plus status when the row already has it. Owner approvals are not this list."
+        density="compact"
+        headerAction={
+          <StatusChip
+            label={decisionsRisksChipLabel(decisionsRisksHonesty.kind)}
+            tone={decisionsRisksHonesty.kind === 'indexed' ? 'warning' : 'neutral'}
+            size="sm"
+          />
+        }
+      >
+        {decisionsRisksHonesty.kind === 'indexed' ? (
+          <>
+            <Caption1 style={{ display: 'block', marginBottom: 8 }}>{decisionsRisksHonesty.sentence}</Caption1>
+            {decisionsRisksHonesty.slice.map((row) => (
+              <div key={row.id} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '4px 0' }}>
+                <Text weight="semibold">
+                  {row.kind === 'risk' ? 'Risk' : 'Decision'}: {row.title}
+                </Text>
+                {row.status ? <Caption1>{row.status}</Caption1> : null}
+              </div>
+            ))}
+            {decisionsRisksHonesty.count > decisionsRisksHonesty.slice.length ? (
+              <Caption1 style={{ display: 'block', marginTop: 8 }}>
+                +{decisionsRisksHonesty.count - decisionsRisksHonesty.slice.length} more
+              </Caption1>
+            ) : null}
+          </>
+        ) : decisionsRisksHonesty.kind === 'mixed' ? (
+          <>
+            <Caption1 style={{ display: 'block', marginBottom: 8 }}>{decisionsRisksHonesty.sentence}</Caption1>
+            {decisionsRisksHonesty.slice.map((row) => (
+              <div key={row.id} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '4px 0' }}>
+                <Text weight="semibold">
+                  {row.kind === 'risk' ? 'Risk' : 'Decision'}: {row.title}
+                </Text>
+                {row.status ? <Caption1>{row.status}</Caption1> : null}
+              </div>
+            ))}
+          </>
+        ) : (
+          <EmptyState
+            title={
+              decisionsRisksHonesty.kind === 'missing'
+                ? 'No entitled decisions or risks'
+                : decisionsRisksHonesty.kind === 'source_unavailable'
+                  ? 'Decisions / risks source unavailable'
+                  : 'Decisions / risks not queried'
+            }
+            description={decisionsRisksHonesty.sentence}
+            density="compact"
+            align="start"
+          />
+        )}
+      </AtlasCard>
 
       <AtlasCard
         title="Deliverables"
